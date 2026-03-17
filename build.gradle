@@ -4,7 +4,8 @@ plugins {
     id 'java'
     id 'idea'
     id 'jacoco'
-    id "org.sonarqube" version "7.2.1.6560"
+    id "org.sonarqube" version "7.2.3.7755"
+    
 }
 
 group = 'ch.uzh.ifi.hasel'
@@ -55,11 +56,10 @@ bootJar {
 }
 
 sonar {
-    properties {
-        property "sonar.projectKey", "TODO"
-        property "sonar.organization", "TODO"
-        property "sonar.host.url", "https://sonarcloud.io"
-    }
+  properties {
+    property "sonar.projectKey", "lauringlarner_Server_SOPRA"
+    property "sonar.organization", "lauringlarner"
+  }
 }
 
 jacocoTestReport {

@@ -1,3 +1,4 @@
+secret
 # SoPra RESTful Service Template FS26
 
 ## Getting started with Spring Boot

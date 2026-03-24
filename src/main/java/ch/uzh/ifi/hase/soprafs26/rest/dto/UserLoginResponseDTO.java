@@ -1,22 +1,30 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
-public class UserGetDTO {
+public class UserLoginResponseDTO {
 
 	private Long id;
-	@JsonIgnore
-	private String name;
 	private String username;
-	@JsonIgnore
 	private String token;
 	private UserStatus status;
 	private String bio;
 	@JsonProperty("creation_date")
 	private LocalDateTime createdAt;
+
+	public UserLoginResponseDTO() {}
+
+	public UserLoginResponseDTO(Long id, String username, String token, UserStatus status,
+			String bio, LocalDateTime createdAt) {
+		this.id = id;
+		this.username = username;
+		this.token = token;
+		this.status = status;
+		this.bio = bio;
+		this.createdAt = createdAt;
+	}
 
 	public Long getId() {
 		return id;
@@ -24,14 +32,6 @@ public class UserGetDTO {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getUsername() {

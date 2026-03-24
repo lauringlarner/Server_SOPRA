@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Internal User Representation
@@ -37,6 +39,15 @@ public class User implements Serializable {
 
 	@Column(nullable = false)
 	private UserStatus status;
+
+	@Column(nullable = false)
+	private String password;
+
+	@Column()
+	private String bio;
+
+	@Column(nullable = false)
+	private LocalDateTime createdAt;
 
 	public Long getId() {
 		return id;
@@ -76,5 +87,45 @@ public class User implements Serializable {
 
 	public void setStatus(UserStatus status) {
 		this.status = status;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getBio() {
+		return bio;
+	}
+
+	public void setBio(String bio) {
+		this.bio = bio;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	@PrePersist
+	private void prePersistDefaults() {
+		if (createdAt == null) {
+			createdAt = LocalDateTime.now();
+		}
+		if (status == null) {
+			status = UserStatus.OFFLINE;
+		}
+		if (token == null || token.isBlank()) {
+			token = UUID.randomUUID().toString();
+		}
+		if (password == null || password.isBlank()) {
+			password = UUID.randomUUID().toString();
+		}
 	}
 }

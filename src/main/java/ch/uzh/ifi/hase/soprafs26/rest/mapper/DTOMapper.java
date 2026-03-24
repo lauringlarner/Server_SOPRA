@@ -5,6 +5,7 @@ import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
 /**
@@ -25,11 +26,28 @@ public interface DTOMapper {
 
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")
+	@Mapping(source = "password", target = "password")
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(target = "id", ignore = true)
+	@Mapping(target = "token", ignore = true)
+	@Mapping(target = "status", ignore = true)
+	@Mapping(target = "createdAt", ignore = true)
 	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")
+	@Mapping(source = "token", target = "token")
 	@Mapping(source = "status", target = "status")
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(source = "createdAt", target = "createdAt")
 	UserGetDTO convertEntityToUserGetDTO(User user);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "username", target = "username")
+	@Mapping(source = "token", target = "token")
+	@Mapping(source = "status", target = "status")
+	@Mapping(source = "bio", target = "bio")
+	@Mapping(source = "createdAt", target = "createdAt")
+	UserLoginResponseDTO convertEntityToUserLoginResponseDTO(User user);
 }

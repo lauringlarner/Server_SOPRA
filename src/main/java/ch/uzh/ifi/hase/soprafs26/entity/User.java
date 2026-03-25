@@ -25,11 +25,11 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue
-	private Long id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
-	@Column(nullable = false)
-	private String name;
+	@Column(unique = true)
+	private String email;
 
 	@Column(nullable = false, unique = true)
 	private String username;
@@ -43,26 +43,32 @@ public class User implements Serializable {
 	@Column(nullable = false)
 	private String password;
 
-	@Column()
-	private String bio;
+	@Column(nullable = false)
+	private int gamesPlayed;
+
+	@Column(nullable = false)
+	private int gamesWon;
+
+	@Column(nullable = false)
+	private int correctItemsFound;
 
 	@Column(nullable = false)
 	private LocalDateTime createdAt;
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public String getEmail() {
+		return email;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public String getUsername() {
@@ -97,12 +103,28 @@ public class User implements Serializable {
 		this.password = password;
 	}
 
-	public String getBio() {
-		return bio;
+	public int getGamesPlayed() {
+		return gamesPlayed;
 	}
 
-	public void setBio(String bio) {
-		this.bio = bio;
+	public void setGamesPlayed(int gamesPlayed) {
+		this.gamesPlayed = gamesPlayed;
+	}
+
+	public int getGamesWon() {
+		return gamesWon;
+	}
+
+	public void setGamesWon(int gamesWon) {
+		this.gamesWon = gamesWon;
+	}
+
+	public int getCorrectItemsFound() {
+		return correctItemsFound;
+	}
+
+	public void setCorrectItemsFound(int correctItemsFound) {
+		this.correctItemsFound = correctItemsFound;
 	}
 
 	public LocalDateTime getCreatedAt() {
@@ -123,9 +145,6 @@ public class User implements Serializable {
 		}
 		if (token == null || token.isBlank()) {
 			token = UUID.randomUUID().toString();
-		}
-		if (password == null || password.isBlank()) {
-			password = UUID.randomUUID().toString();
 		}
 	}
 }

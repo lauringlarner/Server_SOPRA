@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -16,6 +18,13 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+
+
+
 
 @RestController
 public class LobbyController {
@@ -30,7 +39,7 @@ public class LobbyController {
 
 
 
-    @PostMapping("lobbies")
+    @PostMapping("/lobbies")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public LobbyDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
@@ -47,10 +56,37 @@ public class LobbyController {
         // create host player and Lobby
         LobbyPlayer player = lobbyService.createLobbyPlayer(host, true);
         Lobby lobby = lobbyService.createLobby(player);
-        // return Lobby code
+        
         return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
     }
 
+
+    @GetMapping("/lobbies/{lobbyId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public LobbyDTO getLobbyById(@PathVariable UUID lobbyId,
+        @RequestHeader(value = "Authorization", required = false) String token) {
+        // Check if user is authenticated
+		checkAuthToken(token);
+
+        // fetch Lobby
+        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);
+
+        // convert to DTO
+        return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
+        
+    }
+    
+
+    @PostMapping("/lobbies/join")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public LobbyDTO postJoinLobbyByJoinCode(@RequestBody String entity) {
+        //TODO: process POST request
+        
+        return entity;
+    }
+    
 
 
 

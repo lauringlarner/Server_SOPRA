@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,5 +105,12 @@ public class LobbyService {
         }
         return code.toString();
     }
+
+
+    public Lobby getLobbyByLobbyId(UUID lobbyId) {
+        return lobbyRepository.findById(lobbyId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+    }
+
 
 }

@@ -3,7 +3,9 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.CreateLobbyResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
@@ -50,4 +52,7 @@ public interface DTOMapper {
 	@Mapping(source = "bio", target = "bio")
 	@Mapping(source = "createdAt", target = "createdAt")
 	UserLoginResponseDTO convertEntityToUserLoginResponseDTO(User user);
+
+	@Mapping(source = "joinCode", target = "joinCode")
+	CreateLobbyResponseDTO convertEntityToCreateLobbyResponseDTO(Lobby lobby);
 }

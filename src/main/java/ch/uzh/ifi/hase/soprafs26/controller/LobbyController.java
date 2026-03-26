@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.CreateLobbyResponseDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
@@ -33,7 +33,7 @@ public class LobbyController {
     @PostMapping("lobbies")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
-    public CreateLobbyResponseDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
+    public LobbyDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
         // Check if user is authenticated
 		checkAuthToken(token);
         String actualToken = extractTokenFromBearer(token);
@@ -48,7 +48,7 @@ public class LobbyController {
         LobbyPlayer player = lobbyService.createLobbyPlayer(host, true);
         Lobby lobby = lobbyService.createLobby(player);
         // return Lobby code
-        return DTOMapper.INSTANCE.convertEntityToCreateLobbyResponseDTO(lobby);
+        return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
     }
 
 

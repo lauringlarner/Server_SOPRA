@@ -61,7 +61,7 @@ public class LobbyService {
         if (lobbyPlayer == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Host doen't exist");
         }
-        if(lobbyPlayer.getLobbyID() != null) {
+        if(lobbyPlayer.getLobby() != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Host is already in another Lobby");
         }
 
@@ -72,10 +72,15 @@ public class LobbyService {
         newLobby.setStatus(LobbyStatus.OPEN);
         newLobby.addPlayer(lobbyPlayer);
 
+        // Default Game Settings
+        newLobby.setBingoBoardSize(5);
+        newLobby.setGameDuration(10);
+    
+
         newLobby = lobbyRepository.save(newLobby);
         lobbyRepository.flush();
 
-        lobbyPlayer.setLobbyID(newLobby.getId());
+        lobbyPlayer.setLobby(newLobby);
 
         lobbyPlayerRepository.save(lobbyPlayer);
         lobbyPlayerRepository.flush();

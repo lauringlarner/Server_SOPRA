@@ -39,8 +39,40 @@ public class Lobby {
     @OneToMany(mappedBy="lobby", cascade=CascadeType.ALL, orphanRemoval=true)
     private List<LobbyPlayer> lobbyPlayers = new ArrayList<>();
 
+    // Game settings
+    @Column(nullable = false)
+	private Integer gameDuration;
+
+    @Column(nullable = false)
+	private Integer bingoBoardSize; // bingoBoardSize = 4 -> 4 x 4 Board, i.e. 16 items
+
+    /*
+    @Column(nullable = false)
+	private Integer numberOfRounds;
+
+    @Column(nullable = false)
+	private GameMode gameMode;   
+    */
+
+
     public static long getSerialversionuid() {
         return serialVersionUID;
+    }
+
+    public Integer getGameDuration() {
+        return gameDuration;
+    }
+
+    public void setGameDuration(Integer gameDuration) {
+        this.gameDuration = gameDuration;
+    }
+
+    public Integer getBingoBoardSize() {
+        return bingoBoardSize;
+    }
+
+    public void setBingoBoardSize(Integer bingoBoardSize) {
+        this.bingoBoardSize = bingoBoardSize;
     }
 
     public UUID getId() {
@@ -89,6 +121,14 @@ public class Lobby {
 
     public void removePlayer(LobbyPlayer lobbyPlayer) {
         lobbyPlayers.removeIf(p -> Objects.equals(p.getId(), lobbyPlayer.getId()));
+    }
+
+    public List<LobbyPlayer> getLobbyPlayers() {
+        return lobbyPlayers;
+    }
+
+    public void setLobbyPlayers(List<LobbyPlayer> lobbyPlayers) {
+        this.lobbyPlayers = lobbyPlayers;
     }
 
 

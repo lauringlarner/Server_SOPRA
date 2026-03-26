@@ -81,7 +81,7 @@ public class LobbyPlayer {
         this.team = team;
     }
 
-    public boolean isHost() {
+    public boolean getIsHost() {
         return isHost;
     }
 
@@ -89,12 +89,20 @@ public class LobbyPlayer {
         this.isHost = isHost;
     }
 
-    public boolean isReady() {
+    public boolean getIsReady() {
         return isReady;
     }
 
     public void setIsReady(boolean isReady) {
         this.isReady = isReady;
+    }
+
+    public Lobby getLobby() {
+        return lobby;
+    }
+
+    public void setLobby(Lobby lobby) {
+        this.lobby = lobby;
     }
 
     

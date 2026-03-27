@@ -7,9 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 
+import java.util.UUID;
+
 @Repository("userRepository")
 public interface UserRepository extends JpaRepository<User, UUID> {
-
 
 	User findByUsername(String username);
 

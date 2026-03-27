@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,8 +47,9 @@ public class UserControllerTest {
 	@Test
 	public void createUser_validInput_201() throws Exception {
 		// given
+		UUID userId = UUID.randomUUID();
 		User user = new User();
-		user.setId(1L);
+		user.setId(userId);
 		user.setUsername("testuser");
 		user.setPassword("password123");
 		user.setStatus(UserStatus.ONLINE);
@@ -65,7 +68,7 @@ public class UserControllerTest {
 
 		mockMvc.perform(postRequest)
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
+				.andExpect(jsonPath("$.id", is(userId.toString())))
 				.andExpect(jsonPath("$.username", is(user.getUsername())));
 	}
 
@@ -92,32 +95,42 @@ public class UserControllerTest {
 	@Test
 	public void getUserById_validId_200() throws Exception {
 		// given
+		UUID userId = UUID.randomUUID();
 		User user = new User();
-		user.setId(1L);
+		user.setId(userId);
 		user.setUsername("testuser");
 		user.setStatus(UserStatus.ONLINE);
+		user.setToken("token123");
 
-		given(userService.getUserById(1L)).willReturn(user);
+		given(userService.getUserByToken("token123")).willReturn(user);
+		given(userService.getUserById(userId)).willReturn(user);
 
 		// when/then
-		MockHttpServletRequestBuilder getRequest = get("/users/1")
+		MockHttpServletRequestBuilder getRequest = get("/users/" + userId)
 				.contentType(MediaType.APPLICATION_JSON)
 				.header("Authorization", "token123");
 
 		mockMvc.perform(getRequest)
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id", is(user.getId().intValue())))
+				.andExpect(jsonPath("$.id", is(userId.toString())))
 				.andExpect(jsonPath("$.username", is(user.getUsername())));
 	}
 
 	@Test
 	public void getUserById_invalidId_404() throws Exception {
 		// given
-		given(userService.getUserById(999L))
+		UUID unknownId = UUID.randomUUID();
+		UUID authUserId = UUID.randomUUID();
+		User authUser = new User();
+		authUser.setId(authUserId);
+		authUser.setToken("token123");
+
+		given(userService.getUserByToken("token123")).willReturn(authUser);
+		given(userService.getUserById(unknownId))
 				.willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
 		// when/then
-		MockHttpServletRequestBuilder getRequest = get("/users/999")
+		MockHttpServletRequestBuilder getRequest = get("/users/" + unknownId)
 				.contentType(MediaType.APPLICATION_JSON)
 				.header("Authorization", "token123");
 
@@ -129,20 +142,20 @@ public class UserControllerTest {
 	@Test
 	public void updateUser_validId_204() throws Exception {
 		// given
+		UUID userId = UUID.randomUUID();
 		User user = new User();
-		user.setId(1L);
+		user.setId(userId);
 		user.setUsername("updateduser");
 		user.setToken("token123");
 
 		UserPostDTO updateDTO = new UserPostDTO();
 		updateDTO.setUsername("updateduser");
 
-		// Mock the token validation
 		given(userService.getUserByToken("token123")).willReturn(user);
-		given(userService.updateUser(Mockito.eq(1L), Mockito.any())).willReturn(user);
+		given(userService.updateUser(Mockito.eq(userId), Mockito.any())).willReturn(user);
 
 		// when/then
-		MockHttpServletRequestBuilder putRequest = put("/users/1")
+		MockHttpServletRequestBuilder putRequest = put("/users/" + userId)
 				.contentType(MediaType.APPLICATION_JSON)
 				.header("Authorization", "token123")
 				.content(asJsonString(updateDTO));
@@ -152,36 +165,33 @@ public class UserControllerTest {
 	}
 
 	@Test
-	public void updateUser_invalidId_404() throws Exception {
-		// given - test when the authenticated user tries to update a non-existent user
+	public void updateUser_unauthorized_403() throws Exception {
+		// given - authenticated user tries to update a different user's profile
+		UUID targetUserId = UUID.randomUUID();
+		UUID authUserId = UUID.randomUUID();
+
 		User authUser = new User();
-		authUser.setId(999L);
+		authUser.setId(authUserId);
 		authUser.setToken("token123");
 
 		UserPostDTO updateDTO = new UserPostDTO();
 		updateDTO.setUsername("updateduser");
 
-		// Mock the token validation
 		given(userService.getUserByToken("token123")).willReturn(authUser);
-		// Mock service to throw 404 when updating non-existent user
-		given(userService.updateUser(Mockito.eq(999L), Mockito.any()))
-				.willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
 		// when/then
-		MockHttpServletRequestBuilder putRequest = put("/users/999")
+		MockHttpServletRequestBuilder putRequest = put("/users/" + targetUserId)
 				.contentType(MediaType.APPLICATION_JSON)
 				.header("Authorization", "token123")
 				.content(asJsonString(updateDTO));
 
 		mockMvc.perform(putRequest)
-				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.reason", is("User not found")));
+				.andExpect(status().isForbidden());
 	}
 
 	/**
 	 * Helper Method to convert userPostDTO into a JSON string such that the input
 	 * can be processed
-	 * Input will look like this: {"name": "Test User", "username": "testUsername"}
 	 *
 	 * @param object
 	 * @return string

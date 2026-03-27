@@ -45,18 +45,13 @@ public class UserService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username cannot be empty!");
 		}
 
-		// If name is not provided, set it to username
-		if (newUser.getName() == null || newUser.getName().isEmpty()) {
-			newUser.setName(newUser.getUsername());
-		}
+		// Name is deleted
 
 		if (newUser.getPassword() == null || newUser.getPassword().isEmpty()) {
-			newUser.setPassword(UUID.randomUUID().toString());
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty!");
 		}
 
-		if (newUser.getBio() == null) {
-			newUser.setBio("");
-		}
+		// Bio is deleted
 
 		newUser.setToken(UUID.randomUUID().toString());
 		newUser.setStatus(UserStatus.OFFLINE);
@@ -81,13 +76,7 @@ public class UserService {
 	 * @see User
 	 */
 	private void checkIfUserExists(User userToBeCreated) {
-		User userByName = userRepository.findByName(userToBeCreated.getName());
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-
-		if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"The username is not unique. Therefore, the user could not be created!");
-		}
 
 		if (userByUsername != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -95,12 +84,12 @@ public class UserService {
 		}
 	}
 
-	public User getUserById(Long userId) {
+	public User getUserById(UUID userId) {
 		return userRepository.findById(userId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 	}
 
-	public User changePassword(Long userId, String oldPassword, String newPassword) {
+	public User changePassword(UUID userId, String oldPassword, String newPassword) {
 		// Validate new password
 		if (newPassword == null || newPassword.isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be empty!");
@@ -160,7 +149,7 @@ public class UserService {
 		return user;
 	}
 
-	public User updateUser(Long userId, User updatedUser) {
+	public User updateUser(UUID userId, User updatedUser) {
 		User user = getUserById(userId);
 
 		// Check if username is already taken by another user
@@ -173,15 +162,7 @@ public class UserService {
 			user.setUsername(updatedUser.getUsername());
 		}
 
-		// Update name if provided
-		if (updatedUser.getName() != null) {
-			user.setName(updatedUser.getName());
-		}
-
-		// Update bio if provided
-		if (updatedUser.getBio() != null) {
-			user.setBio(updatedUser.getBio());
-		}
+		// name and bio are deleted
 
 		user = userRepository.save(user);
 		userRepository.flush();

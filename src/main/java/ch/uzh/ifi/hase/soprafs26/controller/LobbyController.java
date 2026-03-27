@@ -3,6 +3,8 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -17,11 +19,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 
@@ -78,14 +75,7 @@ public class LobbyController {
     }
     
 
-    @PostMapping("/lobbies/join")
-    @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
-    public LobbyDTO postJoinLobbyByJoinCode(@RequestBody String entity) {
-        //TODO: process POST request
-        
-        return entity;
-    }
+
     
 
 

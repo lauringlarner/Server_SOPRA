@@ -68,7 +68,7 @@ public interface DTOMapper {
 	@Mapping(source = "team", target = "team")
 	@Mapping(source = "isHost", target = "isHost")
 	@Mapping(source = "isReady", target = "isReady")
-	@Mapping(source = "userId", target = "userId")
+	@Mapping(source = "user", target = "user")
 	LobbyPlayerDTO lobbyPlayerToLobbyPlayerDTO(LobbyPlayer lobbyPlayer);
 
 }

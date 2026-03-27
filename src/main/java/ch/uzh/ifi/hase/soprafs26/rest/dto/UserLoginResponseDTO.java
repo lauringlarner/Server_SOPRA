@@ -3,34 +3,32 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class UserLoginResponseDTO {
 
-	private Long id;
+	private UUID id;
 	private String username;
 	private String token;
 	private UserStatus status;
-	private String bio;
 	@JsonProperty("creation_date")
 	private LocalDateTime createdAt;
 
 	public UserLoginResponseDTO() {}
 
-	public UserLoginResponseDTO(Long id, String username, String token, UserStatus status,
-			String bio, LocalDateTime createdAt) {
+	public UserLoginResponseDTO(UUID id, String username, String token, UserStatus status, LocalDateTime createdAt) {
 		this.id = id;
 		this.username = username;
 		this.token = token;
 		this.status = status;
-		this.bio = bio;
 		this.createdAt = createdAt;
 	}
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
@@ -56,14 +54,6 @@ public class UserLoginResponseDTO {
 
 	public void setStatus(UserStatus status) {
 		this.status = status;
-	}
-
-	public String getBio() {
-		return bio;
-	}
-
-	public void setBio(String bio) {
-		this.bio = bio;
 	}
 
 	public LocalDateTime getCreatedAt() {

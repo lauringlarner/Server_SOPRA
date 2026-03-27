@@ -12,6 +12,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
+import java.util.UUID;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +54,7 @@ public class UserController {
 	@GetMapping("/users/{userId}")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public UserGetDTO getUserProfile(@PathVariable Long userId,
+	public UserGetDTO getUserProfile(@PathVariable UUID userId,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
 		checkAuthToken(token);
@@ -112,7 +114,7 @@ public class UserController {
 	@PutMapping("/users/{userId}/password")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public UserGetDTO changePassword(@PathVariable Long userId,
+	public UserGetDTO changePassword(@PathVariable UUID userId,
 		@RequestBody PasswordChangeDTO passwordChangeDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
@@ -133,7 +135,7 @@ public class UserController {
 	@PutMapping("/users/{userId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@ResponseBody
-	public void updateUserProfile(@PathVariable Long userId,
+	public void updateUserProfile(@PathVariable UUID userId,
 		@RequestBody UserPostDTO userPostDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
@@ -159,7 +161,7 @@ public class UserController {
 		userService.getUserByToken(actualToken);
 	}
 
-	private void verifyUserAuthorization(Long userId, String token) {
+	private void verifyUserAuthorization(UUID userId, String token) {
 		// Extract token from Bearer format if present
 		String actualToken = extractTokenFromBearer(token);
 		// Find user with this token

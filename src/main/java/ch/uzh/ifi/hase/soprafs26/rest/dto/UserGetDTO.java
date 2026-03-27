@@ -4,34 +4,28 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class UserGetDTO {
 
-	private Long id;
-	@JsonIgnore
-	private String name;
+	private UUID id;
 	private String username;
+	private String email;
+	private int gamesPlayed;
+	private int gamesWon;
+	private int correctItemsFound;
 	@JsonIgnore
 	private String token;
 	private UserStatus status;
-	private String bio;
 	@JsonProperty("creation_date")
 	private LocalDateTime createdAt;
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(UUID id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getUsername() {
@@ -58,14 +52,6 @@ public class UserGetDTO {
 		this.status = status;
 	}
 
-	public String getBio() {
-		return bio;
-	}
-
-	public void setBio(String bio) {
-		this.bio = bio;
-	}
-
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
@@ -73,4 +59,39 @@ public class UserGetDTO {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
+
+	public String getEmail() { 
+		return email; 
+		}
+
+
+	public void setEmail(String email) { 
+		this.email = email; 
+		}
+
+	public int getGamesPlayed() { 
+		return gamesPlayed; 
+		}
+
+	public void setGamesPlayed(int gamesPlayed) { 
+		this.gamesPlayed = gamesPlayed;
+		 }
+
+	public int getGamesWon() { 
+		return gamesWon; 
+		}
+
+	public void setGamesWon(int gamesWon) { 
+		this.gamesWon = gamesWon; 
+		}
+
+	public int getCorrectItemsFound() { 
+		return correctItemsFound; 
+		}
+
+	public void setCorrectItemsFound(int correctItemsFound) { 
+		this.correctItemsFound = correctItemsFound;
+		}
+
+
 }

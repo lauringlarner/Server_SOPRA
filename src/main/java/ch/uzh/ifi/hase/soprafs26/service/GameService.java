@@ -53,7 +53,7 @@ public class GameService {
 		checkIfGameExists(newGame);
 		// saves the given entity but data is only persisted in the database once
 		// flush() is called
-        newGame.setWordList(Words.WordListGenerate());
+        newGame.setWordList(Words.WordList());
 		newGame = gameRepository.save(newGame);
 		gameRepository.flush();
 

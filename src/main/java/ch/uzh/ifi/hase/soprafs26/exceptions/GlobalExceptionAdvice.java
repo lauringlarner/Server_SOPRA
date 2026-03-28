@@ -15,11 +15,18 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import jakarta.servlet.http.HttpServletRequest;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ErrorDTO;
 
 @ControllerAdvice(annotations = RestController.class)
 public class GlobalExceptionAdvice extends ResponseEntityExceptionHandler {
 
 	private final Logger log = LoggerFactory.getLogger(GlobalExceptionAdvice.class);
+
+	@ExceptionHandler(ResponseStatusException.class)
+	public ResponseEntity<ErrorDTO> handleResponseStatusException(ResponseStatusException ex) {
+		ErrorDTO errorDTO = new ErrorDTO(ex.getReason());
+		return ResponseEntity.status(ex.getStatusCode()).body(errorDTO);
+	}
 
 	@ExceptionHandler(value = { IllegalArgumentException.class, IllegalStateException.class })
 	protected ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) {

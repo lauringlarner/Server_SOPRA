@@ -44,3 +44,15 @@ local.properties
 .xcode*
 
 /bin
+
+# Vision-AI credentials and test images (local only, do not push)
+*-server-*.json
+vision_results_arda.txt
+
+# Vision-AI original files (local only)
+src/main/java/ch/uzh/ifi/hase/soprafs26/VisionQuickstart.java
+*.webp
+*.jpg
+*.jpeg
+*.png
+!vision_test/**

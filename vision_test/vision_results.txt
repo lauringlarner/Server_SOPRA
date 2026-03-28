@@ -1,0 +1,7 @@
+=== Vision Test: vision_test/messy_room.jpg | target: guitar ===
+Objects:
+ - Window (0,79)
+ - Guitar (0,77)
+ - Window (0,73)
+
+Found "guitar" with score 0,77 — SCORE TOO LOW (threshold: 0,90) // we finetune edit the threshold not big of a deal, but results are better here

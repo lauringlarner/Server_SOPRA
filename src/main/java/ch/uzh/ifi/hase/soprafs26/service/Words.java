@@ -1,60 +1,35 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
-//needs to be importet to work with files
-// Import this class to handle errors
 import java.io.*;
-// Import the Scanner class to read text files
 import java.util.*;
 
-
-
-
-
 public class Words {
+
     public static String[] WordList() {
-    File wordList = new File("/Users/laurinprivate/Desktop/Server_SOPRA/src/main/java/ch/uzh/ifi/hase/soprafs26/service/urban_objects.csv");
+        List<String> words = new ArrayList<>();
 
-    List<String> words = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(wordList))) {
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        words.add(line.trim()); // Add each line as a word
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                // Convert List to Array
-                String[] wordsArray = words.toArray(new String[0]);
-
-
-
-                return wordsArray; 
-
+        try (InputStream is = Words.class.getClassLoader().getResourceAsStream("urban_objects.csv");
+             BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                words.add(line.trim());
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-
-    public static String Word() {
-        String[] wordsList = WordList();//list of words
-
-        int arrayLength = wordsList.length; //length of array
-
-        int randomNum = (int)(Math.random() * arrayLength ); //not sure if the whole array is matched
-
-        String word = wordsList[randomNum]; // get random word
-        System.out.println(word);
-        return word;
-
+        return words.toArray(new String[0]);
     }
 
-    public static String[] WordListGenerate() {				//returns a list of 16 randomly choosen words from the library
-		String[] WordList = new String[16];
+    public static String Word() {
+        String[] wordsList = WordList();
+        int randomNum = (int) (Math.random() * wordsList.length);
+        String word = wordsList[randomNum];
+        System.out.println(word);
+        return word;
+    }
 
-		for (int i = 0; i<16; i++){
-			WordList[i] = Words.Word();
-		}
-		return WordList;
-	}
-
+    public static void main(String[] args) {
+        Word();
+    }
 }

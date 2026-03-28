@@ -14,7 +14,7 @@ public class Words {
     public static String[] WordList() {
     File wordList = new File("/Users/laurinprivate/Desktop/Server_SOPRA/src/main/java/ch/uzh/ifi/hase/soprafs26/service/urban_objects.csv");
 
-    List<String> words = new ArrayList();
+    List<String> words = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(wordList))) {
                     String line;
@@ -47,10 +47,14 @@ public class Words {
         return word;
 
     }
-        
-public static void main(String[] args){
-    Word();
 
-}
+    public static String[] WordListGenerate() {				//returns a list of 16 randomly choosen words from the library
+		String[] WordList = new String[16];
+
+		for (int i = 0; i<16; i++){
+			WordList[i] = Words.Word();
+		}
+		return WordList;
+	}
 
 }

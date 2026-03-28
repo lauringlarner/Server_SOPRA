@@ -17,8 +17,8 @@ import java.io.Serializable;
  * the primary key
  */
 @Entity
-@Table(name = "users")
-public class User implements Serializable {
+@Table(name = "games")
+public class Game implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -26,17 +26,17 @@ public class User implements Serializable {
 	@GeneratedValue
 	private Long id;
 
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String name;
-
-	@Column(nullable = false, unique = true)
-	private String username;
-
-	@Column(nullable = false, unique = true)
-	private String token;
 
 	@Column(nullable = false)
 	private UserStatus status;
+
+    @Column(nullable = false)
+    private String[] wordlist;
+
+    @Column(nullable = false, unique = true)
+	private String token;
 
 	public Long getId() {
 		return id;
@@ -54,21 +54,6 @@ public class User implements Serializable {
 		this.name = name;
 	}
 
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getToken() {
-		return token;
-	}
-
-	public void setToken(String token) {
-		this.token = token;
-	}
 
 	public UserStatus getStatus() {
 		return status;
@@ -76,5 +61,22 @@ public class User implements Serializable {
 
 	public void setStatus(UserStatus status) {
 		this.status = status;
+	}
+
+    public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+
+    public String[] getWordList() {
+		return wordlist;
+	}
+
+	public void setWordList(String[] WordList) {
+		this.wordlist = WordList;
 	}
 }

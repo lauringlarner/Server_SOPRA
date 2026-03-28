@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.service.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +39,8 @@ public class UserService {
 	public List<User> getUsers() {
 		return this.userRepository.findAll();
 	}
+
+
 
 	public User createUser(User newUser) {
 		newUser.setToken(UUID.randomUUID().toString());
@@ -74,5 +78,8 @@ public class UserService {
 		} else if (userByName != null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
 		}
+
+
+	
 	}
 }

@@ -2,13 +2,13 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 
-public class UserGetDTO {
+public class GameGetDTO {
 
 	private Long id;
 	private String name;
-	private String username;
 	private UserStatus status;
 	private String[] wordList;
+	private String token;
 
 	public Long getId() {
 		return id;
@@ -25,15 +25,7 @@ public class UserGetDTO {
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
+    
 	public UserStatus getStatus() {
 		return status;
 	}
@@ -49,4 +41,13 @@ public class UserGetDTO {
 	public String[] getWordList() {
 		return wordList;
 	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
 }
+

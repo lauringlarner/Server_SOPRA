@@ -71,3 +71,9 @@ public class VisionQuickstart {
 
 //./gradlew run --args="/'Users/laurinprivate/Desktop/WhatsApp Image 2026-03-23 at 14.54.36.jpeg' guardrail"
 //./gradlew run --args="'/Users/laurinprivate/Desktop/WhatsApp Image 2026-03-23 at 13.36.41.jpeg' bottle"
+
+//./gradlew run --args="'/Users/laurinprivate/Desktop/WhatsApp Image 2026-03-23 at 17.06.02.jpeg' TV"
+//./gradlew run --args="'/Users/laurinprivate/Desktop/WhatsApp Image 2026-03-23 at 17.08.40.jpeg' Ski"
+//./gradlew run --args="'/Users/laurinprivate/Desktop/C2kxjwBoKSFAx1yUsCyzV-.jpg' sun"
+
+//rest specification file in the backend

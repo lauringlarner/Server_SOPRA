@@ -85,6 +85,8 @@ if (secretPropsFile.exists()) {
         ext[name] = value
     }
 }
+/*
+defaultTasks 'bootJar', 'build'
 
 application {
     mainClass = 'ch.uzh.ifi.hase.soprafs26.VisionQuickstart'
@@ -95,4 +97,4 @@ application {
 tasks.named('run', JavaExec) {
     environment "GOOGLE_APPLICATION_CREDENTIALS", "/Users/laurinprivate/Desktop/sopra-fs26-group-18-server-254a2c84c9e1.json"
 }
-
+*/

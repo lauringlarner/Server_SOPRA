@@ -75,10 +75,13 @@ public class UserService {
 	 * @throws org.springframework.web.server.ResponseStatusException
 	 * @see User
 	 */
-	private void checkIfUserExists(User userToBeCreated) {
-		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
 
-		if (userByUsername != null) {
+	public User findByUsername(String username) {
+		return userRepository.findByUsername(username);
+	}
+
+	private void checkIfUserExists(User userToBeCreated) {
+		if (findByUsername(userToBeCreated.getUsername()) != null) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
 				"The username is not unique. Therefore, the user could not be created!");
 		}
@@ -117,7 +120,7 @@ public class UserService {
 	}
 
 	public User loginUser(String username, String password) {
-		User user = userRepository.findByUsername(username);
+		User user = findByUsername(username);
 
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
@@ -136,16 +139,19 @@ public class UserService {
 		return user;
 	}
 
-	public User getUserByToken(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
-		}
 
+	public boolean isValidToken(String token) {
+		if (token == null || token.isEmpty()) {
+			return false;
+		}
+		return userRepository.findByToken(token) != null;
+	}
+
+	public User getUserByToken(String token) {
 		User user = userRepository.findByToken(token);
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
 		}
-
 		return user;
 	}
 
@@ -154,8 +160,7 @@ public class UserService {
 
 		// Check if username is already taken by another user
 		if (updatedUser.getUsername() != null && !updatedUser.getUsername().equals(user.getUsername())) {
-			User userByUsername = userRepository.findByUsername(updatedUser.getUsername());
-			if (userByUsername != null) {
+			if (findByUsername(updatedUser.getUsername()) != null) {
 				throw new ResponseStatusException(HttpStatus.CONFLICT,
 					"The username is not unique. Therefore, the user could not be updated!");
 			}

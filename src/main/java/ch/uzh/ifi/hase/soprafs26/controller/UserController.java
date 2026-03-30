@@ -10,6 +10,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
+import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 import java.util.UUID;
@@ -28,9 +29,11 @@ import java.util.List;
 public class UserController {
 
 	private final UserService userService;
+	private final AuthService authService;
 
-	UserController(UserService userService) {
+	UserController(UserService userService, AuthService authService) {
 		this.userService = userService;
+		this.authService = authService;
 	}
 
 	@GetMapping("/users")
@@ -38,7 +41,7 @@ public class UserController {
 	@ResponseBody
 	public List<UserGetDTO> getAllUsers(@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.checkAuthToken(token);
 
 		// fetch all users in the internal representation
 		List<User> users = userService.getUsers();
@@ -57,7 +60,7 @@ public class UserController {
 	public UserGetDTO getUserProfile(@PathVariable UUID userId,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.checkAuthToken(token);
 
 		// fetch user
 		User user = userService.getUserById(userId);
@@ -102,10 +105,10 @@ public class UserController {
 	@ResponseBody
 	public void logout(@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.checkAuthToken(token);
 
 		// Extract token from Bearer format
-		String actualToken = extractTokenFromBearer(token);
+		String actualToken = authService.extractTokenFromBearer(token);
 
 		// Logout user
 		userService.logoutUser(actualToken);
@@ -118,7 +121,7 @@ public class UserController {
 		@RequestBody PasswordChangeDTO passwordChangeDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.checkAuthToken(token);
 
 		// Verify user is changing their own password
 		verifyUserAuthorization(userId, token);
@@ -129,7 +132,7 @@ public class UserController {
 			passwordChangeDTO.getNewPassword());
 
 		// Convert to DTO and return
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(updatedUser);
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(updatedUser); // Returning update profile, but also could return just a simple message, since already pushes for logout. 
 	}
 
 	@PutMapping("/users/{userId}")
@@ -139,7 +142,7 @@ public class UserController {
 		@RequestBody UserPostDTO userPostDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.checkAuthToken(token);
 
 		// Verify user is updating their own profile
 		verifyUserAuthorization(userId, token);
@@ -151,32 +154,12 @@ public class UserController {
 		userService.updateUser(userId, userInput);
 	}
 
-	private void checkAuthToken(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization token is required!");
-		}
-		// Extract token from Bearer format if present
-		String actualToken = extractTokenFromBearer(token);
-		// Validate token by retrieving user - throws 401 if token is invalid
-		userService.getUserByToken(actualToken);
-	}
-
 	private void verifyUserAuthorization(UUID userId, String token) {
-		// Extract token from Bearer format if present
-		String actualToken = extractTokenFromBearer(token);
-		// Find user with this token
+		String actualToken = authService.extractTokenFromBearer(token);
 		User user = userService.getUserByToken(actualToken);
 
-		// Check if token belongs to the user whose resource is being accessed
 		if (!user.getId().equals(userId)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own profile!");
 		}
-	}
-
-	private String extractTokenFromBearer(String authHeader) {
-		if (authHeader != null && authHeader.startsWith("Bearer ")) {
-			return authHeader.substring(7); // Remove "Bearer " prefix (7 characters)
-		}
-		return authHeader;
 	}
 }

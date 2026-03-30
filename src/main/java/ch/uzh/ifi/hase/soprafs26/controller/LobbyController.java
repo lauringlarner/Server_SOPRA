@@ -78,14 +78,14 @@ public class LobbyController {
     }
     
 
-    @PostMapping("/lobbies/join")
-    @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
-    public LobbyDTO postJoinLobbyByJoinCode(@RequestBody String entity) {
+    //@PostMapping("/lobbies/join")
+    //@ResponseStatus(HttpStatus.OK)
+    //@ResponseBody
+    //public LobbyDTO postJoinLobbyByJoinCode(@RequestBody String entity) {
         //TODO: process POST request
         
-        return entity;
-    }
+    //    return entity;
+    //}
     
 
 

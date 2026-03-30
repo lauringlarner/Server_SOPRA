@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 
@@ -27,7 +28,7 @@ public class LobbyPlayer {
     @Column(nullable = false)
 	private LocalDateTime joinedAt;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
 	private TeamColor team;
 
     @Column(nullable = false)
@@ -36,21 +37,21 @@ public class LobbyPlayer {
     @Column(nullable = false)
 	private boolean isReady;
 
-    // reference to its corresponding User
-    @Column(nullable = false)
-	private UUID UserId;
+    @OneToOne(optional = false) // every player must have a user
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+	private User user;
 
     @ManyToOne
     @JoinColumn(name = "lobby_id")
 	private Lobby lobby;
 
 
-    public UUID getUserId() {
-        return UserId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(UUID userId) {
-        UserId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public static long getSerialversionuid() {

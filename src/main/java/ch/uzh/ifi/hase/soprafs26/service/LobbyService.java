@@ -29,7 +29,7 @@ public class LobbyService {
 
 	private final LobbyRepository lobbyRepository;
 
-	public LobbyService(@Qualifier("userRepository") LobbyRepository lobbyRepository, LobbyPlayerRepository lobbyPlayerRepository) {
+	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository, @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository) {
 		this.lobbyRepository = lobbyRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
 	}
@@ -41,19 +41,28 @@ public class LobbyService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User doen't exist");
         }
 
+        if (checkIfLobbyPlayerExistsByUser(newLobbyUser)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"The User is already a Player");
+        }
 
         LobbyPlayer newLobbyPlayer = new LobbyPlayer();
 
         newLobbyPlayer.setIsHost(isHost);
         newLobbyPlayer.setIsReady(false);
         newLobbyPlayer.setJoinedAt(LocalDateTime.now());
-        newLobbyPlayer.setUserId(newLobbyUser.getId());
+        newLobbyPlayer.setUser(newLobbyUser);
 
         newLobbyPlayer = lobbyPlayerRepository.save(newLobbyPlayer);
         lobbyPlayerRepository.flush();
 
         log.debug("Created LobbyPlayer: {}", newLobbyPlayer);
 		return newLobbyPlayer;
+    }
+
+
+    public Boolean checkIfLobbyPlayerExistsByUser(User user) {
+        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
+        return lobbyPlayer != null;
     }
 
 
@@ -74,7 +83,7 @@ public class LobbyService {
         newLobby.addPlayer(lobbyPlayer);
 
         // Default Game Settings
-        newLobby.setBingoBoardSize(5);
+        newLobby.setBingoBoardSize(4);
         newLobby.setGameDuration(10);
     
 
@@ -88,6 +97,46 @@ public class LobbyService {
 
         log.debug("Created Lobby: {}", newLobby);
 		return newLobby;
+    }
+
+
+    public Lobby joinLobby(LobbyPlayer lobbyPlayer, Lobby lobbyToJoin) {
+
+        if (lobbyPlayer == null || lobbyToJoin == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player or Lobby doesn't exist!");
+        }
+
+        if (lobbyToJoin.getStatus() == LobbyStatus.CLOSED) {
+             throw new ResponseStatusException(HttpStatus.CONFLICT, "Lobby is already closed!");
+        }
+
+
+        lobbyToJoin.addPlayer(lobbyPlayer);
+
+        lobbyToJoin = lobbyRepository.save(lobbyToJoin);
+        lobbyRepository.flush();
+
+        lobbyPlayer.setLobby(lobbyToJoin);
+
+        lobbyPlayerRepository.save(lobbyPlayer);
+        lobbyPlayerRepository.flush();
+
+        log.debug("Lobby added new Player: {}", lobbyPlayer);
+
+        return lobbyToJoin;
+    }
+
+    public Lobby getLobbyByJoinCode(String joinCode) {
+        if (joinCode == null || joinCode.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Join Code!");
+		}
+	
+		Lobby lobby = lobbyRepository.findByJoinCode(joinCode);
+		if (lobby == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Join Code!");
+		}
+
+		return lobby;
     }
 
 
@@ -110,6 +159,11 @@ public class LobbyService {
     public Lobby getLobbyByLobbyId(UUID lobbyId) {
         return lobbyRepository.findById(lobbyId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+    }
+
+    public LobbyPlayer getLobbyPlayerByUser(User user) {
+        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
+        return lobbyPlayer;
     }
 
 

@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamColor;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 
 public class LobbyPlayerDTO {
     
@@ -17,7 +19,7 @@ public class LobbyPlayerDTO {
 
     private boolean isReady;
 
-    private UUID userId;
+    private User user;
 
 
     public UUID getId() {
@@ -59,13 +61,13 @@ public class LobbyPlayerDTO {
     public void setIsReady(boolean isReady) {
         this.isReady = isReady;
     }
-
-    public UUID getUserId() {
-        return userId;
+    // User getter returns UserGetDTO instead of the actual User to hide token
+    public UserGetDTO getUser() {
+        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
     }
 
-    public void setUserId(UUID userId) {
-        userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     

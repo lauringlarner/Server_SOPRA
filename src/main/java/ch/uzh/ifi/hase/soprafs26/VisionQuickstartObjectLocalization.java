@@ -7,7 +7,7 @@ import java.util.List;
 
 
 
-public class VisionQuickstart_arda {
+public class VisionQuickstartObjectLocalization {
 
     public static void analyzeimage(String filePath, String object) throws Exception {
 

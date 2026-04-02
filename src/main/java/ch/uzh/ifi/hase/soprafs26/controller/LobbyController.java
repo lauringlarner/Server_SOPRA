@@ -103,6 +103,7 @@ public class LobbyController {
     @PostMapping("/lobbies/join")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
+
     public LobbyJoinCodeDTO postJoinLobby(@RequestBody LobbyDTO lobbyDTO, 
         @RequestHeader(value = "Authorization", required = false) String token) {
         // Check if user is authenticated
@@ -119,7 +120,6 @@ public class LobbyController {
         // get Lobby from Join Code
         Lobby lobbyFromJoinCode = DTOMapper.INSTANCE.convertLobbyDTOToEntity(lobbyDTO);
         Lobby lobbyToJoin = lobbyService.getLobbyByJoinCode(lobbyFromJoinCode.getJoinCode());
-
 
         // create non-host player and join lobby
         LobbyPlayer lobbyPlayer = lobbyService.createLobbyPlayer(user, false);

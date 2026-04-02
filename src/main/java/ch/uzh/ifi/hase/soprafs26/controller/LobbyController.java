@@ -18,7 +18,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyPlayerRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyPlayerDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
@@ -45,7 +45,7 @@ public class LobbyController {
     @PostMapping("/lobbies")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
-    public LobbyDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
+    public LobbyJoinCodeDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
         // Check if user is authenticated
 		checkAuthToken(token);
         String actualToken = extractTokenFromBearer(token);
@@ -60,7 +60,7 @@ public class LobbyController {
         LobbyPlayer player = lobbyService.createLobbyPlayer(user, true);
         Lobby lobby = lobbyService.createLobby(player);
         
-        return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
+        return DTOMapper.INSTANCE.convertEntityToLobbyJoinCodeDTO(lobby);
     }
 
 
@@ -103,7 +103,8 @@ public class LobbyController {
     @PostMapping("/lobbies/join")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public LobbyPlayerDTO postJoinLobby(@RequestBody LobbyDTO lobbyDTO,
+
+    public LobbyJoinCodeDTO postJoinLobby(@RequestBody LobbyDTO lobbyDTO, 
         @RequestHeader(value = "Authorization", required = false) String token) {
         // Check if user is authenticated
 		checkAuthToken(token);
@@ -124,7 +125,8 @@ public class LobbyController {
         LobbyPlayer lobbyPlayer = lobbyService.createLobbyPlayer(user, false);
         lobbyService.joinLobby(lobbyPlayer, lobbyToJoin);
 
-        return DTOMapper.INSTANCE.convertLobbyPlayerDTOToEntity(lobbyPlayer);
+
+        return DTOMapper.INSTANCE.convertEntityToLobbyJoinCodeDTO(lobbyToJoin);
     }
     
 

@@ -3,7 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import ch.uzh.ifi.hase.soprafs26.constant.TeamColor;
+import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,7 +29,7 @@ public class LobbyPlayer {
 	private LocalDateTime joinedAt;
 
     @Column(nullable = true)
-	private TeamColor team;
+	private TeamType teamType;
 
     @Column(nullable = false)
 	private boolean isHost;
@@ -74,12 +74,12 @@ public class LobbyPlayer {
         this.joinedAt = joinedAt;
     }
 
-    public TeamColor getTeam() {
-        return team;
+    public TeamType getTeamType() {
+        return teamType;
     }
 
-    public void setTeam(TeamColor team) {
-        this.team = team;
+    public void setTeam(TeamType teamType) {
+        this.teamType = teamType;
     }
 
     public boolean getIsHost() {

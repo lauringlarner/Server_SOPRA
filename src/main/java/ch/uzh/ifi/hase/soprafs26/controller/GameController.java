@@ -2,10 +2,14 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.GameService;
 
@@ -55,4 +59,11 @@ public class GameController {
         // convert internal representation of game back to API
         return DTOMapper.INSTANCE.convertEntityToGameGetDTO(createdGame);
     }
+
+    @PostMapping("/api/analyze")
+public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
+                                   @RequestParam("object") String object) throws Exception {
+    int result = VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object);
+    return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(result));
+}
 }

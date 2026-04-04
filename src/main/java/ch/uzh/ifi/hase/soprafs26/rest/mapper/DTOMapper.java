@@ -18,6 +18,9 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
+
 
 
 /**
@@ -54,6 +57,9 @@ public interface DTOMapper {
 	//game mapper
 	@Mapping(source = "name", target = "name")
 	Game convertGamePostDTOtoEntity(GamePostDTO gamePostDTO);
+	//image mappper
+	@Mapping(source = "found", target = "found")
+	ImageAnalysisGetDTO convertImageAnalysisResultToGetDTO(ImageAnalysisResult result);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "name", target = "name")

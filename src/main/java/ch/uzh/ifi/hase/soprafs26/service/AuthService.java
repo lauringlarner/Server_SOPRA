@@ -13,7 +13,7 @@ public class AuthService {
         this.userService = userService;
     }
 
-    public void checkAuthToken(String token) {
+    public String checkAuthToken(String token) {
         if (token == null || token.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization token is required!");
         }
@@ -21,7 +21,9 @@ public class AuthService {
         if (!userService.isValidToken(actualToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
         }
+        return actualToken;
     }
+
 
     public String extractTokenFromBearer(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -29,4 +31,5 @@ public class AuthService {
         }
         return authHeader;
     }
+    
 }

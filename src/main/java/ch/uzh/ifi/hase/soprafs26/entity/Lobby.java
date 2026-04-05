@@ -55,6 +55,15 @@ public class Lobby {
     */
 
 
+    
+    public void setBingoBoardSize(Integer bingoBoardSize) {
+        this.bingoBoardSize = bingoBoardSize;
+    }
+
+    public Integer getBingoBoardSize() {
+        return bingoBoardSize;
+    }
+       
     public static long getSerialversionuid() {
         return serialVersionUID;
     }
@@ -65,14 +74,6 @@ public class Lobby {
 
     public void setGameDuration(Integer gameDuration) {
         this.gameDuration = gameDuration;
-    }
-
-    public Integer getBingoBoardSize() {
-        return bingoBoardSize;
-    }
-
-    public void setBingoBoardSize(Integer bingoBoardSize) {
-        this.bingoBoardSize = bingoBoardSize;
     }
 
     public UUID getId() {

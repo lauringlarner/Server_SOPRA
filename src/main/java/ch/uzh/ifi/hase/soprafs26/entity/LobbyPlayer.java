@@ -78,7 +78,7 @@ public class LobbyPlayer {
         return teamType;
     }
 
-    public void setTeam(TeamType teamType) {
+    public void setTeamType(TeamType teamType) {
         this.teamType = teamType;
     }
 

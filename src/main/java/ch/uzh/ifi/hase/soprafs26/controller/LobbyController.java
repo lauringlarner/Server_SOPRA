@@ -52,9 +52,7 @@ public class LobbyController {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
 
-        // create host player and create lobby
-        // or BAD_REQUEST if user or userId is null
-        // or CONFLICT if user already has a player or player already is in a lobby
+        // create host player and create lobby or CONFLICT if user already has a player
         LobbyPlayer player = lobbyService.createLobbyPlayer(user, true);
         Lobby lobby = lobbyService.createLobby(player);
         
@@ -115,9 +113,7 @@ public class LobbyController {
         String joinCode = lobbyJoinCodeDTO.getJoinCode();
         Lobby lobby = lobbyService.getLobbyByJoinCode(joinCode);
 
-        // create non-host player and join lobby
-        // or BAD_REQUEST if user or userId is null
-        // or CONFLICT if user already has a player
+        // create non-host player and join lobby or CONFLICT if user already has a player
         LobbyPlayer lobbyPlayer = lobbyService.createLobbyPlayer(user, false);
         lobbyService.joinLobby(lobbyPlayer, lobby);
 

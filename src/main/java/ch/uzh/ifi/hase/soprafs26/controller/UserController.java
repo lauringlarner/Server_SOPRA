@@ -1,7 +1,19 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -10,12 +22,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
+import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
-
-import java.util.UUID;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * User Controller
@@ -28,9 +36,11 @@ import java.util.List;
 public class UserController {
 
 	private final UserService userService;
+	private final AuthService authService;
 
-	UserController(UserService userService) {
+	UserController(UserService userService, AuthService authService) {
 		this.userService = userService;
+		this.authService = authService;
 	}
 
 	@GetMapping("/users")
@@ -38,7 +48,7 @@ public class UserController {
 	@ResponseBody
 	public List<UserGetDTO> getAllUsers(@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.authenticateToken(token);
 
 		// fetch all users in the internal representation
 		List<User> users = userService.getUsers();
@@ -57,7 +67,7 @@ public class UserController {
 	public UserGetDTO getUserProfile(@PathVariable UUID userId,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		authService.authenticateToken(token);
 
 		// fetch user
 		User user = userService.getUserById(userId);
@@ -101,14 +111,11 @@ public class UserController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@ResponseBody
 	public void logout(@RequestHeader(value = "Authorization", required = false) String token) {
-		// Check if user is authenticated
-		checkAuthToken(token);
-
-		// Extract token from Bearer format
-		String actualToken = extractTokenFromBearer(token);
+		// authenticate and return user or throw Unauthorized
+		User user = authService.authenticateToken(token);
 
 		// Logout user
-		userService.logoutUser(actualToken);
+		userService.logoutUser(user);
 	}
 
 	@PutMapping("/users/{userId}/password")
@@ -118,10 +125,10 @@ public class UserController {
 		@RequestBody PasswordChangeDTO passwordChangeDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		User user = authService.authenticateToken(token);
 
 		// Verify user is changing their own password
-		verifyUserAuthorization(userId, token);
+		userService.validateUserMatchesUserId(userId, user);
 
 		// Change password
 		User updatedUser = userService.changePassword(userId,
@@ -129,7 +136,7 @@ public class UserController {
 			passwordChangeDTO.getNewPassword());
 
 		// Convert to DTO and return
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(updatedUser);
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(updatedUser); // Returning update profile, but also could return just a simple message, since already pushes for logout. 
 	}
 
 	@PutMapping("/users/{userId}")
@@ -139,10 +146,10 @@ public class UserController {
 		@RequestBody UserPostDTO userPostDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		checkAuthToken(token);
+		User user = authService.authenticateToken(token);
 
 		// Verify user is updating their own profile
-		verifyUserAuthorization(userId, token);
+		userService.validateUserMatchesUserId(userId, user);
 
 		// Convert DTO to User entity for update
 		User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
@@ -150,33 +157,5 @@ public class UserController {
 		// Update user profile
 		userService.updateUser(userId, userInput);
 	}
-
-	private void checkAuthToken(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization token is required!");
-		}
-		// Extract token from Bearer format if present
-		String actualToken = extractTokenFromBearer(token);
-		// Validate token by retrieving user - throws 401 if token is invalid
-		userService.getUserByToken(actualToken);
-	}
-
-	private void verifyUserAuthorization(UUID userId, String token) {
-		// Extract token from Bearer format if present
-		String actualToken = extractTokenFromBearer(token);
-		// Find user with this token
-		User user = userService.getUserByToken(actualToken);
-
-		// Check if token belongs to the user whose resource is being accessed
-		if (!user.getId().equals(userId)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own profile!");
-		}
-	}
-
-	private String extractTokenFromBearer(String authHeader) {
-		if (authHeader != null && authHeader.startsWith("Bearer ")) {
-			return authHeader.substring(7); // Remove "Bearer " prefix (7 characters)
-		}
-		return authHeader;
-	}
+	
 }

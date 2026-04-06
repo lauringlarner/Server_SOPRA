@@ -1,6 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.constant;
 
-public enum  TeamColor {
+public enum  TeamType {
     // May need to be changed
-    RED, BLUE, Undecided;
+    Team1, Team2, Undecided;
 }

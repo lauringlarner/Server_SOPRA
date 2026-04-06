@@ -6,6 +6,7 @@ import tools.jackson.databind.ObjectMapper;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -43,6 +45,9 @@ public class UserControllerTest {
 
 	@MockitoBean
 	private UserService userService;
+
+	@MockitoBean
+	private AuthService authService;
 
 	@Test
 	public void createUser_validInput_201() throws Exception {
@@ -151,6 +156,7 @@ public class UserControllerTest {
 		UserPostDTO updateDTO = new UserPostDTO();
 		updateDTO.setUsername("updateduser");
 
+		given(authService.extractTokenFromBearer("token123")).willReturn("token123");
 		given(userService.getUserByToken("token123")).willReturn(user);
 		given(userService.updateUser(Mockito.eq(userId), Mockito.any())).willReturn(user);
 
@@ -177,8 +183,12 @@ public class UserControllerTest {
 		UserPostDTO updateDTO = new UserPostDTO();
 		updateDTO.setUsername("updateduser");
 
-		given(userService.getUserByToken("token123")).willReturn(authUser);
-
+		given(authService.authenticateToken("token123")).willReturn(authUser);
+		doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, 
+        	"You can only modify your own profile!"))
+        	.when(userService)
+        	.validateUserMatchesUserId(targetUserId, authUser);
+			
 		// when/then
 		MockHttpServletRequestBuilder putRequest = put("/users/" + targetUserId)
 				.contentType(MediaType.APPLICATION_JSON)

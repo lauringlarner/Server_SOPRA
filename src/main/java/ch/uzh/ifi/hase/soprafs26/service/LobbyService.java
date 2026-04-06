@@ -2,7 +2,11 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,58 +15,61 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyPlayerRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 
 
 @Service
 @Transactional
 public class LobbyService {
-	private final LobbyPlayerRepository lobbyPlayerRepository;
 
-    private final Logger log = LoggerFactory.getLogger(LobbyService.class);
+    private final LobbyPlayerRepository lobbyPlayerRepository;
 
 	private final LobbyRepository lobbyRepository;
+    
+    private final Map<UUID, List<SseEmitter>> lobbyEmitters = new ConcurrentHashMap<>();
+
+    private final Logger log = LoggerFactory.getLogger(LobbyService.class);
 
 	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository, @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository) {
 		this.lobbyRepository = lobbyRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
 	}
 
+    //////////////
+    // Creation //
+    //////////////
 
-    public LobbyPlayer createLobbyPlayer(User newLobbyUser, Boolean isHost) {
+    public LobbyPlayer createLobbyPlayer(User user, Boolean isHost) {
         
-        if (newLobbyUser == null || newLobbyUser.getId() == null) {
+        if (user == null || user.getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User doen't exist");
         }
 
-        if (checkIfLobbyPlayerExistsByUser(newLobbyUser)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"The User is already a Player");
-        }
+        validateUserHasNoPlayer(user); // CONFLICT on failure
 
         LobbyPlayer newLobbyPlayer = new LobbyPlayer();
 
         newLobbyPlayer.setIsHost(isHost);
         newLobbyPlayer.setIsReady(false);
         newLobbyPlayer.setJoinedAt(LocalDateTime.now());
-        newLobbyPlayer.setUser(newLobbyUser);
+        newLobbyPlayer.setUser(user);
+        newLobbyPlayer.setTeamType(TeamType.Undecided);
 
         newLobbyPlayer = lobbyPlayerRepository.save(newLobbyPlayer);
         lobbyPlayerRepository.flush();
 
         log.debug("Created LobbyPlayer: {}", newLobbyPlayer);
 		return newLobbyPlayer;
-    }
-
-
-    public Boolean checkIfLobbyPlayerExistsByUser(User user) {
-        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
-        return lobbyPlayer != null;
     }
 
 
@@ -100,14 +107,58 @@ public class LobbyService {
     }
 
 
+    
+    ///////////////
+    // Retrieval //
+    ///////////////
+    
+    public Lobby getLobbyByJoinCode(String joinCode) {
+        validateJoinCode(joinCode); // BAD_REQUEST on failure
+        
+		Lobby lobby = lobbyRepository.findByJoinCode(joinCode);
+		if (lobby == null) {
+            log.debug("Lobby not found by JoinCode");
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found!");
+		}
+        
+		return lobby;
+    }
+    
+    public Lobby getLobbyByLobbyId(UUID lobbyId) {
+        return lobbyRepository.findById(lobbyId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+    }
+    
+    
+    public LobbyPlayer getLobbyPlayerByUser(User user) {
+        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
+		if (lobbyPlayer == null) {
+            log.debug("Player not found by user!");
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
+		}
+		return lobbyPlayer;
+	}
+    
+    public LobbyPlayer getLobbyPlayerById(UUID playerId) {
+        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findById(playerId).orElseThrow(() -> {
+            log.debug("Player not found by id!");
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
+        });
+        return lobbyPlayer;
+    }
+    
+    /////////////
+    // Actions //
+    /////////////
+    
     public Lobby joinLobby(LobbyPlayer lobbyPlayer, Lobby lobbyToJoin) {
 
         if (lobbyPlayer == null || lobbyToJoin == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player or Lobby doesn't exist!");
         }
 
-        if (lobbyToJoin.getStatus() == LobbyStatus.CLOSED) {
-             throw new ResponseStatusException(HttpStatus.CONFLICT, "Lobby is already closed!");
+        if (lobbyToJoin.getStatus() != LobbyStatus.OPEN) {
+             throw new ResponseStatusException(HttpStatus.CONFLICT, "Lobby is not OPEN!");
         }
 
 
@@ -121,24 +172,193 @@ public class LobbyService {
         lobbyPlayerRepository.save(lobbyPlayer);
         lobbyPlayerRepository.flush();
 
-        log.debug("Lobby added new Player: {}", lobbyPlayer);
+        // SSE pushes update
+        pushLobbyUpdate(lobbyToJoin);
+
+        log.debug("Lobby {} added new Player: {}", lobbyToJoin,lobbyPlayer);
 
         return lobbyToJoin;
     }
 
-    public Lobby getLobbyByJoinCode(String joinCode) {
-        if (joinCode == null || joinCode.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Join Code!");
-		}
-	
-		Lobby lobby = lobbyRepository.findByJoinCode(joinCode);
-		if (lobby == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid Join Code!");
-		}
+    /////////////
+    // Updates //
+    /////////////
+    
+    public void updateTeamType(LobbyPlayer lobbyPlayer, TeamType teamType) {
+        validateTeamType(teamType); // BAD_REQUEST on failure
+        lobbyPlayer.setTeamType(teamType);
+        
+        // SSE push update
+        pushLobbyUpdate(lobbyPlayer.getLobby());
+        
+        log.debug("Player {} successfully updated their team type",lobbyPlayer);
+    }
+    
+    public void updateReadyStatus(LobbyPlayer lobbyPlayer, Boolean readyStatus) {
+        validateReadyStatus(readyStatus); // BAD_REQUEST on failure 
+        lobbyPlayer.setIsReady(readyStatus);
+        
+        // SSE push update
+        pushLobbyUpdate(lobbyPlayer.getLobby());
+        
+        log.debug("Player {} successfully updated their ready status",lobbyPlayer);
+    }
+    
+    public void updateAllLobbyPlayersReadyStatusToFalse(Lobby lobby) {
+        List<LobbyPlayer> LobbyPlayers = lobby.getLobbyPlayers();
+        
+        for (LobbyPlayer lobbyPlayer : LobbyPlayers) {
+            lobbyPlayer.setIsReady(false);
+        }
+    }
+    
+    
+    public void updateLobbySettings(Lobby lobby, Integer gameDuration) {
+        validateGameDuration(gameDuration); // BAD_REQUEST on failure
+        lobby.setGameDuration(gameDuration);
+        
+        // SSE push update
+        pushLobbyUpdate(lobby);
+        
+        log.debug("Lobby {} successfully changed their settings",lobby);
+    }
+    
+    public void setLobbyStatusRunning(Lobby lobby) {
+        lobby.setStatus(LobbyStatus.RUNNING);
+        
+        log.debug("Lobby {} is now RUNNING", lobby);
+    }
+    
+    public void setLobbyStatusOpen(Lobby lobby) {
+        lobby.setStatus(LobbyStatus.OPEN);
+        
+        log.debug("Lobby {} is now OPEN", lobby);
+    }
+    
+    //////////////
+    // Deletion //
+    //////////////
+    
+    public void deleteLobby(Lobby lobby) {
+        lobbyRepository.delete(lobby);
 
-		return lobby;
+        log.debug("Lobby successfully deleted");
+    }
+    
+    public void deleteLobbyPlayer(LobbyPlayer lobbyPlayer) {
+        Lobby lobby = lobbyPlayer.getLobby();
+        
+        lobby.removePlayer(lobbyPlayer);
+        
+        lobbyPlayerRepository.delete(lobbyPlayer);
+        
+        // SSE push update
+        pushLobbyUpdate(lobbyPlayer.getLobby());
+        
+        log.debug("Player successfully deleted");
     }
 
+    ////////////////
+    // Validation //
+    ////////////////
+    
+    public void validateLobbyPlayerInLobby(LobbyPlayer lobbyPlayer, Lobby lobby) {
+        if (!lobbyPlayer.getLobby().equals(lobby)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player doesn't belong to Lobby!");
+        }
+    }
+    
+    public void validateLobbyPlayerIsNotHost(LobbyPlayer lobbyPlayer) {
+        if (isPlayerHost(lobbyPlayer)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Wrong endpoint was used. Hosts need to use  DELETE /lobbies/{lobbyId}  !");
+            }
+        }
+        
+    public void validateLobbyPlayerIsHost(LobbyPlayer lobbyPlayer) {
+        if (!isPlayerHost(lobbyPlayer)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player is not Host!");
+        }
+    }
+        
+    public void validateAllPlayersReady(Lobby lobby) {
+        List<LobbyPlayer> LobbyPlayers = lobby.getLobbyPlayers();
+
+        for (LobbyPlayer lobbyPlayer : LobbyPlayers) {
+            if (!isPlayerReady(lobbyPlayer)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Not all Players are ready!");
+            }
+        }
+    }
+    
+
+    public void validateLobbyIsOpen(Lobby lobby) {
+        if (lobby.getStatus() != LobbyStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Game is already RUNNING!");
+        }
+    }
+    
+    
+    public void validateUserMatchesLobbyPlayerId(UUID lobbyPlayerId, User user) {
+        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
+        
+        if (!lobbyPlayer.getId().equals(lobbyPlayerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own Player!");
+        }
+    }
+
+    private void validateUserHasNoPlayer(User user) {
+        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
+
+        if (lobbyPlayer != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already has a player!");
+        }
+    }
+
+    
+    private void validateGameDuration(Integer gameDuration) {
+        Integer minDuration = 5;
+        Integer maxDuration = 20;
+        
+        if (gameDuration < minDuration || gameDuration > maxDuration) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                String.format("Game duration must be between %d - %d minutes", minDuration, maxDuration));
+        }
+    }
+
+    private void validateReadyStatus(Boolean readyStatus) {
+        if (readyStatus == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ready status submitted!");
+        }
+    }
+
+    private void validateTeamType(TeamType teamType) {
+        if (teamType != TeamType.Team1 && teamType != TeamType.Team2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Team submitted!");
+        }
+    }
+
+    private void validateJoinCode(String joinCode) {
+        if (joinCode == null || joinCode.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Join code cannot be empty!");
+        }
+        if (!joinCode.matches("^[A-Z0-9]{6}$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                "Join code must be 6 characters long and contain only uppercase letters and numbers!");
+            }
+        }
+        
+    ///////////////
+    // Utilities //    
+    ///////////////
+    
+    public boolean isPlayerHost(LobbyPlayer lobbyPlayer) {
+        return lobbyPlayer.getIsHost();
+    }
+
+    public boolean isPlayerReady(LobbyPlayer lobbyPlayer) {
+        return lobbyPlayer.getIsReady();
+    }
 
     public String generateJoinCode() {
         final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -154,16 +374,37 @@ public class LobbyService {
         }
         return code.toString();
     }
-
-
-    public Lobby getLobbyByLobbyId(UUID lobbyId) {
-        return lobbyRepository.findById(lobbyId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+                  
+    ///////////////////
+    // SSE functions //
+    ///////////////////
+    
+    public void registerLobbyEmitter(UUID lobbyId, SseEmitter emitter) {
+        lobbyEmitters.computeIfAbsent(lobbyId, k -> new ArrayList<>()).add(emitter);
     }
 
-    public LobbyPlayer getLobbyPlayerByUser(User user) {
-        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
-        return lobbyPlayer;
+    public void removeLobbyEmitter(UUID lobbyId, SseEmitter emitter) {
+        List<SseEmitter> emitters = lobbyEmitters.get(lobbyId);
+        if (emitters != null) {
+            emitters.remove(emitter);
+            if (emitters.isEmpty()) {
+                lobbyEmitters.remove(lobbyId);
+            }
+        }
+    }
+
+    public void pushLobbyUpdate(Lobby lobby) {
+        List<SseEmitter> emitters = lobbyEmitters.get(lobby.getId());
+        if (emitters != null) {
+            LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
+            for (SseEmitter emitter : emitters) {
+                try {
+                    emitter.send(SseEmitter.event().name("lobbyUpdate").data(lobbyDTO));
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            }
+        }
     }
 
 

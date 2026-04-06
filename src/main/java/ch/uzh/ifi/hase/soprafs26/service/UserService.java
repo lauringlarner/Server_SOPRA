@@ -37,9 +37,9 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 
-	public List<User> getUsers() {
-		return this.userRepository.findAll();
-	}
+	//////////////
+	// Creation //
+	//////////////
 
 
 
@@ -70,30 +70,55 @@ public class UserService {
 		return newUser;
 	}
 
-	/**
-	 * This is a helper method that will check the uniqueness criteria of the
-	 * username defined in the User entity. The method will do nothing if the input
-	 * is unique and throw an error otherwise.
-	 *
-	 * @param userToBeCreated
-	 * @throws org.springframework.web.server.ResponseStatusException
-	 * @see User
-	 */
-	private void checkIfUserExists(User userToBeCreated) {
-		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-
-		if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT,
-				"The username is not unique. Therefore, the user could not be created!");
-		}
-
-
+	///////////////
+	// Retrieval //	
+	///////////////
 	
+	public List<User> getUsers() {
+		return this.userRepository.findAll();
 	}
-
+	
 	public User getUserById(UUID userId) {
 		return userRepository.findById(userId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
+		.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
+	}
+	
+	public User getUserByToken(String token) {
+		User user = userRepository.findByToken(token);
+		if (user == null) {
+			log.debug("User not found by Token!");
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
+		}
+		return user;
+	}
+	
+	public User getUserByUsername(String username) {
+		return userRepository.findByUsername(username);
+	}
+
+	/////////////
+	// Updates //
+	/////////////
+
+	public User updateUser(UUID userId, User updatedUser) {
+		User user = getUserById(userId);
+
+		// Check if username is already taken by another user
+		if (updatedUser.getUsername() != null && !updatedUser.getUsername().equals(user.getUsername())) {
+			if (getUserByUsername(updatedUser.getUsername()) != null) {
+				throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"The username is not unique. Therefore, the user could not be updated!");
+			}
+			user.setUsername(updatedUser.getUsername());
+		}
+
+		// name and bio are deleted
+
+		user = userRepository.save(user);
+		userRepository.flush();
+
+		log.debug("Updated Information for User: {}", user);
+		return user;
 	}
 
 	public User changePassword(UUID userId, String oldPassword, String newPassword) {
@@ -123,8 +148,12 @@ public class UserService {
 		return user;
 	}
 
+	/////////////
+	// Actions //
+	/////////////
+	
 	public User loginUser(String username, String password) {
-		User user = userRepository.findByUsername(username);
+		User user = getUserByUsername(username);
 
 		if (user == null) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
@@ -143,44 +172,7 @@ public class UserService {
 		return user;
 	}
 
-	public User getUserByToken(String token) {
-		if (token == null || token.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
-		}
-	
-		User user = userRepository.findByToken(token);
-		if (user == null) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
-		}
-
-		return user;
-	}
-
-	public User updateUser(UUID userId, User updatedUser) {
-		User user = getUserById(userId);
-
-		// Check if username is already taken by another user
-		if (updatedUser.getUsername() != null && !updatedUser.getUsername().equals(user.getUsername())) {
-			User userByUsername = userRepository.findByUsername(updatedUser.getUsername());
-			if (userByUsername != null) {
-				throw new ResponseStatusException(HttpStatus.CONFLICT,
-					"The username is not unique. Therefore, the user could not be updated!");
-			}
-			user.setUsername(updatedUser.getUsername());
-		}
-
-		// name and bio are deleted
-
-		user = userRepository.save(user);
-		userRepository.flush();
-
-		log.debug("Updated Information for User: {}", user);
-		return user;
-	}
-
-	public User logoutUser(String token) {
-		// Find user by token
-		User user = getUserByToken(token);
+	public User logoutUser(User user) {
 
 		// Set status to OFFLINE and generate new token (invalidate old token)
 		user.setStatus(UserStatus.OFFLINE);
@@ -192,4 +184,22 @@ public class UserService {
 		log.debug("User logged out: {}", user);
 		return user;
 	}
+
+	////////////////
+	// Validation //
+	////////////////
+	
+	private void checkIfUserExists(User userToBeCreated) {
+		if (getUserByUsername(userToBeCreated.getUsername()) != null) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+				"The username is not unique. Therefore, the user could not be created!");
+		}
+	}
+
+	public void validateUserMatchesUserId(UUID userId, User user) {
+		if (!user.getId().equals(userId)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own profile!");
+		}
+	}
+
 }

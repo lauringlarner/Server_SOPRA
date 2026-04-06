@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.uzh.ifi.hase.soprafs26.entity.User;
+
 @Service
 public class AuthService {
 
@@ -13,15 +15,14 @@ public class AuthService {
         this.userService = userService;
     }
 
-    public String checkAuthToken(String token) {
+    public User authenticateToken(String token) {
         if (token == null || token.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization token is required!");
         }
         String actualToken = extractTokenFromBearer(token);
-        if (!userService.isValidToken(actualToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token!");
-        }
-        return actualToken;
+        User user = userService.getUserByToken(actualToken); // UNAUTHORIZED on failure
+
+        return user;
     }
 
 

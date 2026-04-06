@@ -48,7 +48,7 @@ public class UserController {
 	@ResponseBody
 	public List<UserGetDTO> getAllUsers(@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		authService.checkAuthToken(token);
+		authService.authenticateToken(token);
 
 		// fetch all users in the internal representation
 		List<User> users = userService.getUsers();
@@ -67,7 +67,7 @@ public class UserController {
 	public UserGetDTO getUserProfile(@PathVariable UUID userId,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		authService.checkAuthToken(token);
+		authService.authenticateToken(token);
 
 		// fetch user
 		User user = userService.getUserById(userId);
@@ -111,11 +111,11 @@ public class UserController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@ResponseBody
 	public void logout(@RequestHeader(value = "Authorization", required = false) String token) {
-		// Check if user is authenticated and extract token from Bearer format
-		String actualToken = authService.checkAuthToken(token);
+		// authenticate and return user or throw Unauthorized
+		User user = authService.authenticateToken(token);
 
 		// Logout user
-		userService.logoutUser(actualToken);
+		userService.logoutUser(user);
 	}
 
 	@PutMapping("/users/{userId}/password")
@@ -125,10 +125,10 @@ public class UserController {
 		@RequestBody PasswordChangeDTO passwordChangeDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		authService.checkAuthToken(token);
+		User user = authService.authenticateToken(token);
 
 		// Verify user is changing their own password
-		verifyUserAuthorization(userId, token);
+		userService.validateUserMatchesUserId(userId, user);
 
 		// Change password
 		User updatedUser = userService.changePassword(userId,
@@ -146,10 +146,10 @@ public class UserController {
 		@RequestBody UserPostDTO userPostDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
-		authService.checkAuthToken(token);
+		User user = authService.authenticateToken(token);
 
 		// Verify user is updating their own profile
-		verifyUserAuthorization(userId, token);
+		userService.validateUserMatchesUserId(userId, user);
 
 		// Convert DTO to User entity for update
 		User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
@@ -157,13 +157,5 @@ public class UserController {
 		// Update user profile
 		userService.updateUser(userId, userInput);
 	}
-
-	private void verifyUserAuthorization(UUID userId, String token) {
-		String actualToken = authService.extractTokenFromBearer(token);
-		User user = userService.getUserByToken(actualToken);
-
-		if (!user.getId().equals(userId)) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify your own profile!");
-		}
-	}
+	
 }

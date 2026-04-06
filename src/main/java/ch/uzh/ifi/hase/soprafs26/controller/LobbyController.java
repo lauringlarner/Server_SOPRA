@@ -26,7 +26,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.TeamTypeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
-import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 
 
@@ -38,11 +37,9 @@ public class LobbyController {
 
     private final AuthService authService;
     private final LobbyService lobbyService;
-    private final UserService userService;
 
-    public LobbyController(LobbyService lobbyService, UserService userService, AuthService authService) {
+    public LobbyController(LobbyService lobbyService, AuthService authService) {
         this.lobbyService = lobbyService;
-        this.userService = userService;
         this.authService = authService;
     }
 

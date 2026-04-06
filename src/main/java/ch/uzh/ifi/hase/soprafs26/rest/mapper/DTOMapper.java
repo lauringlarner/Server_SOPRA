@@ -33,6 +33,9 @@ public interface DTOMapper {
 	@Mapping(target = "token", ignore = true)
 	@Mapping(target = "status", ignore = true)
 	@Mapping(target = "createdAt", ignore = true)
+	@Mapping(target = "gamesPlayed", ignore = true)
+	@Mapping(target = "gamesWon", ignore = true)
+	@Mapping(target = "correctItemsFound", ignore = true)
 	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
 	@Mapping(source = "id", target = "id")
@@ -60,10 +63,5 @@ public interface DTOMapper {
 	@Mapping(source = "bingoBoardSize", target = "bingoBoardSize")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
-
-	@Mapping(source = "joinCode", target = "joinCode")
-	Lobby convertLobbyDTOToEntity(LobbyDTO lobbyDTO);
-
-
 
 }

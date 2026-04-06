@@ -220,8 +220,9 @@ public class LobbyController {
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
         
-        // validate all lobbyPlayers currently in the lobby are "ready" or CONFLICT
+        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN or CONFLICT
         lobbyService.validateAllPlayersReady(lobby);
+        lobbyService.validateLobbyIsOpen(lobby);
         
         /////////////////////////////////////////////////////
         /* Replace with GameService function to create a game
@@ -229,11 +230,9 @@ public class LobbyController {
         */
         /////////////////////////////////////////////////////
         
-        // update lobby status to running
-        lobbyService.setLobbyStatusRunning(lobby);
-
-        // set all lobbyPlayers, currently in lobby, ready status to false
+        // set all lobbyPlayers, currently in lobby, ready status to false and set lobby status to running
         lobbyService.updateAllLobbyPlayersReadyStatusToFalse(lobby);
+        lobbyService.setLobbyStatusRunning(lobby);
     }
     
 

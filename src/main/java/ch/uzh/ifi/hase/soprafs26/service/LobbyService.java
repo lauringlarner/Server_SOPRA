@@ -291,6 +291,13 @@ public class LobbyService {
         }
     }
     
+
+    public void validateLobbyIsOpen(Lobby lobby) {
+        if (lobby.getStatus() != LobbyStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Game is already RUNNING!");
+        }
+    }
+    
     
     public void validateUserMatchesLobbyPlayerId(UUID lobbyPlayerId, User user) {
         LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);

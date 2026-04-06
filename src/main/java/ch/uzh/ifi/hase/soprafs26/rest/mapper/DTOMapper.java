@@ -10,6 +10,10 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
+
 
 /**
  * DTOMapper
@@ -45,6 +49,16 @@ public interface DTOMapper {
 	@Mapping(source = "createdAt", target = "createdAt")
 	UserGetDTO convertEntityToUserGetDTO(User user);
 
+	//game mapper
+	@Mapping(source = "name", target = "name")
+	Game convertGamePostDTOtoEntity(GamePostDTO gamePostDTO);
+
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "status", target = "status")
+	@Mapping(source = "wordList", target = "wordList")
+	@Mapping(source = "token", target = "token")
+	GameGetDTO convertEntityToGameGetDTO(Game game);
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "token", target = "token")

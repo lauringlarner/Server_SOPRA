@@ -1,12 +1,13 @@
 package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyAccessInfoDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
@@ -67,9 +68,11 @@ public interface DTOMapper {
 	UserLoginResponseDTO convertEntityToUserLoginResponseDTO(User user);
 
 
-
+	@Mapping(source = "id", target = "id")
 	@Mapping(source = "joinCode", target = "joinCode")
-	LobbyJoinCodeDTO convertEntityToLobbyJoinCodeDTO(Lobby lobby);
+	LobbyAccessInfoDTO convertEntityToLobbyAccessInfoDTO(Lobby lobby);
+
+
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "joinCode", target = "joinCode")

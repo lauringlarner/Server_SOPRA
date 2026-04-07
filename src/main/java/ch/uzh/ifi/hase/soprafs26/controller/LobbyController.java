@@ -213,11 +213,14 @@ public class LobbyController {
         // validate lobbyPlayer is in lobby and is a host or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
-        
-        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN or CONFLICT
+
+        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN 
+        // and every team has at least 1 player each and every player is assigned to a valid team or CONFLICT
         lobbyService.validateAllPlayersReady(lobby);
         lobbyService.validateLobbyIsOpen(lobby);
-        
+        lobbyService.validateAllPlayersAreInValidTeams(lobby);
+        lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
+
         /////////////////////////////////////////////////////
         /* Replace with GameService function to create a game
         gameService.createGame()

@@ -17,6 +17,7 @@ public class UserGetDTO {
 	@JsonIgnore
 	private String token;
 	private UserStatus status;
+	private String[] wordList;
 	@JsonProperty("creation_date")
 	private LocalDateTime createdAt;
 
@@ -52,9 +53,14 @@ public class UserGetDTO {
 		this.status = status;
 	}
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
+	public void setWordList(String[] wordList){
+		this.wordList = wordList;}
+
+	public String[] getWordList() {
+		return wordList;
 	}
+	public LocalDateTime getCreatedAt() {
+		return createdAt;}
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;

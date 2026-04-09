@@ -38,11 +38,11 @@ public class LobbyPlayerDTO {
         this.joinedAt = joinedAt;
     }
 
-    public TeamType getTeam() {
+    public TeamType getTeamType() {
         return teamType;
     }
 
-    public void setTeam(TeamType teamType) {
+    public void setTeamType(TeamType teamType) {
         this.teamType = teamType;
     }
 

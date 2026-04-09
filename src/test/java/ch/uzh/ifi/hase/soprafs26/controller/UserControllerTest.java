@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -182,9 +183,12 @@ public class UserControllerTest {
 		UserPostDTO updateDTO = new UserPostDTO();
 		updateDTO.setUsername("updateduser");
 
-		given(authService.extractTokenFromBearer("token123")).willReturn("token123");
-		given(userService.getUserByToken("token123")).willReturn(authUser);
-
+		given(authService.authenticateToken("token123")).willReturn(authUser);
+		doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, 
+        	"You can only modify your own profile!"))
+        	.when(userService)
+        	.validateUserMatchesUserId(targetUserId, authUser);
+			
 		// when/then
 		MockHttpServletRequestBuilder putRequest = put("/users/" + targetUserId)
 				.contentType(MediaType.APPLICATION_JSON)

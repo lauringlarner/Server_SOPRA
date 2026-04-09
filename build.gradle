@@ -5,6 +5,7 @@ plugins {
     id 'idea'
     id 'jacoco'
     id "org.sonarqube" version "7.2.3.7755"
+    id 'application'
     
 }
 
@@ -41,6 +42,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-json'
     implementation 'org.springframework.boot:spring-boot-h2console'
+
+    implementation 'com.google.cloud:google-cloud-vision:3.39.0' //vision
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'
@@ -84,5 +87,16 @@ if (secretPropsFile.exists()) {
         ext[name] = value
     }
 }
-
+/*
 defaultTasks 'bootJar', 'build'
+
+application {
+    mainClass = 'ch.uzh.ifi.hase.soprafs26.VisionQuickstart'
+    //mainClass =  'ch.uzh.ifi.hase.soprafs26.service.Words'
+
+}
+
+tasks.named('run', JavaExec) {
+    environment "GOOGLE_APPLICATION_CREDENTIALS", "/Users/laurinprivate/Desktop/sopra-fs26-group-18-server-254a2c84c9e1.json"
+}
+*/

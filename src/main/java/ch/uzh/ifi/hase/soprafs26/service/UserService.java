@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,6 +33,7 @@ public class UserService {
 	private final Logger log = LoggerFactory.getLogger(UserService.class);
 
 	private final UserRepository userRepository;
+	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 	public UserService(@Qualifier("userRepository") UserRepository userRepository) {
 		this.userRepository = userRepository;
@@ -57,6 +59,7 @@ public class UserService {
 
 		// Bio is deleted
 
+		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 		newUser.setToken(UUID.randomUUID().toString());
 		newUser.setStatus(UserStatus.OFFLINE);
 		newUser.setCreatedAt(LocalDateTime.now());
@@ -130,12 +133,12 @@ public class UserService {
 		User user = getUserById(userId);
 
 		// Verify old password
-		if (!user.getPassword().equals(oldPassword)) {
+		if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Old password is incorrect!");
 		}
 
 		// Update password
-		user.setPassword(newPassword);
+		user.setPassword(passwordEncoder.encode(newPassword));
 
 		// Enforce logout: generate new token and set status to OFFLINE
 		user.setToken(UUID.randomUUID().toString());
@@ -159,7 +162,7 @@ public class UserService {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
 		}
 
-		if (!user.getPassword().equals(password)) {
+		if (!passwordEncoder.matches(password, user.getPassword())) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
 		}
 

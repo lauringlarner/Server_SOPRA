@@ -26,17 +26,23 @@ public class Game implements Serializable {
 	@GeneratedValue
 	private Long id;
 
-	@Column(nullable = false, unique = true)
-	private String name;
-
 	@Column(nullable = false)
 	private UserStatus status;
 
     @Column(nullable = false)
     private String[] wordlist;
 
+	@Column(nullable = false)
+    private String[] wordListScore;
+
     @Column(nullable = false, unique = true)
 	private String token;
+
+	@Column(nullable = false)
+	private int score_1;
+
+	@Column(nullable = false)
+	private int score_2;
 
 	public Long getId() {
 		return id;
@@ -44,14 +50,6 @@ public class Game implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 
@@ -78,5 +76,30 @@ public class Game implements Serializable {
 
 	public void setWordList(String[] WordList) {
 		this.wordlist = WordList;
+	}
+
+	public String[] getWordListScore(){
+		return wordListScore;
+	}
+
+	public void setWordListScore(String[] wordListScore){
+		this.wordListScore = wordListScore;
+	}
+
+
+	public int getScore_1() {
+		return score_1;
+	}
+
+	public void setScore_1(int score_1) {
+		this.score_1 = score_1;
+	}
+
+	public int getScore_2() {
+		return score_2;
+	}
+
+	public void setScore_2(int score_2) {
+		this.score_2 = score_2;
 	}
 }

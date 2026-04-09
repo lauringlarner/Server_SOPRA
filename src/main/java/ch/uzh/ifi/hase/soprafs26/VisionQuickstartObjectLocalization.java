@@ -11,12 +11,12 @@ public class VisionQuickstartObjectLocalization {
 
     public static int analyzeimage(byte[] imageBytes, String object) throws Exception {
 
-        float THRESHOLD = 0.6f;
+        float THRESHOLD = 0.3f;
 
         // Load credentials from resources folder
         InputStream credentialsStream = VisionQuickstartObjectLocalization.class
                 .getClassLoader()
-                .getResourceAsStream("google-credentials.json");
+                .getResourceAsStream("sopra-fs26-group-18-server-254a2c84c9e1.json");
 
         GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream)
                 .createScoped("https://www.googleapis.com/auth/cloud-platform");

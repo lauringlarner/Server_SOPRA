@@ -5,10 +5,13 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 public class GameGetDTO {
 
 	private Long id;
-	private String name;
 	private UserStatus status;
 	private String[] wordList;
+	private String[] wordListScore;
 	private String token;
+	private int score_1;
+	private int score_2;
+
 
 	public Long getId() {
 		return id;
@@ -18,13 +21,6 @@ public class GameGetDTO {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
     
 	public UserStatus getStatus() {
 		return status;
@@ -42,6 +38,14 @@ public class GameGetDTO {
 		return wordList;
 	}
 
+	public void setWordListScore(String[] wordList){
+		this.wordList = wordListScore;
+	}
+
+	public String[] getWordListScore() {
+		return wordListScore;
+	}
+
 	public String getToken() {
 		return token;
 	}
@@ -49,5 +53,23 @@ public class GameGetDTO {
 	public void setToken(String token) {
 		this.token = token;
 	}
+
+	public int getScore_1() {
+		return score_1;
+	}
+
+	public void setScore_1(int score_1) {
+		this.score_1 = score_1;
+	}
+
+	public int getScore_2() {
+		return score_2;
+	}
+
+	public void setScore_2(int score_2) {
+		this.score_2 = score_2;
+	}
 }
+
+
 

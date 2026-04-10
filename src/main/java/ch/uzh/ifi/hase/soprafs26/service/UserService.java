@@ -52,9 +52,20 @@ public class UserService {
 
 		// Name is deleted
 
+		// Password validation
 		if (newUser.getPassword() == null || newUser.getPassword().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty!");
 		}
+		if (newUser.getPassword().length() < 12) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 12 characters long!");
+		}
+		if (!newUser.getPassword().chars().anyMatch(Character::isDigit)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
+		}
+		if (!newUser.getPassword().chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
+		}
+
 
 		// Bio is deleted
 
@@ -127,6 +138,15 @@ public class UserService {
 		// Validate new password
 		if (newPassword == null || newPassword.isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be empty!");
+		}
+		if (newPassword.length() < 12) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 12 characters long!");
+		}
+		if (!newPassword.chars().anyMatch(Character::isDigit)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
+		}
+		if (!newPassword.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
 		}
 
 		User user = getUserById(userId);

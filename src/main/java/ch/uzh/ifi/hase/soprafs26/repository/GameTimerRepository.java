@@ -12,7 +12,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.GameTimer;
 @Repository("gameTimerRepository")
 public interface GameTimerRepository extends JpaRepository<GameTimer, UUID> {
 
-    GameTimer findByLobbyId(UUID lobbyId);
+    GameTimer findByGameId(Long gameId);
 
     List<GameTimer> findAllByStatus(TimerStatus status);
 }

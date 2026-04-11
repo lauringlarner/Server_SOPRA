@@ -25,24 +25,24 @@ public class GameTimerService {
         this.gameTimerRepository = gameTimerRepository;
     }
 
-    public GameTimer createTimer(UUID lobbyId, Integer durationMinutes) {
+    public GameTimer createTimer(Long gameId, Integer durationMinutes) {
         if (durationMinutes == null || durationMinutes < 5 || durationMinutes > 120) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game duration must be between 5 and 120 minutes!");
         }
-        if (gameTimerRepository.findByLobbyId(lobbyId) != null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "A timer already exists for this lobby!");
+        if (gameTimerRepository.findByGameId(gameId) != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A timer already exists for this game!");
         }
 
         GameTimer timer = new GameTimer();
-        timer.setLobbyId(lobbyId);
+        timer.setGameId(gameId);
         timer.setDurationMinutes(durationMinutes);
         timer.setStatus(TimerStatus.NOT_STARTED);
 
         return gameTimerRepository.save(timer);
     }
 
-    public GameTimer startTimer(UUID lobbyId) {
-        GameTimer timer = getTimerByLobbyId(lobbyId);
+    public GameTimer startTimer(Long gameId) {
+        GameTimer timer = getTimerByGameId(gameId);
 
         if (timer.getStatus() != TimerStatus.NOT_STARTED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Timer is already started or finished!");
@@ -54,10 +54,10 @@ public class GameTimerService {
         return gameTimerRepository.save(timer);
     }
 
-    public GameTimer getTimerByLobbyId(UUID lobbyId) {
-        GameTimer timer = gameTimerRepository.findByLobbyId(lobbyId);
+    public GameTimer getTimerByGameId(Long gameId) {
+        GameTimer timer = gameTimerRepository.findByGameId(gameId);
         if (timer == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found for this lobby!");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found for this game!");
         }
         return timer;
     }

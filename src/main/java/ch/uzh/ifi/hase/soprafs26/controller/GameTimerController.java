@@ -27,14 +27,15 @@ public class GameTimerController {
         this.authService = authService;
     }
 
-    @PostMapping("/lobbies/{lobbyId}/timer/start")
+    @PostMapping("/lobbies/{lobbyId}/games/{gameId}/timer/start")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public GameTimerDTO startTimer(@PathVariable UUID lobbyId,
+            @PathVariable Long gameId,
             @RequestHeader(value = "Authorization", required = false) String token) {
         authService.checkAuthToken(token);
 
-        GameTimer timer = gameTimerService.startTimer(lobbyId);
+        GameTimer timer = gameTimerService.startTimer(gameId);
 
         GameTimerDTO dto = new GameTimerDTO();
         dto.setStatus(timer.getStatus());
@@ -43,11 +44,12 @@ public class GameTimerController {
     }
 
     // no need to auth
-    @GetMapping("/lobbies/{lobbyId}/timer")
+    @GetMapping("/lobbies/{lobbyId}/games/{gameId}/timer")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public GameTimerDTO getTimer(@PathVariable UUID lobbyId) {
-        GameTimer timer = gameTimerService.getTimerByLobbyId(lobbyId);
+    public GameTimerDTO getTimer(@PathVariable UUID lobbyId,
+            @PathVariable Long gameId) {
+        GameTimer timer = gameTimerService.getTimerByGameId(gameId);
 
         GameTimerDTO dto = new GameTimerDTO();
         dto.setStatus(timer.getStatus());

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
-import ch.uzh.ifi.hase.soprafs26.service.*;
 
 /**
  * User Service
@@ -32,6 +32,7 @@ public class UserService {
 	private final Logger log = LoggerFactory.getLogger(UserService.class);
 
 	private final UserRepository userRepository;
+	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 	public UserService(@Qualifier("userRepository") UserRepository userRepository) {
 		this.userRepository = userRepository;
@@ -51,12 +52,24 @@ public class UserService {
 
 		// Name is deleted
 
+		// Password validation
 		if (newUser.getPassword() == null || newUser.getPassword().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty!");
 		}
+		if (newUser.getPassword().length() < 12) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 12 characters long!");
+		}
+		if (!newUser.getPassword().chars().anyMatch(Character::isDigit)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
+		}
+		if (!newUser.getPassword().chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
+		}
 
+ 
 		// Bio is deleted
 
+		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 		newUser.setToken(UUID.randomUUID().toString());
 		newUser.setStatus(UserStatus.OFFLINE);
 		newUser.setCreatedAt(LocalDateTime.now());
@@ -126,16 +139,25 @@ public class UserService {
 		if (newPassword == null || newPassword.isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be empty!");
 		}
+		if (newPassword.length() < 12) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 12 characters long!");
+		}
+		if (!newPassword.chars().anyMatch(Character::isDigit)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
+		}
+		if (!newPassword.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
+		}
 
 		User user = getUserById(userId);
 
 		// Verify old password
-		if (!user.getPassword().equals(oldPassword)) {
+		if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Old password is incorrect!");
 		}
 
 		// Update password
-		user.setPassword(newPassword);
+		user.setPassword(passwordEncoder.encode(newPassword));
 
 		// Enforce logout: generate new token and set status to OFFLINE
 		user.setToken(UUID.randomUUID().toString());
@@ -159,7 +181,7 @@ public class UserService {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
 		}
 
-		if (!user.getPassword().equals(password)) {
+		if (!passwordEncoder.matches(password, user.getPassword())) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password!");
 		}
 

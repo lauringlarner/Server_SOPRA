@@ -282,11 +282,21 @@ public class LobbyService {
     }
         
     public void validateAllPlayersReady(Lobby lobby) {
-        List<LobbyPlayer> LobbyPlayers = lobby.getLobbyPlayers();
+        List<LobbyPlayer> lobbyPlayers = lobby.getLobbyPlayers();
 
-        for (LobbyPlayer lobbyPlayer : LobbyPlayers) {
+        for (LobbyPlayer lobbyPlayer : lobbyPlayers) {
             if (!isPlayerReady(lobbyPlayer)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Not all Players are ready!");
+            }
+        }
+    }
+
+    public void validateAllPlayersAreInValidTeams(Lobby lobby) {
+        List<LobbyPlayer> lobbyPlayers = lobby.getLobbyPlayers();
+
+        for (LobbyPlayer lobbyPlayer : lobbyPlayers) {
+            if (!isPlayerInValidTeam(lobbyPlayer)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Not all Players have joined a team yet!");
             }
         }
     }
@@ -296,6 +306,32 @@ public class LobbyService {
         if (lobby.getStatus() != LobbyStatus.OPEN) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Game is already RUNNING!");
         }
+    }
+
+
+
+    public void validateLobbyHasPlayersInBothTeams(Lobby lobby) {
+        List<LobbyPlayer> lobbyPlayers = lobby.getLobbyPlayers();
+
+        boolean hasTeam1 = false;
+        boolean hasTeam2 = false;
+
+        for (LobbyPlayer lobbyPlayer : lobbyPlayers) {
+            TeamType team = lobbyPlayer.getTeamType();
+
+            if (team == TeamType.Team1) {
+                hasTeam1 = true;
+            } else if (team == TeamType.Team2) {
+                hasTeam2 = true;
+            }
+
+            if (hasTeam1 && hasTeam2) {
+                return;
+            }
+        }
+
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "A team has zero players assigned!");
+
     }
     
     
@@ -358,6 +394,10 @@ public class LobbyService {
 
     public boolean isPlayerReady(LobbyPlayer lobbyPlayer) {
         return lobbyPlayer.getIsReady();
+    }
+
+    public boolean isPlayerInValidTeam(LobbyPlayer lobbyPlayer) {
+        return lobbyPlayer.getTeamType() != TeamType.Undecided;
     }
 
     public String generateJoinCode() {

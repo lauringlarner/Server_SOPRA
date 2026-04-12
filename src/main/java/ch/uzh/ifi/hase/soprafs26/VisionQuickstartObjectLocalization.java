@@ -1,21 +1,33 @@
 package ch.uzh.ifi.hase.soprafs26;
+
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.List;
-
-
 
 public class VisionQuickstartObjectLocalization {
 
-    public static void analyzeimage(String filePath, String object) throws Exception {
+    public static int analyzeimage(byte[] imageBytes, String object) throws Exception {
 
-        // 🔁 Put your image path here
+        float THRESHOLD = 0.3f;
 
-        try (ImageAnnotatorClient vision = ImageAnnotatorClient.create()) {
+        // Load credentials from resources folder
+        InputStream credentialsStream = VisionQuickstartObjectLocalization.class
+                .getClassLoader()
+                .getResourceAsStream("sopra-fs26-group-18-server-254a2c84c9e1.json");
 
-            ByteString imgBytes = ByteString.readFrom(new FileInputStream(filePath));
+        GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream)
+                .createScoped("https://www.googleapis.com/auth/cloud-platform");
+
+        ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
+                .setCredentialsProvider(() -> credentials)
+                .build();
+
+        ByteString imgBytes = ByteString.copyFrom(imageBytes);
+
+        try (ImageAnnotatorClient vision = ImageAnnotatorClient.create(settings)) {
 
             Image img = Image.newBuilder().setContent(imgBytes).build();
 
@@ -23,72 +35,26 @@ public class VisionQuickstartObjectLocalization {
                     .setType(Feature.Type.OBJECT_LOCALIZATION)
                     .build();
 
-            AnnotateImageRequest request =
-                    AnnotateImageRequest.newBuilder()
-                            .addFeatures(feature)
-                            .setImage(img)
-                            .build();
+            AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+                    .addFeatures(feature)
+                    .setImage(img)
+                    .build();
 
             BatchAnnotateImagesResponse response =
                     vision.batchAnnotateImages(List.of(request));
 
-            boolean found = false;
-            float matchScore = 0f;
-            float THRESHOLD = 0.90f;
-
             for (AnnotateImageResponse res : response.getResponsesList()) {
-
-                if (res.hasError()) {
-                    System.out.println("Error: " + res.getError().getMessage());
-                    return;
-                }
-
-                System.out.println("Objects:");
+                if (res.hasError()) return 0;
 
                 for (LocalizedObjectAnnotation label : res.getLocalizedObjectAnnotationsList()) {
-                    System.out.printf(" - %s (%.2f)%n",
-                            label.getName(),
-                            label.getScore());
-
-                    if (label.getName().equalsIgnoreCase(object)) {
-                        matchScore = label.getScore();
-                        if (matchScore >= THRESHOLD) {
-                            found = true;
-                        }
+                    if (label.getName().equalsIgnoreCase(object)
+                            && label.getScore() >= THRESHOLD) {
+                        return 1;
                     }
                 }
             }
-
-            if (matchScore > 0) {
-                System.out.printf("%nFound \"%s\" with score %.2f — %s (threshold: %.2f)%n",
-                        object, matchScore,
-                        found ? "DETECTED" : "SCORE TOO LOW",
-                        THRESHOLD);
-            } else {
-                System.out.printf("%nResult: \"%s\" not in labels%n", object);
-            }
-
         }
-    }
 
-    public static void main(String[] args) throws Exception {
-        String file = args[0];
-        String word = args[1];
-
-        // Sonuçları hem konsola hem dosyaya yaz
-        String outPath = args.length > 2 ? args[2] : "vision_results_arda.txt";
-        java.io.OutputStream tee = new java.io.OutputStream() {
-            final java.io.OutputStream console = System.out;
-            final java.io.OutputStream file = new java.io.FileOutputStream(outPath);
-            @Override public void write(int b) throws java.io.IOException { console.write(b); file.write(b); }
-            @Override public void write(byte[] b, int off, int len) throws java.io.IOException { console.write(b, off, len); file.write(b, off, len); }
-            @Override public void flush() throws java.io.IOException { console.flush(); file.flush(); }
-            @Override public void close() throws java.io.IOException { file.close(); }
-        };
-        System.setOut(new java.io.PrintStream(tee));
-
-        System.out.println("=== Vision Test: " + file + " | target: " + word + " ===");
-        analyzeimage(file, word);
-        tee.close();
+        return 0;
     }
 }

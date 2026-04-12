@@ -33,7 +33,7 @@ public class GameTimerController {
     public GameTimerDTO startTimer(@PathVariable UUID lobbyId,
             @PathVariable Long gameId,
             @RequestHeader(value = "Authorization", required = false) String token) {
-        authService.checkAuthToken(token);
+        authService.authenticateToken(token);
 
         GameTimer timer = gameTimerService.startTimer(gameId);
 

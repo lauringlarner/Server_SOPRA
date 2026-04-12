@@ -66,7 +66,7 @@ public class UserService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
 		}
 
-
+ 
 		// Bio is deleted
 
 		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));

@@ -39,7 +39,7 @@ public class GameGetDTO {
 	}
 
 	public void setWordListScore(String[] wordList){
-		this.wordList = wordListScore;
+		this.wordListScore = wordList;
 	}
 
 	public String[] getWordListScore() {
@@ -70,6 +70,5 @@ public class GameGetDTO {
 		this.score_2 = score_2;
 	}
 }
-
 
 

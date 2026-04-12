@@ -4,15 +4,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
+import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.LobbyPlayerRepository;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,9 +36,12 @@ public class GameService {
 	private final Logger log = LoggerFactory.getLogger(GameService.class);
 
 	private final GameRepository gameRepository;
+	private final LobbyPlayerRepository lobbyPlayerRepository;
 
-	public GameService(@Qualifier("gameRepository") GameRepository gameRepository) {
+	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
+			@Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository) {
 		this.gameRepository = gameRepository;
+		this.lobbyPlayerRepository = lobbyPlayerRepository;
 	}
 
 	public List<Game> getGames() {
@@ -120,40 +128,81 @@ public class GameService {
 		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already taken by a team!");
 	}
 
+	private String getSubmissionTeam(User user) {
+		LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
+		if (lobbyPlayer == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
+		}
 
-	public int imageSubmission(MultipartFile file, String object,String[] wordlistscore, int indexofword, String team, Game game){
-	try{
-    //check if the object is in the image 
-    if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
-	
-        //set word as taken
-        wordlistscore[indexofword]="1";
-        //teamscore +=1
-       if("1".equals(team)){
-        int score=game.getScore_1();
-        game.setScore_1(score+1);
-       }                                        //add in service so it can be saved
-       else if("2".equals(team)){
-        int score=game.getScore_2();
-        game.setScore_2(score+1);
-       }
-       else{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");}
+		TeamType teamType = lobbyPlayer.getTeamType();
+		if (teamType == TeamType.Team1) {
+			return "1";
+		}
+		if (teamType == TeamType.Team2) {
+			return "2";
+		}
 
-        //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player is not in a valid team!");
+	}
 
-       gameRepository.flush();
-        //return
-        int result = 1;
-            return result;
-        
-    }else{
-        int result=0;
-        return result;
-        
-	}}catch (Exception e) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+	public String validateSubmissionRequest(Game game, MultipartFile file, String object, User user) {
+		if (file == null || file.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is missing!");
+		}
+		if (object == null || object.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Object is missing!");
+		}
 
+		String team = getSubmissionTeam(user);
 
-}
+		String[] wordlist = game.getWordList();
+		int indexOfWord = checkWordList(wordlist, object);
+		String[] wordListScore = game.getWordListScore();
+		checkWordTaken(wordListScore, indexOfWord);
+
+		return team;
+	}
+
+	@Async
+	public void processSubmissionAsync(Long gameId, byte[] fileBytes, String object, String team) {
+		try {
+			processSubmission(gameId, fileBytes, object, team);
+		}
+		catch (ResponseStatusException exception) {
+			log.debug("Submission for game {} was not applied: {}", gameId, exception.getReason());
+		}
+		catch (Exception exception) {
+			log.error("Submission for game {} failed", gameId, exception);
+		}
+	}
+
+	@Transactional
+	public void processSubmission(Long gameId, byte[] fileBytes, String object, String team) {
+		Game game = getGameById(gameId);
+		String[] wordlist = game.getWordList();
+		int indexOfWord = checkWordList(wordlist, object);
+		String[] wordListScore = game.getWordListScore();
+		checkWordTaken(wordListScore, indexOfWord);
+
+		try {
+			if (VisionQuickstartObjectLocalization.analyzeimage(fileBytes, object) != 1) {
+				return;
+			}
+
+			wordListScore[indexOfWord] = "1";
+			if ("1".equals(team)) {
+				int score = game.getScore_1();
+				game.setScore_1(score + 1);
+			}
+			else {
+				int score = game.getScore_2();
+				game.setScore_2(score + 1);
+			}
+
+			gameRepository.flush();
+		}
+		catch (Exception exception) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+		}
 	}
 }

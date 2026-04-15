@@ -157,3 +157,6 @@ public class GameService {
 }
 	}
 }
+//set word as taken
+ //teamscore +=1
+//return 1 if found, 0 if not

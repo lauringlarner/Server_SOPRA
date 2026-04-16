@@ -3,6 +3,8 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 import jakarta.persistence.*;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 
@@ -27,13 +29,13 @@ public class Game implements Serializable {
 	private Long id;
 
 	@Column(nullable = false)
-	private UserStatus status;
+	private UserStatus status; //?
 
     @Column(nullable = false)
     private String[] wordlist;
 
 	@Column(nullable = false)
-    private String[] wordListScore;
+    private String[] wordListScore; //?
 
     @Column(nullable = false, unique = true)
 	private String token;
@@ -43,6 +45,12 @@ public class Game implements Serializable {
 
 	@Column(nullable = false)
 	private int score_2;
+
+	@Column(nullable = false)
+	private int boardSize;
+
+	@Column(columnDefinition = "TEXT")
+	private String tileGridJson;
 
 	public Long getId() {
 		return id;
@@ -59,7 +67,7 @@ public class Game implements Serializable {
 
 	public void setStatus(UserStatus status) {
 		this.status = status;
-	}
+	} 
 
     public String getToken() {
 		return token;
@@ -67,7 +75,7 @@ public class Game implements Serializable {
 
 	public void setToken(String token) {
 		this.token = token;
-	}
+	}//? -> just maybe change to ID
 
 
     public String[] getWordList() {
@@ -101,5 +109,42 @@ public class Game implements Serializable {
 
 	public void setScore_2(int score_2) {
 		this.score_2 = score_2;
+	}
+
+	public int getBoardSize() {
+		return boardSize;
+	}
+
+	public void setBoardSize(int boardSize) {
+		this.boardSize = boardSize;
+	}
+
+	public String getTileGridJson() {
+		return tileGridJson;
+	}
+
+	public void setTileGridJson(String tileGridJson) {
+		this.tileGridJson = tileGridJson;
+	}
+
+	public Tile[][] getTileGrid() {
+		if (tileGridJson == null) return null;
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.readValue(tileGridJson,
+				mapper.getTypeFactory().constructArrayType(
+					mapper.getTypeFactory().constructArrayType(Tile.class)));
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Failed to deserialize tileGrid", e);
+		}
+	}
+
+	public void setTileGrid(Tile[][] tileGrid) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			this.tileGridJson = mapper.writeValueAsString(tileGrid);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Failed to serialize tileGrid", e);
+		}
 	}
 }

@@ -43,27 +43,17 @@ public class Lobby {
     @Column(nullable = false)
 	private Integer gameDuration;
 
+    /*
     @Column(nullable = false)
 	private Integer bingoBoardSize; // bingoBoardSize = 4 -> 4 x 4 Board, i.e. 16 items
 
-    /*
     @Column(nullable = false)
 	private Integer numberOfRounds;
 
     @Column(nullable = false)
 	private GameMode gameMode;   
     */
-
-
-    
-    public void setBingoBoardSize(Integer bingoBoardSize) {
-        this.bingoBoardSize = bingoBoardSize;
-    }
-
-    public Integer getBingoBoardSize() {
-        return bingoBoardSize;
-    }
-       
+  
     public static long getSerialversionuid() {
         return serialVersionUID;
     }

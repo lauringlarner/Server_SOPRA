@@ -11,8 +11,6 @@ public class LobbyDTO {
 
     private Integer gameDuration;
 
-    private Integer bingoBoardSize;
-
     private List<LobbyPlayerDTO> lobbyPlayers;
 
     public String getJoinCode() {
@@ -37,14 +35,6 @@ public class LobbyDTO {
 
     public void setGameDuration(Integer gameDuration) {
         this.gameDuration = gameDuration;
-    }
-
-    public Integer getBingoBoardSize() {
-        return bingoBoardSize;
-    }
-
-    public void setBingoBoardSize(Integer bingoBoardSize) {
-        this.bingoBoardSize = bingoBoardSize;
     }
 
     public UUID getId() {

@@ -90,7 +90,6 @@ public class LobbyService {
         newLobby.addPlayer(lobbyPlayer);
 
         // Default Game Settings
-        newLobby.setBingoBoardSize(4);
         newLobby.setGameDuration(10);
     
 

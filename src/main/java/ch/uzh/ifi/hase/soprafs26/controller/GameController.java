@@ -92,9 +92,11 @@ public class GameController {
         @RequestHeader(value = "Authorization", required = false) String token) throws Exception {
         // authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
+        
+        // fetch Game from gameId or Not Found
+        Game game = gameService.getGameById(gameId);
 
-        Game game = gameService.getGameById(gameId);//get game and check if exists
-
+        // validate User is in game or FORBIDDEN
         gameService.validateUserInGame(user, game);
 
         //check if the word is in the list and if yes return the index

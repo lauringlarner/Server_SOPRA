@@ -1,8 +1,11 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 /**
  * User Service
  * This class is the "worker" and responsible for all functionality related to
@@ -32,6 +38,8 @@ public class GameService {
 	private final Logger log = LoggerFactory.getLogger(GameService.class);
 
 	private final GameRepository gameRepository;
+
+	private final Map<UUID, List<SseEmitter>> gameEmitters = new ConcurrentHashMap<>();
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository) {
 		this.gameRepository = gameRepository;
@@ -127,6 +135,10 @@ public class GameService {
         //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
 
        gameRepository.flush();
+
+	    // SSE pushes update
+        pushGameUpdate(game);
+
         //return
         int result = 1;
             return result;
@@ -137,11 +149,40 @@ public class GameService {
         
 	}}catch (Exception e) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
-
-
-}
+		}
 	}
-}
+
 //set word as taken
  //teamscore +=1
 //return 1 if found, 0 if not
+
+
+	public void registerGameEmitter(UUID gameId, SseEmitter emitter) {
+		gameEmitters.computeIfAbsent(gameId, k -> new ArrayList<>()).add(emitter);
+	}
+
+	public void removeGameEmitter(UUID gameId, SseEmitter emitter) {
+		List<SseEmitter> emitters = gameEmitters.get(gameId);
+		if (emitters != null) {
+			emitters.remove(emitter);
+			if (emitters.isEmpty()) {
+				gameEmitters.remove(gameId);
+			}
+		}
+	}
+
+	public void pushGameUpdate(Game game) {
+		List<SseEmitter> emitters = gameEmitters.get(game.getId());
+		if (emitters != null) {
+			GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);
+			for (SseEmitter emitter : emitters) {
+				try {
+					emitter.send(SseEmitter.event().name("gameUpdate").data(gameDTO));
+				} catch (Exception e) {
+					emitter.completeWithError(e);
+				}
+			}
+		}
+	}
+
+}

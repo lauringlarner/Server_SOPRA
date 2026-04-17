@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 
-public class GameGetDTO {
+public class GameDTO {
 
 	private UUID id;
 	private GameStatus status;

@@ -12,7 +12,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 
@@ -72,7 +72,7 @@ public interface DTOMapper {
 	@Mapping(source = "score_1", target = "score_1")
 	@Mapping(source = "score_2", target = "score_2")
 	@Mapping(source = "gameDuration", target = "gameDuration")
-	GameGetDTO convertEntityToGameGetDTO(Game game);
+	GameDTO convertEntityToGameDTO(Game game);
 
 	// lobby mapper
 	@Mapping(source = "id", target = "id")

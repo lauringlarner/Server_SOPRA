@@ -1,7 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -14,9 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -41,21 +39,40 @@ public class GameController {
         this.authService = authService;
     }
  
-    @GetMapping("/games")
+
+
+
+    @GetMapping("/games/{gameId}/stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<GameGetDTO> getAllGames(@RequestHeader(value = "Authorization", required = false) String token) {
+    public SseEmitter getGameByIdEmitter(@PathVariable UUID gameId,
+        @RequestHeader(value = "Authorization", required = false) String token) {
+        // authenticate user or UNAUTHORIZED
         authService.authenticateToken(token);
-        // fetch all games in the internal representation
-        List<Game> games = gameService.getGames();
-        List<GameGetDTO> gameGetDTOs = new ArrayList<>();
 
-        // convert each game to the API representation
-        for (Game game : games) {
-            gameGetDTOs.add(DTOMapper.INSTANCE.convertEntityToGameGetDTO(game));
+        Game game = gameService.getGameById(gameId); 
+
+        // Create SSE emitter
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+        // Send initial state
+        try {
+            emitter.send(SseEmitter.event()
+                .name("gameUpdate")
+                .data(DTOMapper.INSTANCE.convertEntityToGameDTO(game)));
+        } catch (Exception e) {
+            emitter.completeWithError(e);
         }
-        return gameGetDTOs;
+
+        // Register emitter
+        gameService.registerGameEmitter(gameId, emitter);
+
+        emitter.onCompletion(() -> gameService.removeGameEmitter(gameId, emitter));
+        emitter.onTimeout(() -> gameService.removeGameEmitter(gameId, emitter));
+
+        return emitter;
     }
+
 
     @PostMapping("/games/{id}/submission")
     @ResponseStatus(HttpStatus.CREATED)

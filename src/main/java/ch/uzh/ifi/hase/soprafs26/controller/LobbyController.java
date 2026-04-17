@@ -64,7 +64,7 @@ public class LobbyController {
     @GetMapping("/lobbies/{lobbyId}/stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public SseEmitter getLobbyById(@PathVariable UUID lobbyId,
+    public SseEmitter getLobbyByIdEmitter(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
@@ -192,7 +192,7 @@ public class LobbyController {
         lobbyService.updateLobbySettings(lobby, gameDuration);
     }
 
-    
+
     @PostMapping("/lobbies/{lobbyId}/start")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody

@@ -382,9 +382,24 @@ public class LobbyService {
         if (!joinCode.matches("^[A-Z0-9]{6}$")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
                 "Join code must be 6 characters long and contain only uppercase letters and numbers!");
-            }
         }
-        
+    }
+
+
+    public void validateUserInGame(User user, Game game) {
+        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
+
+        if (!lobbyPlayer.getLobby().getId().equals(game.getLobbyId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+                "Player is not part of this game!");
+        }
+    }
+
+    public void validateUserPlayerIsHost(User user) {
+        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
+        validateLobbyPlayerIsHost(lobbyPlayer);
+    }
+    
     ///////////////
     // Utilities //    
     ///////////////

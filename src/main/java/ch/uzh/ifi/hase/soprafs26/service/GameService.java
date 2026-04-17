@@ -20,6 +20,7 @@ import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -115,6 +116,16 @@ public class GameService {
 		gameRepository.delete(game);
 
         log.debug("Game successfully deleted");
+	}
+
+	// Wrapper function
+	public void validateUserInGame(User user, Game game) {
+		lobbyService.validateUserInGame(user, game);
+	}
+
+	// Wrapper function
+	public void validateUserPlayerIsHost(User user) {
+		lobbyService.validateUserPlayerIsHost(user);
 	}
 		
 

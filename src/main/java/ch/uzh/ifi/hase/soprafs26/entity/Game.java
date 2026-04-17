@@ -1,6 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
@@ -35,10 +37,10 @@ public class Game implements Serializable {
 	private GameStatus status;
 
     @Column(nullable = false)
-    private String[] wordlist;
+    private List<String> wordList = new ArrayList<>();
 
 	@Column(nullable = false)
-    private String[] wordListScore;
+    private List<String> wordListScore = new ArrayList<>();
 
 	@Column(nullable = false)
 	private int score_1;
@@ -48,6 +50,17 @@ public class Game implements Serializable {
 
 	@Column(nullable = false)
 	private Integer gameDuration;	
+
+	@Column(nullable = false)
+	private UUID lobbyId;
+
+	public void setLobbyId(UUID lobbyId) {
+		this.lobbyId = lobbyId;
+	}
+
+	public UUID getLobbyId() {
+		return lobbyId;
+	}
 
 	public Integer getGameDuration() {
 		return gameDuration;
@@ -73,19 +86,19 @@ public class Game implements Serializable {
 		this.status = status;
 	}
 
-    public String[] getWordList() {
-		return wordlist;
+    public List<String> getWordList() {
+		return wordList;
 	}
 
-	public void setWordList(String[] WordList) {
-		this.wordlist = WordList;
+	public void setWordList(List<String> WordList) {
+		this.wordList = WordList;
 	}
 
-	public String[] getWordListScore(){
+	public List<String> getWordListScore(){
 		return wordListScore;
 	}
 
-	public void setWordListScore(String[] wordListScore){
+	public void setWordListScore(List<String> wordListScore){
 		this.wordListScore = wordListScore;
 	}
 

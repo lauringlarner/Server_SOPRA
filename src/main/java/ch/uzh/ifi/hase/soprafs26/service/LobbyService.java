@@ -424,6 +424,28 @@ public class LobbyService {
     // SSE functions //
     ///////////////////
     
+    public SseEmitter createAndRegisterLobbyStream(Lobby lobby) {
+		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+		// Send initial lobby state
+        try {
+            emitter.send(SseEmitter.event()
+                .name("lobbyUpdate")
+                .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+
+		// register emitter
+		registerLobbyEmitter(lobby.getId(), emitter);
+
+		// lifecycle cleanup
+		emitter.onCompletion(() -> removeLobbyEmitter(lobby.getId(), emitter));
+        emitter.onTimeout(() -> removeLobbyEmitter(lobby.getId(), emitter));
+
+		return emitter;
+	}
+
     public void registerLobbyEmitter(UUID lobbyId, SseEmitter emitter) {
         lobbyEmitters.computeIfAbsent(lobbyId, k -> new ArrayList<>()).add(emitter);
     }
@@ -452,5 +474,14 @@ public class LobbyService {
         }
     }
 
+
+
+
+
+    public void resetLobbyAfterGame(UUID lobbyId) {
+        Lobby lobby = getLobbyByLobbyId(lobbyId);
+        lobby.setGameId(null);
+        updateAllLobbyPlayersReadyStatusToFalse(lobby);
+    }
 
 }

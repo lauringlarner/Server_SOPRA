@@ -1,8 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,56 +54,52 @@ public class GameController {
 
         Game game = gameService.getGameById(gameId); 
 
-        // Create SSE emitter
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-        // Send initial state
-        try {
-            emitter.send(SseEmitter.event()
-                .name("gameUpdate")
-                .data(DTOMapper.INSTANCE.convertEntityToGameDTO(game)));
-        } catch (Exception e) {
-            emitter.completeWithError(e);
-        }
-
-        // Register emitter
-        gameService.registerGameEmitter(gameId, emitter);
-
-        emitter.onCompletion(() -> gameService.removeGameEmitter(gameId, emitter));
-        emitter.onTimeout(() -> gameService.removeGameEmitter(gameId, emitter));
-
-        return emitter;
+        return gameService.createAndRegisterGameStream(game);
     }
 
 
-    @PostMapping("/games/{id}/submission")
+    @DeleteMapping("/game/{gameId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseBody
+    public void deleteGame(@PathVariable UUID gameId,
+        @RequestHeader(value = "Authorization", required = false) String token) {
+        // authenticate user or UNAUTHORIZED
+        authService.authenticateToken(token);
+
+        Game game = gameService.getGameById(gameId);
+
+        gameService.deleteGame(game);
+    }
+
+
+    @PostMapping("/games/{gameId}/submission")
     @ResponseStatus(HttpStatus.CREATED)
     
     public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
-                                   @RequestParam("object") String object,
-                                   @RequestParam("team") String team,
-                                    @PathVariable UUID id,
+                                    @RequestParam("object") String object,
+                                    @RequestParam("team") String team,
+                                    @PathVariable UUID gameId,
                                     @RequestHeader(value = "Authorization", required = false) String token
                                     ) throws Exception {
 
     authService.authenticateToken(token);
-    Game game=gameService.getGameById(id);//get game and check if exists
+    Game game = gameService.getGameById(gameId);//get game and check if exists
 
     //check if the word is in the list and if yes return the index
-    String[] wordlist = game.getWordList();
-    int indexofword= gameService.checkWordList(wordlist,object);
+    List<String> wordList = game.getWordList();
+    int indexOfWord = gameService.checkWordList(wordList,object);
 
 
     //check if the word is not taken;
-    String[] wordlistscore = game.getWordListScore();
-    gameService.checkWordTaken(wordlistscore,indexofword );
+    List<String> wordListScore = game.getWordListScore();
+    gameService.checkWordTaken(wordListScore,indexOfWord );
     
 
     //set word as taken
     //teamscore +=1
     //return 1 if found, 0 if not
 
-    if( gameService.imageSubmission(file, object,wordlistscore,indexofword,team, game) == 1)
+    if( gameService.imageSubmission(file, object,wordListScore,indexOfWord,team, game) == 1)
     {int result = 1;
         return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(result));
     }

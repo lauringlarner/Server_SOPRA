@@ -1,7 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,8 +40,11 @@ public class GameService {
 
 	private final Map<UUID, List<SseEmitter>> gameEmitters = new ConcurrentHashMap<>();
 
-	public GameService(@Qualifier("gameRepository") GameRepository gameRepository) {
+	private final LobbyService lobbyService;
+
+	public GameService(@Qualifier("gameRepository") GameRepository gameRepository, LobbyService lobbyService) {
 		this.gameRepository = gameRepository;
+		this.lobbyService = lobbyService;
 	}
 
 
@@ -51,13 +53,15 @@ public class GameService {
 		return this.gameRepository.findAll();
 	}
 
-	public static String[] WordList() {				//returns a list of 16 randomly choosen words from the library
-		String[] WordList = new String[16];
+	//returns a list of 16 randomly choosen words from the library
+	public static List<String> WordList() {
+		List<String> wordList = new ArrayList<>();
 
-		for (int i = 0; i<16; i++){
-			WordList[i] = Words.Word();
+		for (int i = 0; i < 16; i++) {
+			wordList.add(Words.Word());
 		}
-		return WordList;
+
+		return wordList;
 	}
 
 	public Game createGame(Lobby lobby) {
@@ -67,14 +71,16 @@ public class GameService {
 		// saves the given entity but data is only persisted in the database once
 		// flush() is called
 		//setwordlist
-		String[] wordList = new String[16];
-		for(int i=0; i < 16; i++ ){
-			wordList[i] = Words.Word();
+		List<String> wordList = new ArrayList<>();
+		for (int i = 0; i < 16; i++) {
+			wordList.add(Words.Word());
 		}
 		newGame.setWordList(wordList);
 		//set WordListScore
-		String[] wordListScore = new String[16];
-		Arrays.fill(wordListScore, "0");
+		List<String> wordListScore = new ArrayList<>();
+		for (int i = 0; i < 16; i++) {
+			wordListScore.add("0");
+		}
 		newGame.setWordListScore(wordListScore);
 		//Set score
 		int score = 0;
@@ -95,18 +101,25 @@ public class GameService {
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
-	public int checkWordList(String[] wordlist, String object){
-		for (int i=0; i<wordlist.length; i++){
-			if ( wordlist[i].equals(object)){
+	public int checkWordList(List<String> wordList, String object) {
+		for (int i = 0; i < wordList.size(); i++) {
+			if (wordList.get(i).equals(object)) {
 				return i;
-			}	
-	}
-	throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Object is not in the Game!");
+			}
 		}
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Object is not in the Game!");
+	}
+
+	public void deleteGame(Game game) {
+		lobbyService.resetLobbyAfterGame(game.getLobbyId());
+		gameRepository.delete(game);
+
+        log.debug("Game successfully deleted");
+	}
 		
 
-	public int checkWordTaken(String[] wordListScore, int index){
-		if (wordListScore[index].equals("0")){
+	public int checkWordTaken(List<String> wordListScore, int index) {
+		if (wordListScore.get(index).equals("0")) {
 			return 1;
 		}
 
@@ -114,13 +127,13 @@ public class GameService {
 	}
 
 
-	public int imageSubmission(MultipartFile file, String object,String[] wordlistscore, int indexofword, String team, Game game){
+	public int imageSubmission(MultipartFile file, String object,List<String> wordListScore, int indexOfWord, String team, Game game){
 	try{
     //check if the object is in the image 
     if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
 	
         //set word as taken
-        wordlistscore[indexofword]="1";
+        wordListScore.set(indexOfWord, "1");
         //teamscore +=1
        if("1".equals(team)){
         int score=game.getScore_1();
@@ -135,7 +148,6 @@ public class GameService {
         //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
 
        gameRepository.flush();
-
 	    // SSE pushes update
         pushGameUpdate(game);
 
@@ -156,6 +168,27 @@ public class GameService {
  //teamscore +=1
 //return 1 if found, 0 if not
 
+	public SseEmitter createAndRegisterGameStream(Game game) {
+		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+		// send initial game state
+		try {
+			emitter.send(SseEmitter.event()
+				.name("gameUpdate")
+				.data(DTOMapper.INSTANCE.convertEntityToGameDTO(game)));
+		} catch (Exception e) {
+			emitter.completeWithError(e);
+		}
+
+		// register emitter
+		registerGameEmitter(game.getId(), emitter);
+
+		// lifecycle cleanup
+		emitter.onCompletion(() -> removeGameEmitter(game.getId(), emitter));
+		emitter.onTimeout(() -> removeGameEmitter(game.getId(), emitter));
+
+		return emitter;
+	}
 
 	public void registerGameEmitter(UUID gameId, SseEmitter emitter) {
 		gameEmitters.computeIfAbsent(gameId, k -> new ArrayList<>()).add(emitter);

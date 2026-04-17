@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
+import java.util.List;
 import java.util.UUID;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
@@ -8,12 +9,20 @@ public class GameDTO {
 
 	private UUID id;
 	private GameStatus status;
-	private String[] wordList;
-	private String[] wordListScore;
+	private List<String> wordList;
+	private List<String> wordListScore;
 	private int score_1;
 	private int score_2;
 	private Integer gameDuration;
+	private UUID lobbyId;
 
+	public UUID getLobbyId() {
+		return lobbyId;
+	}
+
+	public void setLobbyId(UUID lobbyId) {
+		this.lobbyId = lobbyId;
+	}
 
 	public UUID getId() {
 		return id;
@@ -40,19 +49,19 @@ public class GameDTO {
 		this.status = status;
 	}
 
-	public void setWordList(String[] wordList){
+	public void setWordList(List<String> wordList){
 		this.wordList = wordList;
 	}
 
-	public String[] getWordList() {
+	public List<String> getWordList() {
 		return wordList;
 	}
 
-	public void setWordListScore(String[] wordList){
-		this.wordList = wordListScore;
+	public void setWordListScore(List<String> wordListScore){
+		this.wordListScore = wordListScore;
 	}
 
-	public String[] getWordListScore() {
+	public List<String> getWordListScore() {
 		return wordListScore;
 	}
 

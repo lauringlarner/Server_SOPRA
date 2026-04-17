@@ -76,26 +76,7 @@ public class LobbyController {
         // validate lobbyPlayer is in lobby or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
 
-
-        // Create SSE emitter
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-        // Send initial lobby state
-        try {
-            emitter.send(SseEmitter.event()
-                .name("lobbyUpdate")
-                .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
-        } catch (Exception e) {
-            emitter.completeWithError(e);
-        }
-
-        // Register emitter for future updates
-        lobbyService.registerLobbyEmitter(lobbyId, emitter);
-
-        emitter.onCompletion(() -> lobbyService.removeLobbyEmitter(lobbyId, emitter));
-        emitter.onTimeout(() -> lobbyService.removeLobbyEmitter(lobbyId, emitter));
-
-        return emitter;     
+        return lobbyService.createAndRegisterLobbyStream(lobby);
     }
     
 

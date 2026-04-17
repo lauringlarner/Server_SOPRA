@@ -107,8 +107,6 @@ public class LobbyService {
 		return newLobby;
     }
 
-
-    
     ///////////////
     // Retrieval //
     ///////////////
@@ -181,20 +179,12 @@ public class LobbyService {
         return lobbyToJoin;
     }
 
-    public void startGame(Lobby lobby) {
-        Game newGame = gameService.createGame(lobby);
-        lobby.setGameId(newGame.getId());
-
-        // SSE push update
-        pushLobbyUpdate(lobby);
-    }
-
     public void resetLobbyAfterGame(UUID lobbyId) {
         Lobby lobby = getLobbyByLobbyId(lobbyId);
         lobby.setGameId(null);
         updateAllLobbyPlayersReadyStatusToFalse(lobby);
     }
-    
+
     /////////////
     // Updates //
     /////////////
@@ -392,18 +382,11 @@ public class LobbyService {
     }
 
 
-    public void validateUserInGame(User user, Game game) {
-        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
-
+    public void validateLobbyPlayerIsInGame(LobbyPlayer lobbyPlayer, Game game) {
         if (!lobbyPlayer.getLobby().getId().equals(game.getLobbyId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
                 "Player is not part of this game!");
         }
-    }
-
-    public void validateUserPlayerIsHost(User user) {
-        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
-        validateLobbyPlayerIsHost(lobbyPlayer);
     }
     
     ///////////////

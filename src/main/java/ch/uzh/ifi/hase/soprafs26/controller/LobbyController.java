@@ -26,6 +26,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.ReadyStatusDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TeamTypeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
+import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
 
 
@@ -38,10 +39,12 @@ public class LobbyController {
 
     private final AuthService authService;
     private final LobbyService lobbyService;
+    private final GameOrchestrationService gameOrchestrationService;
 
-    public LobbyController(LobbyService lobbyService, AuthService authService) {
+    public LobbyController(LobbyService lobbyService, AuthService authService, GameOrchestrationService gameOrchestrationService) {
         this.lobbyService = lobbyService;
         this.authService = authService;
+        this.gameOrchestrationService = gameOrchestrationService;
     }
 
 
@@ -181,24 +184,9 @@ public class LobbyController {
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
-
-        // fetch lobbyPlayer and lobby or Not Found
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);   
-
-        // validate lobbyPlayer is in lobby and is a host or FORBIDDEN
-        lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
-        lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
-
-        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN 
-        // and every team has at least 1 player each and every player is assigned to a valid team or CONFLICT
-        lobbyService.validateAllPlayersReady(lobby);
-        lobbyService.validateLobbyIsOpen(lobby);
-        lobbyService.validateAllPlayersAreInValidTeams(lobby);
-        lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
         
-        // creates the game and saves the gameId in Lobby
-        lobbyService.startGame(lobby);
+        // starts game
+        gameOrchestrationService.startGame(user, lobbyId);
     }
     
 

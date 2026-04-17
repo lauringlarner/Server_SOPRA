@@ -20,7 +20,6 @@ import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
-import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -41,11 +40,8 @@ public class GameService {
 
 	private final Map<UUID, List<SseEmitter>> gameEmitters = new ConcurrentHashMap<>();
 
-	private final LobbyService lobbyService;
-
-	public GameService(@Qualifier("gameRepository") GameRepository gameRepository, LobbyService lobbyService) {
+	public GameService(@Qualifier("gameRepository") GameRepository gameRepository) {
 		this.gameRepository = gameRepository;
-		this.lobbyService = lobbyService;
 	}
 
 	//////////////
@@ -56,7 +52,7 @@ public class GameService {
 		Game newGame = new Game();
 
 		newGame.setStatus(GameStatus.IN_PROGRESS);
-
+		newGame.setLobbyId(lobby.getId());
 		//setwordlist
 		List<String> wordList = new ArrayList<>();
 		for (int i = 0; i < 16; i++) {
@@ -72,7 +68,7 @@ public class GameService {
 		//Set score
 		int score = 0;
 		newGame.setScore_1(score);
-		newGame.setScore_1(score);
+		newGame.setScore_2(score);
 		// set game duration setting from lobby
 		newGame.setGameDuration(lobby.getGameDuration());
 
@@ -111,7 +107,6 @@ public class GameService {
     //////////////
 
 	public void deleteGame(Game game) {
-		lobbyService.resetLobbyAfterGame(game.getLobbyId());
 		gameRepository.delete(game);
 
         log.debug("Game successfully deleted");
@@ -121,16 +116,6 @@ public class GameService {
 	// Validation //
 	////////////////
 
-	// Wrapper function
-	public void validateUserInGame(User user, Game game) {
-		lobbyService.validateUserInGame(user, game);
-	}
-
-	// Wrapper function
-	public void validateUserPlayerIsHost(User user) {
-		lobbyService.validateUserPlayerIsHost(user);
-	}	
-	
     ///////////////
     // Utilities //    
     ///////////////

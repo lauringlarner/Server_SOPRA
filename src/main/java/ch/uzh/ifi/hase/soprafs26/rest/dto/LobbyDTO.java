@@ -11,6 +11,16 @@ public class LobbyDTO {
 
     private Integer gameDuration;
 
+    private UUID gameId;
+
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(UUID gameId) {
+        this.gameId = gameId;
+    }
+
     private List<LobbyPlayerDTO> lobbyPlayers;
 
     public String getJoinCode() {

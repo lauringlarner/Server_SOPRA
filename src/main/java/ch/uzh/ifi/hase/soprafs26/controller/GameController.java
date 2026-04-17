@@ -1,26 +1,27 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
-import ch.uzh.ifi.hase.soprafs26.service.GameService;
-import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
-
-import org.springframework.web.bind.annotation.RequestHeader;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
-
-import java.util.ArrayList;
-import java.util.List;
+import ch.uzh.ifi.hase.soprafs26.service.GameService;
 
 /**
  * Game Controller
@@ -56,28 +57,13 @@ public class GameController {
         return gameGetDTOs;
     }
 
-    @PostMapping("/games")
-    @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
-    public GameGetDTO createGame(@RequestBody GamePostDTO gamePostDTO,
-            @RequestHeader(value = "Authorization", required = false) String token) {
-        authService.authenticateToken(token);
-        // convert API game to internal representation
-        Game gameInput = DTOMapper.INSTANCE.convertGamePostDTOtoEntity(gamePostDTO);
-
-        // create game
-        Game createdGame = gameService.createGame(gameInput);
-        // convert internal representation of game back to API
-        return DTOMapper.INSTANCE.convertEntityToGameGetDTO(createdGame);
-    }
-
     @PostMapping("/games/{id}/submission")
     @ResponseStatus(HttpStatus.CREATED)
     
     public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
                                    @RequestParam("object") String object,
                                    @RequestParam("team") String team,
-                                    @PathVariable Long id,
+                                    @PathVariable UUID id,
                                     @RequestHeader(value = "Authorization", required = false) String token
                                     ) throws Exception {
 

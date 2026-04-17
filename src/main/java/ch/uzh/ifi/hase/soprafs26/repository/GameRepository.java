@@ -1,14 +1,16 @@
 package ch.uzh.ifi.hase.soprafs26.repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 
 @Repository("gameRepository")
-public interface GameRepository extends JpaRepository<Game, Long> {
-	Game findByToken(String Token);
-	Game findById(int id);
+public interface GameRepository extends JpaRepository<Game, UUID> {
+	Optional<Game> findById(UUID id);
 
 }
 

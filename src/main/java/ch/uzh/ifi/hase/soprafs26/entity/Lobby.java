@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,8 +29,8 @@ public class Lobby {
     @Column(unique = true)
 	private String joinCode;
 
-    @Column(nullable = false)
-	private LobbyStatus status;
+    @Column(nullable = true)
+    private UUID gameId;
 
     @Column(nullable = false)
 	private LocalDateTime createdAt;
@@ -82,14 +81,6 @@ public class Lobby {
         this.joinCode = joinCode;
     }
 
-    public LobbyStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LobbyStatus status) {
-        this.status = status;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -122,5 +113,12 @@ public class Lobby {
         this.lobbyPlayers = lobbyPlayers;
     }
 
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(UUID gameId) {
+        this.gameId = gameId;
+    }
 
 }

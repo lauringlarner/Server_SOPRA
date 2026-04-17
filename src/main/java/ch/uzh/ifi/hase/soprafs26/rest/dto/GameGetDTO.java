@@ -1,32 +1,42 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
+import java.util.UUID;
+
+import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 
 public class GameGetDTO {
 
-	private Long id;
-	private UserStatus status;
+	private UUID id;
+	private GameStatus status;
 	private String[] wordList;
 	private String[] wordListScore;
-	private String token;
 	private int score_1;
 	private int score_2;
+	private Integer gameDuration;
 
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public Integer getGameDuration() {
+		return gameDuration;
+	}
+
+	public void setGameDuration(Integer gameDuration) {
+		this.gameDuration = gameDuration;
+	}
+
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
     
-	public UserStatus getStatus() {
+	public GameStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(UserStatus status) {
+	public void setStatus(GameStatus status) {
 		this.status = status;
 	}
 
@@ -44,14 +54,6 @@ public class GameGetDTO {
 
 	public String[] getWordListScore() {
 		return wordListScore;
-	}
-
-	public String getToken() {
-		return token;
-	}
-
-	public void setToken(String token) {
-		this.token = token;
 	}
 
 	public int getScore_1() {

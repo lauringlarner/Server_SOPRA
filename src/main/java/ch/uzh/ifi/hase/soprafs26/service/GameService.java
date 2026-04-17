@@ -48,29 +48,15 @@ public class GameService {
 		this.lobbyService = lobbyService;
 	}
 
-
-
-	public List<Game> getGames() {
-		return this.gameRepository.findAll();
-	}
-
-	//returns a list of 16 randomly choosen words from the library
-	public static List<String> WordList() {
-		List<String> wordList = new ArrayList<>();
-
-		for (int i = 0; i < 16; i++) {
-			wordList.add(Words.Word());
-		}
-
-		return wordList;
-	}
+	//////////////
+	// Creation //
+	//////////////
 
 	public Game createGame(Lobby lobby) {
 		Game newGame = new Game();
 
 		newGame.setStatus(GameStatus.IN_PROGRESS);
-		// saves the given entity but data is only persisted in the database once
-		// flush() is called
+
 		//setwordlist
 		List<String> wordList = new ArrayList<>();
 		for (int i = 0; i < 16; i++) {
@@ -97,19 +83,32 @@ public class GameService {
 		return newGame;
 	}
 
+	///////////////
+	// Retrieval //	
+	///////////////
+
+	public List<Game> getGames() {
+		return this.gameRepository.findAll();
+	}
+
 	public Game getGameById(UUID gameId) {
 		return gameRepository.findById(gameId)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
-	public int checkWordList(List<String> wordList, String object) {
-		for (int i = 0; i < wordList.size(); i++) {
-			if (wordList.get(i).equals(object)) {
-				return i;
-			}
-		}
-		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Object is not in the Game!");
-	}
+	/////////////
+	// Updates //
+	/////////////
+	
+
+	/////////////
+	// Actions //
+	/////////////
+
+
+	//////////////
+    // Deletion //
+    //////////////
 
 	public void deleteGame(Game game) {
 		lobbyService.resetLobbyAfterGame(game.getLobbyId());
@@ -117,6 +116,10 @@ public class GameService {
 
         log.debug("Game successfully deleted");
 	}
+	
+	////////////////
+	// Validation //
+	////////////////
 
 	// Wrapper function
 	public void validateUserInGame(User user, Game game) {
@@ -126,58 +129,16 @@ public class GameService {
 	// Wrapper function
 	public void validateUserPlayerIsHost(User user) {
 		lobbyService.validateUserPlayerIsHost(user);
-	}
-		
-
-	public int checkWordTaken(List<String> wordListScore, int index) {
-		if (wordListScore.get(index).equals("0")) {
-			return 1;
-		}
-
-		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already taken by a team!");
-	}
-
-
-	public int imageSubmission(MultipartFile file, String object,List<String> wordListScore, int indexOfWord, String team, Game game){
-	try{
-    //check if the object is in the image 
-    if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
+	}	
 	
-        //set word as taken
-        wordListScore.set(indexOfWord, "1");
-        //teamscore +=1
-       if("1".equals(team)){
-        int score=game.getScore_1();
-        game.setScore_1(score+1);
-       }                                        //add in service so it can be saved
-       else if("2".equals(team)){
-        int score=game.getScore_2();
-        game.setScore_2(score+1);
-       }
-       else{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");}
-
-        //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
-
-       gameRepository.flush();
-	    // SSE pushes update
-        pushGameUpdate(game);
-
-        //return
-        int result = 1;
-            return result;
-        
-    }else{
-        int result=0;
-        return result;
-        
-	}}catch (Exception e) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
-		}
-	}
-
-//set word as taken
- //teamscore +=1
-//return 1 if found, 0 if not
+    ///////////////
+    // Utilities //    
+    ///////////////
+	
+	
+    ///////////////////
+    // SSE functions //
+    ///////////////////
 
 	public SseEmitter createAndRegisterGameStream(Game game) {
 		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
@@ -228,5 +189,79 @@ public class GameService {
 			}
 		}
 	}
+
+
+
+
+/* Not yet sorted, and in need of refactoring */
+
+	//returns a list of 16 randomly choosen words from the library
+	public static List<String> WordList() {
+		List<String> wordList = new ArrayList<>();
+
+		for (int i = 0; i < 16; i++) {
+			wordList.add(Words.Word());
+		}
+
+		return wordList;
+	}
+
+	public int checkWordList(List<String> wordList, String object) {
+		for (int i = 0; i < wordList.size(); i++) {
+			if (wordList.get(i).equals(object)) {
+				return i;
+			}
+		}
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Object is not in the Game!");
+	}
+
+	public int checkWordTaken(List<String> wordListScore, int index) {
+		if (wordListScore.get(index).equals("0")) {
+			return 1;
+		}
+
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already taken by a team!");
+	}
+
+	public int imageSubmission(MultipartFile file, String object,List<String> wordListScore, int indexOfWord, String team, Game game){
+	try{
+    //check if the object is in the image 
+    if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
+	
+        //set word as taken
+        wordListScore.set(indexOfWord, "1");
+        //teamscore +=1
+       if("1".equals(team)){
+        int score=game.getScore_1();
+        game.setScore_1(score+1);
+       }                                        //add in service so it can be saved
+       else if("2".equals(team)){
+        int score=game.getScore_2();
+        game.setScore_2(score+1);
+       }
+       else{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");}
+
+        //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
+
+       gameRepository.flush();
+	    // SSE pushes update
+        pushGameUpdate(game);
+
+        //return
+        int result = 1;
+            return result;
+        
+    }else{
+        int result=0;
+        return result;
+        
+	}}catch (Exception e) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+		}
+	}
+
+//set word as taken
+ //teamscore +=1
+//return 1 if found, 0 if not
 
 }

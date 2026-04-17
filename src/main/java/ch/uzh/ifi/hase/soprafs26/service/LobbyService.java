@@ -189,6 +189,12 @@ public class LobbyService {
         pushLobbyUpdate(lobby);
     }
 
+    public void resetLobbyAfterGame(UUID lobbyId) {
+        Lobby lobby = getLobbyByLobbyId(lobbyId);
+        lobby.setGameId(null);
+        updateAllLobbyPlayersReadyStatusToFalse(lobby);
+    }
+    
     /////////////
     // Updates //
     /////////////
@@ -487,16 +493,6 @@ public class LobbyService {
                 }
             }
         }
-    }
-
-
-
-
-
-    public void resetLobbyAfterGame(UUID lobbyId) {
-        Lobby lobby = getLobbyByLobbyId(lobbyId);
-        lobby.setGameId(null);
-        updateAllLobbyPlayersReadyStatusToFalse(lobby);
     }
 
 }

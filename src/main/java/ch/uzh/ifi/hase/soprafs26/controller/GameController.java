@@ -78,6 +78,10 @@ public class GameController {
         gameService.validateUserInGame(user, game);
         gameService.validateUserPlayerIsHost(user);
 
+        ///////////////////////////////////////////////////
+        /// Update user stats would come here probably ? //
+        ///////////////////////////////////////////////////
+
         // delete game
         gameService.deleteGame(game);
     }

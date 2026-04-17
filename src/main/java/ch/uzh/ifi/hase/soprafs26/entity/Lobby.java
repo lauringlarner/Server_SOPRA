@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,8 +29,8 @@ public class Lobby {
     @Column(unique = true)
 	private String joinCode;
 
-    @Column(nullable = false)
-	private LobbyStatus status;
+    @Column(nullable = true)
+    private UUID gameId;
 
     @Column(nullable = false)
 	private LocalDateTime createdAt;
@@ -43,27 +42,17 @@ public class Lobby {
     @Column(nullable = false)
 	private Integer gameDuration;
 
+    /*
     @Column(nullable = false)
 	private Integer bingoBoardSize; // bingoBoardSize = 4 -> 4 x 4 Board, i.e. 16 items
 
-    /*
     @Column(nullable = false)
 	private Integer numberOfRounds;
 
     @Column(nullable = false)
 	private GameMode gameMode;   
     */
-
-
-    
-    public void setBingoBoardSize(Integer bingoBoardSize) {
-        this.bingoBoardSize = bingoBoardSize;
-    }
-
-    public Integer getBingoBoardSize() {
-        return bingoBoardSize;
-    }
-       
+  
     public static long getSerialversionuid() {
         return serialVersionUID;
     }
@@ -90,14 +79,6 @@ public class Lobby {
 
     public void setJoinCode(String joinCode) {
         this.joinCode = joinCode;
-    }
-
-    public LobbyStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LobbyStatus status) {
-        this.status = status;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -132,5 +113,12 @@ public class Lobby {
         this.lobbyPlayers = lobbyPlayers;
     }
 
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(UUID gameId) {
+        this.gameId = gameId;
+    }
 
 }

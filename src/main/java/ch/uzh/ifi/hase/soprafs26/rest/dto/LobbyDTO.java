@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,7 +12,25 @@ public class LobbyDTO {
 
     private Integer gameDuration;
 
-    private Integer bingoBoardSize;
+    private UUID gameId;
+
+    private LocalDateTime createdAt;
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public UUID getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(UUID gameId) {
+        this.gameId = gameId;
+    }
 
     private List<LobbyPlayerDTO> lobbyPlayers;
 
@@ -37,14 +56,6 @@ public class LobbyDTO {
 
     public void setGameDuration(Integer gameDuration) {
         this.gameDuration = gameDuration;
-    }
-
-    public Integer getBingoBoardSize() {
-        return bingoBoardSize;
-    }
-
-    public void setBingoBoardSize(Integer bingoBoardSize) {
-        this.bingoBoardSize = bingoBoardSize;
     }
 
     public UUID getId() {

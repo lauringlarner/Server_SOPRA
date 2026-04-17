@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -38,11 +38,14 @@ public class LobbyService {
     
     private final Map<UUID, List<SseEmitter>> lobbyEmitters = new ConcurrentHashMap<>();
 
+    private final GameService gameService;
+
     private final Logger log = LoggerFactory.getLogger(LobbyService.class);
 
-	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository, @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository) {
+	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository, @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository, GameService gameService) {
 		this.lobbyRepository = lobbyRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
+        this.gameService = gameService;
 	}
 
     //////////////
@@ -86,11 +89,9 @@ public class LobbyService {
 
         newLobby.setCreatedAt(LocalDateTime.now());
         newLobby.setJoinCode(generateJoinCode());
-        newLobby.setStatus(LobbyStatus.OPEN);
         newLobby.addPlayer(lobbyPlayer);
 
         // Default Game Settings
-        newLobby.setBingoBoardSize(4);
         newLobby.setGameDuration(10);
     
 
@@ -106,8 +107,6 @@ public class LobbyService {
 		return newLobby;
     }
 
-
-    
     ///////////////
     // Retrieval //
     ///////////////
@@ -126,7 +125,7 @@ public class LobbyService {
     
     public Lobby getLobbyByLobbyId(UUID lobbyId) {
         return lobbyRepository.findById(lobbyId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
     }
     
     
@@ -157,7 +156,7 @@ public class LobbyService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player or Lobby doesn't exist!");
         }
 
-        if (lobbyToJoin.getStatus() != LobbyStatus.OPEN) {
+        if (lobbyToJoin.getGameId() != null) {
              throw new ResponseStatusException(HttpStatus.CONFLICT, "Lobby is not OPEN!");
         }
 
@@ -178,6 +177,12 @@ public class LobbyService {
         log.debug("Lobby {} added new Player: {}", lobbyToJoin,lobbyPlayer);
 
         return lobbyToJoin;
+    }
+
+    public void resetLobbyAfterGame(UUID lobbyId) {
+        Lobby lobby = getLobbyByLobbyId(lobbyId);
+        lobby.setGameId(null);
+        updateAllLobbyPlayersReadyStatusToFalse(lobby);
     }
 
     /////////////
@@ -222,19 +227,13 @@ public class LobbyService {
         
         log.debug("Lobby {} successfully changed their settings",lobby);
     }
-    
-    public void setLobbyStatusRunning(Lobby lobby) {
-        lobby.setStatus(LobbyStatus.RUNNING);
+   
+    public void setLobbyGameId(Lobby lobby, UUID gameId) {
+        lobby.setGameId(gameId);
         
-        log.debug("Lobby {} is now RUNNING", lobby);
+        log.debug("Lobby {} is now running the game {}", lobby, gameId);
     }
-    
-    public void setLobbyStatusOpen(Lobby lobby) {
-        lobby.setStatus(LobbyStatus.OPEN);
-        
-        log.debug("Lobby {} is now OPEN", lobby);
-    }
-    
+       
     //////////////
     // Deletion //
     //////////////
@@ -303,12 +302,10 @@ public class LobbyService {
     
 
     public void validateLobbyIsOpen(Lobby lobby) {
-        if (lobby.getStatus() != LobbyStatus.OPEN) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Game is already RUNNING!");
+        if (!isLobbyOpen(lobby)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A game is already RUNNING!");
         }
     }
-
-
 
     public void validateLobbyHasPlayersInBothTeams(Lobby lobby) {
         List<LobbyPlayer> lobbyPlayers = lobby.getLobbyPlayers();
@@ -381,9 +378,17 @@ public class LobbyService {
         if (!joinCode.matches("^[A-Z0-9]{6}$")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
                 "Join code must be 6 characters long and contain only uppercase letters and numbers!");
-            }
         }
-        
+    }
+
+
+    public void validateLobbyPlayerIsInGame(LobbyPlayer lobbyPlayer, Game game) {
+        if (!lobbyPlayer.getLobby().getId().equals(game.getLobbyId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, 
+                "Player is not part of this game!");
+        }
+    }
+    
     ///////////////
     // Utilities //    
     ///////////////
@@ -398,6 +403,10 @@ public class LobbyService {
 
     public boolean isPlayerInValidTeam(LobbyPlayer lobbyPlayer) {
         return lobbyPlayer.getTeamType() != TeamType.Undecided;
+    }
+
+    public boolean isLobbyOpen(Lobby lobby) {
+        return lobby.getGameId() == null;
     }
 
     public String generateJoinCode() {
@@ -419,6 +428,28 @@ public class LobbyService {
     // SSE functions //
     ///////////////////
     
+    public SseEmitter createAndRegisterLobbyStream(Lobby lobby) {
+		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+		// Send initial lobby state
+        try {
+            emitter.send(SseEmitter.event()
+                .name("lobbyUpdate")
+                .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+
+		// register emitter
+		registerLobbyEmitter(lobby.getId(), emitter);
+
+		// lifecycle cleanup
+		emitter.onCompletion(() -> removeLobbyEmitter(lobby.getId(), emitter));
+        emitter.onTimeout(() -> removeLobbyEmitter(lobby.getId(), emitter));
+
+		return emitter;
+	}
+
     public void registerLobbyEmitter(UUID lobbyId, SseEmitter emitter) {
         lobbyEmitters.computeIfAbsent(lobbyId, k -> new ArrayList<>()).add(emitter);
     }
@@ -446,6 +477,5 @@ public class LobbyService {
             }
         }
     }
-
 
 }

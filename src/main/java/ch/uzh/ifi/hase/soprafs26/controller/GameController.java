@@ -3,17 +3,23 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.GameService;
+import ch.uzh.ifi.hase.soprafs26.service.LeaderboardService;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -34,55 +40,88 @@ public class GameController {
 
     private final GameService gameService;
     private final AuthService authService;
+    private final LeaderboardService leaderboardService;
 
-    GameController(GameService gameService, AuthService authService) {
+    GameController(GameService gameService, AuthService authService, LeaderboardService leaderboardService) {
         this.gameService = gameService;
         this.authService = authService;
+        this.leaderboardService = leaderboardService;
     }
  
-    @GetMapping("/games")
+    @GetMapping("/lobbies/{lobbyId}/games")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<GameGetDTO> getAllGames(@RequestHeader(value = "Authorization", required = false) String token) {
+    public List<GameGetDTO> getAllGames(@PathVariable UUID lobbyId,
+                                       @RequestHeader(value = "Authorization", required = false) String token) {
         authService.authenticateToken(token);
-        // fetch all games in the internal representation
         List<Game> games = gameService.getGames();
         List<GameGetDTO> gameGetDTOs = new ArrayList<>();
 
-        // convert each game to the API representation
         for (Game game : games) {
             gameGetDTOs.add(DTOMapper.INSTANCE.convertEntityToGameGetDTO(game));
         }
         return gameGetDTOs;
     }
 
-    @PostMapping("/games")
+    @PostMapping("/lobbies/{lobbyId}/games")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
-    public GameGetDTO createGame(@RequestBody GamePostDTO gamePostDTO,
-            @RequestHeader(value = "Authorization", required = false) String token) {
+    public GameGetDTO createGame(@PathVariable UUID lobbyId,
+                                 @RequestBody GamePostDTO gamePostDTO,
+                                 @RequestHeader(value = "Authorization", required = false) String token) {
         authService.authenticateToken(token);
-        // convert API game to internal representation
         Game gameInput = DTOMapper.INSTANCE.convertGamePostDTOtoEntity(gamePostDTO);
-
-        // create game
         Game createdGame = gameService.createGame(gameInput);
-        // convert internal representation of game back to API
         return DTOMapper.INSTANCE.convertEntityToGameGetDTO(createdGame);
     }
 
-    @PostMapping("/games/{id}/submission")
+    @PostMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.CREATED)
-    
+    @ResponseBody
+    public LeaderboardGetDTO postLeaderboard(@PathVariable UUID lobbyId,
+                                             @PathVariable Long gameId,
+                                             @RequestBody LeaderboardPostDTO leaderboardPostDTO,
+                                             @RequestHeader(value = "Authorization", required = false) String token) {
+        authService.authenticateToken(token);
+        Game game = gameService.getGameById(gameId);
+
+        Leaderboard leaderboard = leaderboardService.initOrUpdate(game);
+
+        LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
+        dto.setTeam1Score(leaderboard.getTeam1Score());
+        dto.setTeam2Score(leaderboard.getTeam2Score());
+        dto.setTileGrid(leaderboard.getTileGrid());
+        return dto;
+    }
+
+    @GetMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public LeaderboardGetDTO getLeaderboard(@PathVariable UUID lobbyId,
+                                            @PathVariable Long gameId,
+                                            @RequestHeader(value = "Authorization", required = false) String token) {
+        authService.authenticateToken(token);
+        Leaderboard leaderboard = leaderboardService.getLeaderboard(gameId);
+
+        LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
+        dto.setTeam1Score(leaderboard.getTeam1Score());
+        dto.setTeam2Score(leaderboard.getTeam2Score());
+        dto.setTileGrid(leaderboard.getTileGrid());
+        return dto;
+    }
+
+    @PostMapping("/lobbies/{lobbyId}/games/{gameId}/submission")
+    @ResponseStatus(HttpStatus.CREATED)
     public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
-                                   @RequestParam("object") String object,
-                                   @RequestParam("team") String team,
-                                    @PathVariable Long id,
-                                    @RequestHeader(value = "Authorization", required = false) String token
-                                    ) throws Exception {
+                                       @RequestParam("object") String object,
+                                       @RequestParam("team") String team,
+                                       @PathVariable UUID lobbyId,
+                                       @PathVariable Long gameId,
+                                       @RequestHeader(value = "Authorization", required = false) String token
+                                       ) throws Exception {
 
     authService.authenticateToken(token);
-    Game game=gameService.getGameById(id);//get game and check if exists
+    Game game=gameService.getGameById(gameId);//get game and check if exists
 
     //check if the word is in the list and if yes return the index
     String[] wordlist = game.getWordList();

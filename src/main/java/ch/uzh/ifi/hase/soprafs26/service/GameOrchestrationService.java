@@ -89,6 +89,11 @@ public class GameOrchestrationService {
     }
 
 
+    public Game getGameById(UUID gameId) {
+        return gameService.getGameById(gameId);
+    }
+
+
     public void deleteGame(User user, UUID gameId) {
         // fetch Game from gameId and player from user or Not Found
         Game game = gameService.getGameById(gameId);

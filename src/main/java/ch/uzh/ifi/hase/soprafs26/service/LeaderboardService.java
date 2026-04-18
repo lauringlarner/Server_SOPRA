@@ -10,6 +10,8 @@ import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.repository.LeaderboardRepository;
 
+import java.util.UUID;
+
 @Service
 @Transactional
 public class LeaderboardService {
@@ -58,7 +60,7 @@ public class LeaderboardService {
         return leaderboardRepository.save(leaderboard);
     }
 
-    public Leaderboard getLeaderboard(Long gameId) {
+    public Leaderboard getLeaderboard(UUID gameId) {
         Leaderboard leaderboard = leaderboardRepository.findByGameId(gameId);
         if (leaderboard == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Leaderboard not found for this game!");

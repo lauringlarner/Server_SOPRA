@@ -45,7 +45,7 @@ public class GameTimerService {
         GameTimer timer = getTimerByGameId(gameId);
 
         if (timer.getStatus() != TimerStatus.NOT_STARTED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Timer is already started or finished!");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Timer is already started!");
         }
 
         timer.setStartedAt(Instant.now());

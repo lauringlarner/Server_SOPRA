@@ -28,6 +28,10 @@ public class Words {
         System.out.println(word);
         return word;
     }
+    // select n words and send to frontend
+    // maybe a feature, handle harder words for higher levels, easier words for lower levels (easy, medium, hard)
+    //
+    
 
     public static void main(String[] args) {
         Word();

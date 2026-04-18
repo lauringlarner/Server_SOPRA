@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Entity
 @Table(name = "leaderboards")
@@ -18,7 +19,7 @@ public class Leaderboard implements Serializable {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long gameId;
+    private UUID gameId;
 
     @Column(nullable = false)
     private int team1Score;
@@ -43,11 +44,11 @@ public class Leaderboard implements Serializable {
         this.id = id;
     }
 
-    public Long getGameId() {
+    public UUID getGameId() {
         return gameId;
     }
 
-    public void setGameId(Long gameId) {
+    public void setGameId(UUID gameId) {
         this.gameId = gameId;
     }
 

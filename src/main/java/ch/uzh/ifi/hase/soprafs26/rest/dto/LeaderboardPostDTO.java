@@ -1,14 +1,16 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
+import java.util.UUID;
+
 public class LeaderboardPostDTO {
 
-    private Long gameId;
+    private UUID gameId;
 
-    public Long getGameId() {
+    public UUID getGameId() {
         return gameId;
     }
 
-    public void setGameId(Long gameId) {
-        this.gameId = gameId; // initally not used
+    public void setGameId(UUID gameId) {
+        this.gameId = gameId;
     }
 }

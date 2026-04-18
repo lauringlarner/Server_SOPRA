@@ -18,8 +18,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.TileStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
+import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -37,11 +39,17 @@ public class GameService {
 	private final Logger log = LoggerFactory.getLogger(GameService.class);
 
 	private final GameRepository gameRepository;
+	private final ScoreService scoreService;
+	private final LeaderboardService leaderboardService;
 
 	private final Map<UUID, List<SseEmitter>> gameEmitters = new ConcurrentHashMap<>();
 
-	public GameService(@Qualifier("gameRepository") GameRepository gameRepository) {
+	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
+					   ScoreService scoreService,
+					   LeaderboardService leaderboardService) {
 		this.gameRepository = gameRepository;
+		this.scoreService = scoreService;
+		this.leaderboardService = leaderboardService;
 	}
 
 	//////////////
@@ -66,11 +74,21 @@ public class GameService {
 		}
 		newGame.setWordListScore(wordListScore);
 		//Set score
-		int score = 0;
-		newGame.setScore_1(score);
-		newGame.setScore_2(score);
+		newGame.setScore_1(0);
+		newGame.setScore_2(0);
 		// set game duration setting from lobby
 		newGame.setGameDuration(lobby.getGameDuration());
+
+		// build NxN tileGrid
+		int boardSize = 4;
+		newGame.setBoardSize(boardSize);
+		Tile[][] tileGrid = new Tile[boardSize][boardSize];
+		for (int i = 0; i < boardSize; i++) {
+			for (int j = 0; j < boardSize; j++) {
+				tileGrid[i][j] = new Tile(Words.Word(), 1, TileStatus.UNCLAIMED);
+			}
+		}
+		newGame.setTileGrid(tileGrid);
 
 		newGame = gameRepository.save(newGame);
 		gameRepository.flush();
@@ -208,23 +226,19 @@ public class GameService {
 		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already taken by a team!");
 	}
 
-	public int imageSubmission(MultipartFile file, String object,List<String> wordListScore, int indexOfWord, String team, Game game){
+	public int imageSubmission(MultipartFile file, String object, List<String> wordListScore, int indexOfWord, String team, Game game){
 	try{
-    //check if the object is in the image 
+    //check if the object is in the image
     if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
-	
+
         //set word as taken
         wordListScore.set(indexOfWord, "1");
-        //teamscore +=1
-       if("1".equals(team)){
-        int score=game.getScore_1();
-        game.setScore_1(score+1);
-       }                                        //add in service so it can be saved
-       else if("2".equals(team)){
-        int score=game.getScore_2();
-        game.setScore_2(score+1);
-       }
-       else{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");}
+
+        // claim tile, update score via ScoreService
+        scoreService.claimTile(game, indexOfWord, team);
+
+        // update leaderboard
+        leaderboardService.updateLeaderboard(game);
 
         //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
 

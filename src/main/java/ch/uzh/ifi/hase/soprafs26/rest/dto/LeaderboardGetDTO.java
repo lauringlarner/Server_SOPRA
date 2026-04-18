@@ -2,18 +2,20 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 
+import java.util.UUID;
+
 public class LeaderboardGetDTO {
 
-    private final Long gameId;
+    private final UUID gameId;
     private int team1Score;
     private int team2Score;
     private Tile[][] tileGrid;
 
-    public LeaderboardGetDTO(Long gameId) {
+    public LeaderboardGetDTO(UUID gameId) {
         this.gameId = gameId;
     }
 
-    public Long getGameId() {
+    public UUID getGameId() {
         return gameId;
     }
 

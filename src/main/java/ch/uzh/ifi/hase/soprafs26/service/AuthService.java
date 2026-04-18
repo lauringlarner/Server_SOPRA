@@ -27,10 +27,10 @@ public class AuthService {
 
 
     public String extractTokenFromBearer(String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
+        if (!authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Token");
         }
-        return authHeader;
+        return authHeader.substring(7);
     }
     
 }

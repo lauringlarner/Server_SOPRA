@@ -26,6 +26,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.ReadyStatusDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TeamTypeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
+import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
 
 
@@ -38,10 +39,12 @@ public class LobbyController {
 
     private final AuthService authService;
     private final LobbyService lobbyService;
+    private final GameOrchestrationService gameOrchestrationService;
 
-    public LobbyController(LobbyService lobbyService, AuthService authService) {
+    public LobbyController(LobbyService lobbyService, AuthService authService, GameOrchestrationService gameOrchestrationService) {
         this.lobbyService = lobbyService;
         this.authService = authService;
+        this.gameOrchestrationService = gameOrchestrationService;
     }
 
 
@@ -64,7 +67,7 @@ public class LobbyController {
     @GetMapping("/lobbies/{lobbyId}/stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public SseEmitter getLobbyById(@PathVariable UUID lobbyId,
+    public SseEmitter getLobbyByIdEmitter(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
@@ -76,28 +79,8 @@ public class LobbyController {
         // validate lobbyPlayer is in lobby or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
 
-
-        // Create SSE emitter
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-        // Send initial lobby state
-        try {
-            emitter.send(SseEmitter.event()
-                .name("lobbyUpdate")
-                .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
-        } catch (Exception e) {
-            emitter.completeWithError(e);
-        }
-
-        // Register emitter for future updates
-        lobbyService.registerLobbyEmitter(lobbyId, emitter);
-
-        emitter.onCompletion(() -> lobbyService.removeLobbyEmitter(lobbyId, emitter));
-        emitter.onTimeout(() -> lobbyService.removeLobbyEmitter(lobbyId, emitter));
-
-        return emitter;
-            
-        }
+        return lobbyService.createAndRegisterLobbyStream(lobby);
+    }
     
 
     @PostMapping("/lobbies/join")
@@ -144,7 +127,6 @@ public class LobbyController {
         // get team type and update lobbyPlayer or BAD_REQUEST
         TeamType teamType = teamTypeDTO.getTeamType();
         lobbyService.updateTeamType(lobbyPlayer, teamType);
-
     }
 
     @PutMapping("/lobbies/{lobbyId}/players/{playerId}/ready")
@@ -192,12 +174,9 @@ public class LobbyController {
         // get gameDuration and update lobbys gameDuration or BAD_REQUEST
         Integer gameDuration = gameSettingsDTO.getGameDuration();
         lobbyService.updateLobbySettings(lobby, gameDuration);
-
     }
 
-    ///////////////////////////////////////
-    // currenly doesn't return anything. later it needs to return at least the Game id per DTO
-    ///////////////////////////////////////
+
     @PostMapping("/lobbies/{lobbyId}/start")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
@@ -205,31 +184,9 @@ public class LobbyController {
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
-
-        // fetch lobbyPlayer and lobby or Not Found
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);   
-
-        // validate lobbyPlayer is in lobby and is a host or FORBIDDEN
-        lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
-        lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
-
-        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN 
-        // and every team has at least 1 player each and every player is assigned to a valid team or CONFLICT
-        lobbyService.validateAllPlayersReady(lobby);
-        lobbyService.validateLobbyIsOpen(lobby);
-        lobbyService.validateAllPlayersAreInValidTeams(lobby);
-        lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
-
-        /////////////////////////////////////////////////////
-        /* Replace with GameService function to create a game
-        gameService.createGame()
-        */
-        /////////////////////////////////////////////////////
         
-        // set all lobbyPlayers, currently in lobby, ready status to false and set lobby status to running
-        lobbyService.updateAllLobbyPlayersReadyStatusToFalse(lobby);
-        lobbyService.setLobbyStatusRunning(lobby);
+        // starts game
+        gameOrchestrationService.startGame(user, lobbyId);
     }
     
 
@@ -274,6 +231,6 @@ public class LobbyController {
 
         // delete lobbyPlayer
         lobbyService.deleteLobbyPlayer(lobbyPlayer);
-        }
+    }
     
 }

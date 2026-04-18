@@ -12,8 +12,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 
@@ -35,6 +34,7 @@ public interface DTOMapper {
 
 	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
+	// User mapper
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "password", target = "password")
 	@Mapping(target = "id", ignore = true)
@@ -52,40 +52,37 @@ public interface DTOMapper {
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "createdAt", target = "createdAt")
 	UserGetDTO convertEntityToUserGetDTO(User user);
-
-	//game mapper
 	
-	Game convertGamePostDTOtoEntity(GamePostDTO gamePostDTO);
-	//image mappper
-	@Mapping(source = "found", target = "found")
-	ImageAnalysisGetDTO convertImageAnalysisResultToGetDTO(ImageAnalysisResult result);
-
-	@Mapping(source = "id", target = "id")
-	@Mapping(source = "status", target = "status")
-	@Mapping(source = "wordList", target = "wordList")
-	@Mapping(source = "wordListScore", target = "wordListScore")
-	@Mapping(source = "score_1", target = "score_1")
-	@Mapping(source = "score_2", target = "score_2")
-	@Mapping(source = "token", target = "token")
-	GameGetDTO convertEntityToGameGetDTO(Game game);
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "username", target = "username")
 	@Mapping(source = "token", target = "token")
 	@Mapping(source = "status", target = "status")
 	@Mapping(source = "createdAt", target = "createdAt")
 	UserLoginResponseDTO convertEntityToUserLoginResponseDTO(User user);
+	
+	//image mappper
+	@Mapping(source = "found", target = "found")
+	ImageAnalysisGetDTO convertImageAnalysisResultToGetDTO(ImageAnalysisResult result);
 
+	// game mapper
+	@Mapping(source = "id", target = "id")
+	@Mapping(source = "status", target = "status")
+	@Mapping(source = "wordList", target = "wordList")
+	@Mapping(source = "wordListScore", target = "wordListScore")
+	@Mapping(source = "score_1", target = "score_1")
+	@Mapping(source = "score_2", target = "score_2")
+	@Mapping(source = "gameDuration", target = "gameDuration")
+	@Mapping(source = "lobbyId", target = "lobbyId")
+	GameDTO convertEntityToGameDTO(Game game);
 
+	// lobby mapper
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "joinCode", target = "joinCode")
 	LobbyAccessInfoDTO convertEntityToLobbyAccessInfoDTO(Lobby lobby);
 
-
-
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "joinCode", target = "joinCode")
 	@Mapping(source = "gameDuration", target = "gameDuration")
-	@Mapping(source = "bingoBoardSize", target = "bingoBoardSize")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
 

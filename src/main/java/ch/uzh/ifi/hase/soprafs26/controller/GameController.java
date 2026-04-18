@@ -1,32 +1,33 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.UUID;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
-import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GameGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GamePostDTO;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
-import ch.uzh.ifi.hase.soprafs26.service.GameService;
-import ch.uzh.ifi.hase.soprafs26.service.LeaderboardService;
-import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
-
-import org.springframework.web.bind.annotation.RequestHeader;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
+import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
+import ch.uzh.ifi.hase.soprafs26.service.LeaderboardService;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Game Controller
@@ -38,53 +39,62 @@ import java.util.List;
 @RestController
 public class GameController {
 
-    private final GameService gameService;
     private final AuthService authService;
+    private final GameOrchestrationService gameOrchestrationService;
     private final LeaderboardService leaderboardService;
 
-    GameController(GameService gameService, AuthService authService, LeaderboardService leaderboardService) {
-        this.gameService = gameService;
+    GameController(AuthService authService, GameOrchestrationService gameOrchestrationService, LeaderboardService leaderboardService) {
         this.authService = authService;
+        this.gameOrchestrationService = gameOrchestrationService;
         this.leaderboardService = leaderboardService;
     }
- 
-    @GetMapping("/lobbies/{lobbyId}/games")
+
+
+    @GetMapping("/games/{gameId}/stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<GameGetDTO> getAllGames(@PathVariable UUID lobbyId,
-                                       @RequestHeader(value = "Authorization", required = false) String token) {
-        authService.authenticateToken(token);
-        List<Game> games = gameService.getGames();
-        List<GameGetDTO> gameGetDTOs = new ArrayList<>();
-
-        for (Game game : games) {
-            gameGetDTOs.add(DTOMapper.INSTANCE.convertEntityToGameGetDTO(game));
-        }
-        return gameGetDTOs;
+    public SseEmitter getGameByIdEmitter(@PathVariable UUID gameId,
+        @RequestHeader(value = "Authorization", required = false) String token) {
+        User user = authService.authenticateToken(token);
+        return gameOrchestrationService.startGameStream(user, gameId);
     }
 
-    @PostMapping("/lobbies/{lobbyId}/games")
-    @ResponseStatus(HttpStatus.CREATED)
+
+    @DeleteMapping("/games/{gameId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody
-    public GameGetDTO createGame(@PathVariable UUID lobbyId,
-                                 @RequestBody GamePostDTO gamePostDTO,
-                                 @RequestHeader(value = "Authorization", required = false) String token) {
-        authService.authenticateToken(token);
-        Game gameInput = DTOMapper.INSTANCE.convertGamePostDTOtoEntity(gamePostDTO);
-        Game createdGame = gameService.createGame(gameInput);
-        return DTOMapper.INSTANCE.convertEntityToGameGetDTO(createdGame);
+    public void deleteGame(@PathVariable UUID gameId,
+        @RequestHeader(value = "Authorization", required = false) String token) {
+        User user = authService.authenticateToken(token);
+        gameOrchestrationService.deleteGame(user, gameId);
     }
+
+
+    @PostMapping("/games/{gameId}/submission")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
+        @RequestParam("object") String object, @RequestParam("team") String team,
+        @PathVariable UUID gameId,
+        @RequestHeader(value = "Authorization", required = false) String token) throws Exception {
+        User user = authService.authenticateToken(token);
+
+        if (gameOrchestrationService.submitImage(user, gameId, file, object, team) == 1) {
+            return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(1));
+        } else {
+            return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(0));
+        }
+    }
+
 
     @PostMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public LeaderboardGetDTO postLeaderboard(@PathVariable UUID lobbyId,
-                                             @PathVariable Long gameId,
+                                             @PathVariable UUID gameId,
                                              @RequestBody LeaderboardPostDTO leaderboardPostDTO,
                                              @RequestHeader(value = "Authorization", required = false) String token) {
         authService.authenticateToken(token);
-        Game game = gameService.getGameById(gameId);
-
+        Game game = gameOrchestrationService.getGameById(gameId);
         Leaderboard leaderboard = leaderboardService.initOrUpdate(game);
 
         LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
@@ -94,11 +104,12 @@ public class GameController {
         return dto;
     }
 
+
     @GetMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public LeaderboardGetDTO getLeaderboard(@PathVariable UUID lobbyId,
-                                            @PathVariable Long gameId,
+                                            @PathVariable UUID gameId,
                                             @RequestHeader(value = "Authorization", required = false) String token) {
         authService.authenticateToken(token);
         Leaderboard leaderboard = leaderboardService.getLeaderboard(gameId);
@@ -109,45 +120,4 @@ public class GameController {
         dto.setTileGrid(leaderboard.getTileGrid());
         return dto;
     }
-
-    @PostMapping("/lobbies/{lobbyId}/games/{gameId}/submission")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
-                                       @RequestParam("object") String object,
-                                       @RequestParam("team") String team,
-                                       @PathVariable UUID lobbyId,
-                                       @PathVariable Long gameId,
-                                       @RequestHeader(value = "Authorization", required = false) String token
-                                       ) throws Exception {
-
-    authService.authenticateToken(token);
-    Game game=gameService.getGameById(gameId);//get game and check if exists
-
-    //check if the word is in the list and if yes return the index
-    String[] wordlist = game.getWordList();
-    int indexofword= gameService.checkWordList(wordlist,object);
-
-
-    //check if the word is not taken;
-    String[] wordlistscore = game.getWordListScore();
-    gameService.checkWordTaken(wordlistscore,indexofword );
-    
-
-    //set word as taken
-    //teamscore +=1
-    //return 1 if found, 0 if not
-
-    if( gameService.imageSubmission(file, object,wordlistscore,indexofword,team, game) == 1)
-    {int result = 1;
-        return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(result));
-    }
-    else{
-        int result=0;
-        return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(result));
-        
-    }
-
-
 }
-}
-

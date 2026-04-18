@@ -3,7 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameResultGetDTO;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyAccessInfoDTO;
@@ -85,5 +85,14 @@ public interface DTOMapper {
 	@Mapping(source = "gameDuration", target = "gameDuration")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
+	
+	
+	@Mapping(target = "winnerTeam", ignore = true)
+	@Mapping(target = "winnerScore", ignore = true)
+	@Mapping(target = "loserTeam", ignore = true)
+	@Mapping(target = "loserScore", ignore = true)
+	@Mapping(target = "isDraw", ignore = true)
+	@Mapping(target = "playerList", ignore = true)
+	GameResultGetDTO convertEntityToGameResultGetDTO(Game game);
 
 }

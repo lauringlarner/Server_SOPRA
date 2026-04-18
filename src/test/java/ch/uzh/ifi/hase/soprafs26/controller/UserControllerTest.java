@@ -8,6 +8,13 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
+import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
+
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameResultGetDTO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -42,6 +49,9 @@ public class UserControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@MockitoBean
+    private GameOrchestrationService gameOrchestrationService;
 
 	@MockitoBean
 	private UserService userService;
@@ -198,6 +208,7 @@ public class UserControllerTest {
 		mockMvc.perform(putRequest)
 				.andExpect(status().isForbidden());
 	}
+
 
 	/**
 	 * Helper Method to convert userPostDTO into a JSON string such that the input

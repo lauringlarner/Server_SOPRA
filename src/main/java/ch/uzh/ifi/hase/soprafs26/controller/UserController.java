@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameResultGetDTO;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PasswordChangeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;

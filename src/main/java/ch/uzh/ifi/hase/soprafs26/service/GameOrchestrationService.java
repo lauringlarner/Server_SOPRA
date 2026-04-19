@@ -1,12 +1,16 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import java.io.IOException;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
@@ -21,10 +25,16 @@ public class GameOrchestrationService {
 
     private final GameService gameService;
     private final LobbyService lobbyService;
+    private final LeaderboardService leaderboardService;
 
-    public GameOrchestrationService(GameService gameService, LobbyService lobbyService) {
+    public GameOrchestrationService(
+        GameService gameService,
+        LobbyService lobbyService,
+        LeaderboardService leaderboardService
+    ) {
         this.gameService = gameService;
         this.lobbyService = lobbyService;
+        this.leaderboardService = leaderboardService;
     }
 
 
@@ -49,9 +59,10 @@ public class GameOrchestrationService {
 
         // create game
         Game game = gameService.createGame(lobby);
+        leaderboardService.initOrUpdate(game);
 
-        // set gameId in lobby
-        lobby.setGameId(game.getId());
+        // set gameId in lobby and publish the started-lobby update to SSE subscribers
+        lobbyService.setLobbyGameId(lobby, game.getId());
 
         return game;
     }
@@ -71,7 +82,7 @@ public class GameOrchestrationService {
     }
 
 
-    public int submitImage(User user, UUID gameId, MultipartFile file, String object, String team) {
+    public void submitImageAsync(User user, UUID gameId, MultipartFile file, String object) {
         // fetch Game from gameId and player from user or Not Found
         Game game = gameService.getGameById(gameId);
         LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
@@ -79,13 +90,27 @@ public class GameOrchestrationService {
         // validate player is in game or FORBIDDEN
         lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
 
-        //check if the word is in the list and if yes return the index
-        int index = gameService.checkWordList(game.getWordList(), object);
+        TeamType teamType = lobbyPlayer.getTeamType();
+        if (teamType != TeamType.Team1 && teamType != TeamType.Team2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player is not in a valid team!");
+        }
 
-        //check if the word is not taken;
-        gameService.checkWordTaken(game.getWordListScore(), index);
+        gameService.validateSubmissionRequest(game, file, object);
 
-        return gameService.imageSubmission(file, object, game.getWordListScore(), index, team, game);
+        try {
+            byte[] fileBytes = file.getBytes();
+            String team = teamType == TeamType.Team1 ? "1" : "2";
+
+            gameService.markSubmissionProcessing(game, object, team);
+            gameService.processSubmissionAsync(
+                gameId,
+                fileBytes,
+                object,
+                team
+            );
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+        }
     }
 
 

@@ -73,6 +73,7 @@ public interface DTOMapper {
 	@Mapping(source = "score_2", target = "score_2")
 	@Mapping(source = "gameDuration", target = "gameDuration")
 	@Mapping(source = "lobbyId", target = "lobbyId")
+	@Mapping(source = "tileGrid", target = "tileGrid")
 	GameDTO convertEntityToGameDTO(Game game);
 
 	// lobby mapper
@@ -83,6 +84,7 @@ public interface DTOMapper {
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "joinCode", target = "joinCode")
 	@Mapping(source = "gameDuration", target = "gameDuration")
+	@Mapping(source = "gameId", target = "gameId")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
 

@@ -19,8 +19,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -71,18 +69,13 @@ public class GameController {
 
 
     @PostMapping("/games/{gameId}/submission")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ImageAnalysisGetDTO analyze(@RequestParam("image") MultipartFile file,
-        @RequestParam("object") String object, @RequestParam("team") String team,
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void analyze(@RequestParam("image") MultipartFile file,
+        @RequestParam("object") String object,
         @PathVariable UUID gameId,
         @RequestHeader(value = "Authorization", required = false) String token) throws Exception {
         User user = authService.authenticateToken(token);
-
-        if (gameOrchestrationService.submitImage(user, gameId, file, object, team) == 1) {
-            return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(1));
-        } else {
-            return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(0));
-        }
+        gameOrchestrationService.submitImageAsync(user, gameId, file, object);
     }
 
 

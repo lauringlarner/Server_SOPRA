@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
+import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 
 public class GameDTO {
 
@@ -15,6 +16,7 @@ public class GameDTO {
 	private int score_2;
 	private Integer gameDuration;
 	private UUID lobbyId;
+	private Tile[][] tileGrid;
 
 	public UUID getLobbyId() {
 		return lobbyId;
@@ -80,7 +82,14 @@ public class GameDTO {
 	public void setScore_2(int score_2) {
 		this.score_2 = score_2;
 	}
-}
 
+	public Tile[][] getTileGrid() {
+		return tileGrid;
+	}
+
+	public void setTileGrid(Tile[][] tileGrid) {
+		this.tileGrid = tileGrid;
+	}
+}
 
 

@@ -230,6 +230,9 @@ public class LobbyService {
    
     public void setLobbyGameId(Lobby lobby, UUID gameId) {
         lobby.setGameId(gameId);
+
+        // Notify connected lobby clients immediately so they can transition into the game.
+        pushLobbyUpdate(lobby);
         
         log.debug("Lobby {} is now running the game {}", lobby, gameId);
     }

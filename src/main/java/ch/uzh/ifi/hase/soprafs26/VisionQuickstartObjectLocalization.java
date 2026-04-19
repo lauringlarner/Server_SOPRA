@@ -19,7 +19,9 @@ public class VisionQuickstartObjectLocalization {
             InputStream stream = VisionQuickstartObjectLocalization.class
                     .getClassLoader()
                     .getResourceAsStream("sopra-fs26-group-18-server-254a2c84c9e1.json");
-            GoogleCredentials credentials = GoogleCredentials.fromStream(stream)
+            GoogleCredentials credentials = (stream != null
+                    ? GoogleCredentials.fromStream(stream)
+                    : GoogleCredentials.getApplicationDefault())
                     .createScoped("https://www.googleapis.com/auth/cloud-platform");
             ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
                     .setCredentialsProvider(() -> credentials)

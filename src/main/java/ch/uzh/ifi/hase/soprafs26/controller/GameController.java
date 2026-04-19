@@ -78,7 +78,7 @@ public class GameController {
         @RequestHeader(value = "Authorization", required = false) String token) throws Exception {
         User user = authService.authenticateToken(token);
 
-        if (gameOrchestrationService.submitImage(user, gameId, file, object, team) == 1) {
+        if (gameOrchestrationService.submitImage(user, gameId, file, object, team, user.getUsername()) == 1) {
             return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(1));
         } else {
             return DTOMapper.INSTANCE.convertImageAnalysisResultToGetDTO(new ImageAnalysisResult(0));

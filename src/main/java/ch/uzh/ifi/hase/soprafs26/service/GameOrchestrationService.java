@@ -71,22 +71,22 @@ public class GameOrchestrationService {
     }
 
 
-    public int submitImage(User user, UUID gameId, MultipartFile file, String object, String team) {
-        // fetch Game from gameId and player from user or Not Found
-        Game game = gameService.getGameById(gameId);
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
+   public int submitImage(User user, UUID gameId, MultipartFile file, String object, String team, String playerName) {
+    // fetch Game from gameId and player from user or Not Found
+    Game game = gameService.getGameById(gameId);
+    LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
 
-        // validate player is in game or FORBIDDEN
-        lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
+    // validate player is in game or FORBIDDEN
+    lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
 
-        //check if the word is in the list and if yes return the index
-        int index = gameService.checkWordList(game.getWordList(), object);
+    //check if the word is in the list and if yes return the index
+    int index = gameService.checkWordList(game.getWordList(), object);
 
-        //check if the word is not taken;
-        gameService.checkWordTaken(game.getWordListScore(), index);
+    //check if the word is not taken
+    gameService.checkWordTaken(game.getWordListScore(), index);
 
-        return gameService.imageSubmission(file, object, game.getWordListScore(), index, team, game);
-    }
+    return gameService.imageSubmission(file, object, game.getWordListScore(), index, team, game, playerName);
+}
 
 
     public Game getGameById(UUID gameId) {

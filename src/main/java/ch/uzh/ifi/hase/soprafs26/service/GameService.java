@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,6 +22,7 @@ import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.TileStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
+import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
@@ -89,6 +91,14 @@ public class GameService {
 			}
 		}
 		newGame.setTileGrid(tileGrid);
+
+	// initialize scorer map with all players set to 0
+    Map<String, Integer> scorer = new HashMap<>();
+    for (LobbyPlayer lobbyPlayer : lobby.getLobbyPlayers()) {
+        String username = lobbyPlayer.getUser().getUsername();
+        scorer.put(username, 0);
+    }
+    newGame.setScorer(scorer);
 
 		newGame = gameRepository.save(newGame);
 		gameRepository.flush();
@@ -226,13 +236,18 @@ public class GameService {
 		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already taken by a team!");
 	}
 
-	public int imageSubmission(MultipartFile file, String object, List<String> wordListScore, int indexOfWord, String team, Game game){
+	public int imageSubmission(MultipartFile file, String object, List<String> wordListScore, int indexOfWord, String team, Game game,  String playerName){
 	try{
     //check if the object is in the image
     if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
 
         //set word as taken
         wordListScore.set(indexOfWord, "1");
+
+
+		// add score to the player who submitted
+		addScore(game, playerName, 1);
+
 
         // claim tile, update score via ScoreService
         scoreService.claimTile(game, indexOfWord, team);
@@ -262,5 +277,14 @@ public class GameService {
 //set word as taken
  //teamscore +=1
 //return 1 if found, 0 if not
+
+public void addScore(Game game, String playerName, int points) {
+    Map<String, Integer> scorer = game.getScorer();
+    scorer.merge(playerName, points, Integer::sum);
+    game.setScorer(scorer);
+    gameRepository.save(game);
+}
+
+
 
 }

@@ -3,6 +3,10 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.HashMap;
+import java.util.Map;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +19,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+
 
 /**
  * Internal User Representation
@@ -62,6 +68,11 @@ public class Game implements Serializable {
 
 	@Column(columnDefinition = "TEXT")
 	private String tileGridJson;
+
+	@Column(columnDefinition = "TEXT")
+	private String scorerJson;
+
+
 
 	public void setLobbyId(UUID lobbyId) {
 		this.lobbyId = lobbyId;
@@ -143,6 +154,7 @@ public class Game implements Serializable {
 		this.tileGridJson = tileGridJson;
 	}
 
+
 	public Tile[][] getTileGrid() {
 		if (tileGridJson == null) return null;
 		try {
@@ -161,6 +173,26 @@ public class Game implements Serializable {
 			this.tileGridJson = mapper.writeValueAsString(tileGrid);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("Failed to serialize tileGrid", e);
+		}
+	}
+
+
+	public Map<String, Integer> getScorer() {
+    if (scorerJson == null) return new HashMap<>();
+    try {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(scorerJson, new TypeReference<Map<String, Integer>>() {});
+    } catch (JsonProcessingException e) {
+        throw new RuntimeException("Failed to deserialize scorer", e);
+    }
+}
+
+	public void setScorer(Map<String, Integer> scorer) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			this.scorerJson = mapper.writeValueAsString(scorer);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Failed to serialize scorer", e);
 		}
 	}
 }

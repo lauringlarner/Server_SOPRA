@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 /**
@@ -42,6 +43,8 @@ public class UserService {
 	// Creation //
 	//////////////
 
+
+
 	public User createUser(User newUser) {
 		// Validate username
 		if (newUser.getUsername() == null || newUser.getUsername().isEmpty()) {
@@ -63,6 +66,9 @@ public class UserService {
 		if (!newUser.getPassword().chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
 		}
+
+ 
+		// Bio is deleted
 
 		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 		newUser.setToken(UUID.randomUUID().toString());
@@ -119,6 +125,8 @@ public class UserService {
 			}
 			user.setUsername(updatedUser.getUsername());
 		}
+
+		// name and bio are deleted
 
 		user = userRepository.save(user);
 		userRepository.flush();

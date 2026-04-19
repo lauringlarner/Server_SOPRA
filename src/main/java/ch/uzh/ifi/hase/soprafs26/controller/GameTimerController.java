@@ -31,7 +31,7 @@ public class GameTimerController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public GameTimerDTO startTimer(@PathVariable UUID lobbyId,
-            @PathVariable Long gameId,
+            @PathVariable UUID gameId,
             @RequestHeader(value = "Authorization", required = false) String token) {
         authService.authenticateToken(token);
 
@@ -48,7 +48,7 @@ public class GameTimerController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public GameTimerDTO getTimer(@PathVariable UUID lobbyId,
-            @PathVariable Long gameId) {
+            @PathVariable UUID gameId) {
         GameTimer timer = gameTimerService.getTimerByGameId(gameId);
 
         GameTimerDTO dto = new GameTimerDTO();

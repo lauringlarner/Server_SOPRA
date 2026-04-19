@@ -25,7 +25,7 @@ public class GameTimerService {
         this.gameTimerRepository = gameTimerRepository;
     }
 
-    public GameTimer createTimer(Long gameId, Integer durationMinutes) {
+    public GameTimer createTimer(UUID gameId, Integer durationMinutes) {
         if (durationMinutes == null || durationMinutes < 5 || durationMinutes > 120) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game duration must be between 5 and 120 minutes!");
         }
@@ -41,7 +41,7 @@ public class GameTimerService {
         return gameTimerRepository.save(timer);
     }
 
-    public GameTimer startTimer(Long gameId) {
+    public GameTimer startTimer(UUID gameId) {
         GameTimer timer = getTimerByGameId(gameId);
 
         if (timer.getStatus() != TimerStatus.NOT_STARTED) {
@@ -54,7 +54,7 @@ public class GameTimerService {
         return gameTimerRepository.save(timer);
     }
 
-    public GameTimer getTimerByGameId(Long gameId) {
+    public GameTimer getTimerByGameId(UUID gameId) {
         GameTimer timer = gameTimerRepository.findByGameId(gameId);
         if (timer == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No timer found for this game!");

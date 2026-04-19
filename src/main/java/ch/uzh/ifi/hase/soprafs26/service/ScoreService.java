@@ -52,4 +52,109 @@ public class ScoreService {
 
         game.setTileGrid(tileGrid);
     }
+    
+
+    // not used anywhere yet!
+    public int[] calculateBonusPoints(Game game) {
+        final int rowBonus = 5;
+        final int colBonus = 5;
+        final int diagBonus = 5;
+
+        int bonusPointsTeam1 = 0;
+        int bonusPointsTeam2 = 0;
+        int boardSize = game.getBoardSize();
+        Tile[][] tileGrid = game.getTileGrid();
+
+        // row bonus
+        for (int col = 0; col < boardSize; col++) {
+            int claimedTeam1 = 0;
+            int claimedTeam2 = 0;
+
+            for (int row = 0; row < boardSize; row++) {
+                Tile tile = tileGrid[row][col];
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM1) {
+                    claimedTeam1++;
+                }
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM2) {
+                    claimedTeam2++;
+                }
+            }
+
+            if (claimedTeam1 == boardSize) {
+                bonusPointsTeam1 = bonusPointsTeam1 + colBonus;
+            }
+            if (claimedTeam2 == boardSize) {
+                bonusPointsTeam2 = bonusPointsTeam2 + colBonus;
+            }
+        }
+
+        // col bonus
+        for (int row = 0; row < boardSize; row++) {
+            int claimedTeam1 = 0;
+            int claimedTeam2 = 0;
+
+            for (int col = 0; col < boardSize; col++) {
+                Tile tile = tileGrid[row][col];
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM1) {
+                    claimedTeam1++;
+                }
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM2) {
+                    claimedTeam2++;
+                }
+            }
+
+            if (claimedTeam1 == boardSize) {
+                bonusPointsTeam1 = bonusPointsTeam1 + rowBonus;
+            }
+            if (claimedTeam2 == boardSize) {
+                bonusPointsTeam2 = bonusPointsTeam2 + rowBonus;
+            }
+        }
+
+        // diag bonus
+        // TLBR->top left to bottom right, TRBL->top right to bottom left
+        int claimedTeam1TLBR = 0;
+        int claimedTeam2TLBR = 0;
+        int claimedTeam1TRBL = 0;
+        int claimedTeam2TRBL = 0;
+        for (int idx = 0; idx < boardSize; idx++) {
+            // checks \
+            Tile tileTLBR = tileGrid[idx][idx];
+            if (tileTLBR.getStatus() == TileStatus.CLAIMED_TEAM1) {
+                claimedTeam1TLBR++;
+            }
+            if (tileTLBR.getStatus() == TileStatus.CLAIMED_TEAM2) {
+                claimedTeam2TLBR++;
+            }
+            // checks /
+            Tile tileTRBL = tileGrid[idx][boardSize - idx - 1];
+            if (tileTRBL.getStatus() == TileStatus.CLAIMED_TEAM1) {
+                claimedTeam1TRBL++;
+            }
+            if (tileTRBL.getStatus() == TileStatus.CLAIMED_TEAM2) {
+                claimedTeam2TRBL++;
+            }
+        }
+
+
+        if (claimedTeam1TLBR == boardSize) {
+            bonusPointsTeam1 = bonusPointsTeam1 + diagBonus;
+        }
+        if (claimedTeam2TLBR == boardSize) {
+            bonusPointsTeam2 = bonusPointsTeam2 + diagBonus;
+        }
+        if (claimedTeam1TRBL == boardSize) {
+            bonusPointsTeam1 = bonusPointsTeam1 + diagBonus;
+        }
+        if (claimedTeam2TRBL == boardSize) {
+            bonusPointsTeam2 = bonusPointsTeam2 + diagBonus;
+        }
+
+        return new int[]{bonusPointsTeam1,bonusPointsTeam2};
+    }
+    
+    
+
+
+
 }

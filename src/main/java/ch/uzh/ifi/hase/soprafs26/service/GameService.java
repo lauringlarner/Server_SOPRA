@@ -79,13 +79,13 @@ public class GameService {
 		// set game duration setting from lobby
 		newGame.setGameDuration(lobby.getGameDuration());
 
-		// build NxN tileGrid
+		// build NxN tileGrid from wordList (same order, row-major)
 		int boardSize = 4;
 		newGame.setBoardSize(boardSize);
 		Tile[][] tileGrid = new Tile[boardSize][boardSize];
 		for (int i = 0; i < boardSize; i++) {
 			for (int j = 0; j < boardSize; j++) {
-				tileGrid[i][j] = new Tile(Words.Word(), 1, TileStatus.UNCLAIMED);
+				tileGrid[i][j] = new Tile(wordList.get(i * boardSize + j), 1, TileStatus.UNCLAIMED);
 			}
 		}
 		newGame.setTileGrid(tileGrid);

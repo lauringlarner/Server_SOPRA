@@ -238,7 +238,9 @@ public class LobbyService {
     // Deletion //
     //////////////
     
-    public void deleteLobby(Lobby lobby) {
+    public void deleteLobby(LobbyPlayer lobbyPlayer, Lobby lobby) {
+        // remove host and send SSE to all remaining players before deletion
+        deleteLobbyPlayer(lobbyPlayer);
         lobbyRepository.delete(lobby);
 
         log.debug("Lobby successfully deleted");

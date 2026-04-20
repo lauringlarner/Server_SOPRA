@@ -64,7 +64,7 @@ public class LobbyController {
     }
 
 
-    @GetMapping("/lobbies/{lobbyId}/stream")
+    @GetMapping(value = "/lobbies/{lobbyId}/stream", produces = "text/event-stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public SseEmitter getLobbyByIdEmitter(@PathVariable UUID lobbyId,

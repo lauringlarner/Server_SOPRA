@@ -21,7 +21,6 @@ import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
 import ch.uzh.ifi.hase.soprafs26.service.LeaderboardService;
@@ -48,7 +47,7 @@ public class GameController {
     }
 
 
-    @GetMapping("/games/{gameId}/stream")
+    @GetMapping(value = "/games/{gameId}/stream", produces = "text/event-stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public SseEmitter getGameByIdEmitter(@PathVariable UUID gameId,

@@ -189,7 +189,7 @@ public class LobbyService {
     public void updateTeamType(LobbyPlayer lobbyPlayer, TeamType teamType) {
         validateTeamType(teamType); // BAD_REQUEST on failure
         lobbyPlayer.setTeamType(teamType);
-        
+        lobbyPlayerRepository.flush();
         // SSE push update
         pushLobbyUpdate(lobbyPlayer.getLobby());
         
@@ -199,7 +199,7 @@ public class LobbyService {
     public void updateReadyStatus(LobbyPlayer lobbyPlayer, Boolean readyStatus) {
         validateReadyStatus(readyStatus); // BAD_REQUEST on failure 
         lobbyPlayer.setIsReady(readyStatus);
-        
+        lobbyPlayerRepository.flush();
         // SSE push update
         pushLobbyUpdate(lobbyPlayer.getLobby());
         
@@ -218,7 +218,7 @@ public class LobbyService {
     public void updateLobbySettings(Lobby lobby, Integer gameDuration) {
         validateGameDuration(gameDuration); // BAD_REQUEST on failure
         lobby.setGameDuration(gameDuration);
-        
+        lobbyRepository.flush();
         // SSE push update
         pushLobbyUpdate(lobby);
         
@@ -227,7 +227,7 @@ public class LobbyService {
    
     public void setLobbyGameId(Lobby lobby, UUID gameId) {
         lobby.setGameId(gameId);
-
+        lobbyRepository.flush();
         // Notify connected lobby clients immediately so they can transition into the game.
         pushLobbyUpdate(lobby);
         
@@ -250,9 +250,10 @@ public class LobbyService {
         lobby.removePlayer(lobbyPlayer);
         
         lobbyPlayerRepository.delete(lobbyPlayer);
-        
+        lobbyPlayerRepository.flush();
+
         // SSE push update
-        pushLobbyUpdate(lobbyPlayer.getLobby());
+        pushLobbyUpdate(lobby);
         
         log.debug("Player successfully deleted");
     }

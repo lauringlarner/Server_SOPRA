@@ -153,7 +153,9 @@ public class GameService {
 				.name("gameUpdate")
 				.data(DTOMapper.INSTANCE.convertEntityToGameDTO(game)));
 		} catch (Exception e) {
-			emitter.completeWithError(e);
+            log.error("Initial SSE send failed for game {}", game.getId(), e);
+            emitter.completeWithError(e);
+            sseService.remove(game.getId(), emitter);
 		}
 
 		// register emitter

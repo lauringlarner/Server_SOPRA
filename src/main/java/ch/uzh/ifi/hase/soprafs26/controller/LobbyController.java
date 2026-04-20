@@ -3,6 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,7 +68,7 @@ public class LobbyController {
     @GetMapping(value = "/lobbies/{lobbyId}/stream", produces = "text/event-stream")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public SseEmitter getLobbyByIdEmitter(@PathVariable UUID lobbyId,
+    public ResponseEntity<SseEmitter> getLobbyByIdEmitter(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
@@ -79,7 +80,13 @@ public class LobbyController {
         // validate lobbyPlayer is in lobby or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
 
-        return lobbyService.createAndRegisterLobbyStream(lobby);
+        SseEmitter emitter = lobbyService.createAndRegisterLobbyStream(lobby);
+
+        return ResponseEntity.ok()
+            .header("Cache-Control", "no-cache, no-transform")
+            .header("Connection", "keep-alive")
+            .header("X-Accel-Buffering", "no")
+            .body(emitter);
     }
     
 

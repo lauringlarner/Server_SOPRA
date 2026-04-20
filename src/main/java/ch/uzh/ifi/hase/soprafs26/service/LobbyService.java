@@ -438,7 +438,9 @@ public class LobbyService {
                 .name("lobbyUpdate")
                 .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
         } catch (Exception e) {
+            log.error("Initial SSE send failed for lobby {}", lobby.getId(), e);
             emitter.completeWithError(e);
+            sseService.remove(lobby.getId(), emitter);
         }
 
 		// register emitter

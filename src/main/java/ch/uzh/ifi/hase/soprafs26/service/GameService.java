@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,14 +59,22 @@ public class GameService {
 
 	public Game createGame(Lobby lobby) {
 		Game newGame = new Game();
+		int boardSize = 4;
+		List<String> wordList = new ArrayList<>();
+		Tile[][] tileGrid = new Tile[boardSize][boardSize];
 
 		newGame.setStatus(GameStatus.IN_PROGRESS);
 		newGame.setLobbyId(lobby.getId());
-		//setwordlist
-		List<String> wordList = new ArrayList<>();
-		for (int i = 0; i < 16; i++) {
-			wordList.add(Words.Word());
+
+		// Build one canonical 4x4 board and derive the flat word list from it.
+		for (int row = 0; row < boardSize; row++) {
+			for (int col = 0; col < boardSize; col++) {
+				String word = Words.Word();
+				wordList.add(word);
+				tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+			}
 		}
+
 		newGame.setWordList(wordList);
 		//set WordListScore
 		List<String> wordListScore = new ArrayList<>();
@@ -79,15 +88,7 @@ public class GameService {
 		// set game duration setting from lobby
 		newGame.setGameDuration(lobby.getGameDuration());
 
-		// build NxN tileGrid from wordList (same order, row-major)
-		int boardSize = 4;
 		newGame.setBoardSize(boardSize);
-		Tile[][] tileGrid = new Tile[boardSize][boardSize];
-		for (int i = 0; i < boardSize; i++) {
-			for (int j = 0; j < boardSize; j++) {
-				tileGrid[i][j] = new Tile(wordList.get(i * boardSize + j), 1, TileStatus.UNCLAIMED);
-			}
-		}
 		newGame.setTileGrid(tileGrid);
 
 		newGame = gameRepository.save(newGame);
@@ -201,41 +202,108 @@ public class GameService {
 		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already taken by a team!");
 	}
 
-	public int imageSubmission(MultipartFile file, String object, List<String> wordListScore, int indexOfWord, String team, Game game){
-	try{
-    //check if the object is in the image
-    if(VisionQuickstartObjectLocalization.analyzeimage(file.getBytes(), object) == 1){//the object is in the list
-
-        //set word as taken
-        wordListScore.set(indexOfWord, "1");
-
-        // claim tile, update score via ScoreService
-        scoreService.claimTile(game, indexOfWord, team);
-
-        // update leaderboard
-        leaderboardService.updateLeaderboard(game);
-
-        //here check if all words are taken and end the game(all objects found == all items in wordlistscore != 0)
-
-       gameRepository.flush();
-	    // SSE pushes update
-        pushGameUpdate(game);
-
-        //return
-        int result = 1;
-            return result;
-        
-    }else{
-        int result=0;
-        return result;
-        
-	}}catch (Exception e) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+	public void validateTileAvailable(Game game, int indexOfWord) {
+		Tile tile = getTileAtIndex(game, indexOfWord);
+		if (tile.getStatus() != TileStatus.UNCLAIMED) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Word is already being processed or claimed!");
 		}
 	}
 
-//set word as taken
- //teamscore +=1
-//return 1 if found, 0 if not
+	public void validateSubmissionRequest(Game game, MultipartFile file, String object) {
+		if (file == null || file.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is missing!");
+		}
+		if (object == null || object.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Object is missing!");
+		}
+
+		int indexOfWord = checkWordList(game.getWordList(), object);
+		checkWordTaken(game.getWordListScore(), indexOfWord);
+		validateTileAvailable(game, indexOfWord);
+	}
+
+	public void markSubmissionProcessing(Game game, String object, String team) {
+		int indexOfWord = checkWordList(game.getWordList(), object);
+		Tile[][] tileGrid = game.getTileGrid();
+		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), indexOfWord);
+		tile.setStatus(getProcessingStatus(team));
+		game.setTileGrid(tileGrid);
+		gameRepository.flush();
+		pushGameUpdate(game);
+	}
+
+	@Async
+	public void processSubmissionAsync(UUID gameId, byte[] fileBytes, String object, String team) {
+		try {
+			processSubmission(gameId, fileBytes, object, team);
+		} catch (ResponseStatusException exception) {
+			log.debug("Submission for game {} was not applied: {}", gameId, exception.getReason());
+		} catch (Throwable exception) {
+			log.error("Submission for game {} failed", gameId, exception);
+		}
+	}
+
+	@Transactional
+	public void processSubmission(UUID gameId, byte[] fileBytes, String object, String team) {
+		Game game = getGameById(gameId);
+		int indexOfWord = checkWordList(game.getWordList(), object);
+		Tile[][] tileGrid = game.getTileGrid();
+		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), indexOfWord);
+		TileStatus processingStatus = getProcessingStatus(team);
+
+		if (tile.getStatus() != processingStatus) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Tile is no longer reserved for this submission!");
+		}
+
+		try {
+			if (VisionQuickstartObjectLocalization.analyzeimage(fileBytes, object) != 1) {
+				resetTileStatus(game, indexOfWord);
+				return;
+			}
+
+			tile.setStatus(TileStatus.UNCLAIMED);
+			game.setTileGrid(tileGrid);
+			game.getWordListScore().set(indexOfWord, "1");
+
+			scoreService.claimTile(game, indexOfWord, team);
+			leaderboardService.updateLeaderboard(game);
+
+			gameRepository.flush();
+			pushGameUpdate(game);
+		} catch (Throwable exception) {
+			resetTileStatus(game, indexOfWord);
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+		}
+	}
+
+	private Tile getTileAtIndex(Tile[][] tileGrid, int boardSize, int tileIndex) {
+		int row = tileIndex / boardSize;
+		int col = tileIndex % boardSize;
+		return tileGrid[row][col];
+	}
+
+	private Tile getTileAtIndex(Game game, int tileIndex) {
+		return getTileAtIndex(game.getTileGrid(), game.getBoardSize(), tileIndex);
+	}
+
+	private TileStatus getProcessingStatus(String team) {
+		if ("1".equals(team)) {
+			return TileStatus.PROCESSING_TEAM1;
+		}
+		if ("2".equals(team)) {
+			return TileStatus.PROCESSING_TEAM2;
+		}
+
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");
+	}
+
+	private void resetTileStatus(Game game, int tileIndex) {
+		Tile[][] tileGrid = game.getTileGrid();
+		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), tileIndex);
+		tile.setStatus(TileStatus.UNCLAIMED);
+		game.setTileGrid(tileGrid);
+		gameRepository.flush();
+		pushGameUpdate(game);
+	}
 
 }

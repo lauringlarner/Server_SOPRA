@@ -2,11 +2,8 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,17 +32,17 @@ public class LobbyService {
     private final LobbyPlayerRepository lobbyPlayerRepository;
 
 	private final LobbyRepository lobbyRepository;
-    
-    private final Map<UUID, List<SseEmitter>> lobbyEmitters = new ConcurrentHashMap<>();
 
-    private final GameService gameService;
+    private final SseService sseService;
 
     private final Logger log = LoggerFactory.getLogger(LobbyService.class);
 
-	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository, @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository, GameService gameService) {
+	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository,
+                        @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository,
+                        SseService sseService) {
 		this.lobbyRepository = lobbyRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
-        this.gameService = gameService;
+        this.sseService = sseService;
 	}
 
     //////////////
@@ -444,41 +441,18 @@ public class LobbyService {
         }
 
 		// register emitter
-		registerLobbyEmitter(lobby.getId(), emitter);
+		sseService.register(lobby.getId(), emitter);
 
 		// lifecycle cleanup
-		emitter.onCompletion(() -> removeLobbyEmitter(lobby.getId(), emitter));
-        emitter.onTimeout(() -> removeLobbyEmitter(lobby.getId(), emitter));
+		emitter.onCompletion(() -> sseService.remove(lobby.getId(), emitter));
+        emitter.onTimeout(() -> sseService.remove(lobby.getId(), emitter));
 
 		return emitter;
 	}
 
-    public void registerLobbyEmitter(UUID lobbyId, SseEmitter emitter) {
-        lobbyEmitters.computeIfAbsent(lobbyId, k -> new ArrayList<>()).add(emitter);
-    }
-
-    public void removeLobbyEmitter(UUID lobbyId, SseEmitter emitter) {
-        List<SseEmitter> emitters = lobbyEmitters.get(lobbyId);
-        if (emitters != null) {
-            emitters.remove(emitter);
-            if (emitters.isEmpty()) {
-                lobbyEmitters.remove(lobbyId);
-            }
-        }
-    }
-
     public void pushLobbyUpdate(Lobby lobby) {
-        List<SseEmitter> emitters = lobbyEmitters.get(lobby.getId());
-        if (emitters != null) {
-            LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
-            for (SseEmitter emitter : emitters) {
-                try {
-                    emitter.send(SseEmitter.event().name("lobbyUpdate").data(lobbyDTO));
-                } catch (Exception e) {
-                    emitter.completeWithError(e);
-                }
-            }
-        }
+        LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
+        sseService.push(lobby.getId(), "lobbyUpdate", lobbyDTO);
     }
 
 }

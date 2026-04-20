@@ -2,9 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,15 +40,17 @@ public class GameService {
 	private final GameRepository gameRepository;
 	private final ScoreService scoreService;
 	private final LeaderboardService leaderboardService;
+	private final SseService sseService;
 
-	private final Map<UUID, List<SseEmitter>> gameEmitters = new ConcurrentHashMap<>();
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
-					   ScoreService scoreService,
-					   LeaderboardService leaderboardService) {
+					   	ScoreService scoreService,
+					   	LeaderboardService leaderboardService,
+						SseService sseService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
+		this.sseService = sseService;
 	}
 
 	//////////////
@@ -88,7 +88,15 @@ public class GameService {
 		// set game duration setting from lobby
 		newGame.setGameDuration(lobby.getGameDuration());
 
+		// build NxN tileGrid from wordList (same order, row-major)
+		int boardSize = 4;
 		newGame.setBoardSize(boardSize);
+		Tile[][] tileGrid = new Tile[boardSize][boardSize];
+		for (int i = 0; i < boardSize; i++) {
+			for (int j = 0; j < boardSize; j++) {
+				tileGrid[i][j] = new Tile(wordList.get(i * boardSize + j), 1, TileStatus.UNCLAIMED);
+			}
+		}
 		newGame.setTileGrid(tileGrid);
 
 		newGame = gameRepository.save(newGame);
@@ -157,44 +165,19 @@ public class GameService {
 		}
 
 		// register emitter
-		registerGameEmitter(game.getId(), emitter);
+		sseService.register(game.getId(), emitter);
 
 		// lifecycle cleanup
-		emitter.onCompletion(() -> removeGameEmitter(game.getId(), emitter));
-		emitter.onTimeout(() -> removeGameEmitter(game.getId(), emitter));
+		emitter.onCompletion(() -> sseService.remove(game.getId(), emitter));
+		emitter.onTimeout(() -> sseService.remove(game.getId(), emitter));
 
 		return emitter;
 	}
 
-	public void registerGameEmitter(UUID gameId, SseEmitter emitter) {
-		gameEmitters.computeIfAbsent(gameId, k -> new ArrayList<>()).add(emitter);
-	}
-
-	public void removeGameEmitter(UUID gameId, SseEmitter emitter) {
-		List<SseEmitter> emitters = gameEmitters.get(gameId);
-		if (emitters != null) {
-			emitters.remove(emitter);
-			if (emitters.isEmpty()) {
-				gameEmitters.remove(gameId);
-			}
-		}
-	}
-
 	public void pushGameUpdate(Game game) {
-		List<SseEmitter> emitters = gameEmitters.get(game.getId());
-		if (emitters != null) {
-			GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);
-			for (SseEmitter emitter : emitters) {
-				try {
-					emitter.send(SseEmitter.event().name("gameUpdate").data(gameDTO));
-				} catch (Exception e) {
-					emitter.completeWithError(e);
-				}
-			}
-		}
+		GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);
+		sseService.push(game.getId(), "gameUpdate", gameDTO);
 	}
-
-
 
 
 /* Not yet sorted, and in need of refactoring */

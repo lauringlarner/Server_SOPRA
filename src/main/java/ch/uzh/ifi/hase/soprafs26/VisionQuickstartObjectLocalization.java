@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
+
 public class VisionQuickstartObjectLocalization {
 
     private static final float THRESHOLD = 0.5f;
@@ -82,18 +84,25 @@ public class VisionQuickstartObjectLocalization {
 
             System.out.println("Word list: " + allWords);
 
-            String[] objectWords = object.toLowerCase().replaceAll("[^a-z ]", "").split("\\s+");
-            boolean allMatch = true;
-            for (String word : objectWords) {
-                if (word.length() <= 2) continue;
-                boolean found = allWords.stream().anyMatch(w -> w.contains(word));
-                if (!found) {
-                    allMatch = false;
-                    break;
+             List<String> acceptedTerms = SynonymMap.getAcceptedTerms(object);
+            System.out.println("Accepted terms for '" + object + "': " + acceptedTerms);
+
+            for (String term : acceptedTerms) {
+                String[] termWords = term.replaceAll("[^a-z ]", "").split("\\s+");
+                boolean allMatch = true;
+                for (String word : termWords) {
+                    if (word.length() <= 2) continue;
+                    boolean found = allWords.stream().anyMatch(w -> w.contains(word));
+                    if (!found) {
+                        allMatch = false;
+                        break;
+                    }
+                }
+                if (allMatch) {
+                    System.out.println("Matched via term: " + term);
+                    return 1;
                 }
             }
-
-            if (allMatch) return 1;
         }
 
         return 0;

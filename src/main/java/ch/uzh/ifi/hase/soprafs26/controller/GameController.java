@@ -79,7 +79,7 @@ public class GameController {
     }
 
 
-    @PostMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
+    @PostMapping("/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public LeaderboardGetDTO postLeaderboard(@PathVariable UUID lobbyId,
@@ -98,7 +98,7 @@ public class GameController {
     }
 
 
-    @GetMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
+    @GetMapping("/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public LeaderboardGetDTO getLeaderboard(@PathVariable UUID lobbyId,

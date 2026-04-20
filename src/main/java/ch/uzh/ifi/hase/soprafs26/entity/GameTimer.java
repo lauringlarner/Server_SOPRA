@@ -22,7 +22,7 @@ public class GameTimer {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private Long gameId;
+    private UUID gameId;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -42,11 +42,11 @@ public class GameTimer {
         this.id = id;
     }
 
-    public Long getGameId() {
+    public UUID getGameId() {
         return gameId;
     }
 
-    public void setGameId(Long gameId) {
+    public void setGameId(UUID gameId) {
         this.gameId = gameId;
     }
 

@@ -214,7 +214,7 @@ public class LobbyController {
         lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
 
         // delete lobby
-        lobbyService.deleteLobby(lobby);
+        lobbyService.deleteLobby(lobbyPlayer, lobby);
     }
 
 

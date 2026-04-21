@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -432,38 +433,27 @@ public class LobbyService {
     ///////////////////
     
     public SseEmitter createAndRegisterLobbyStream(Lobby lobby) {
-		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
 
-		// Send initial lobby state
-        try {
+        sseService.register(lobby.getId(), emitter);
 
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                for (int i = 0; i < 100; i++) {
+                    emitter.send(SseEmitter.event()
+                        .name("lobbyUpdate")
+                        .data("test " + i));
 
-            /////////////////////////////////////// test
-            for (int i = 0; i < 100; i++) {
-                emitter.send(SseEmitter.event().data("test " + i));
-                Thread.sleep(50);
+                    Thread.sleep(50);
+                }
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+                sseService.remove(lobby.getId(), emitter);
             }
-            /////////////////////////////////////////
+        });
 
-            
-            emitter.send(SseEmitter.event()
-                .name("lobbyUpdate")
-                .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
-        } catch (Exception e) {
-            log.error("Initial SSE send failed for lobby {}", lobby.getId(), e);
-            emitter.completeWithError(e);
-            sseService.remove(lobby.getId(), emitter);
-        }
-
-		// register emitter
-		sseService.register(lobby.getId(), emitter);
-
-		// lifecycle cleanup
-		emitter.onCompletion(() -> sseService.remove(lobby.getId(), emitter));
-        emitter.onTimeout(() -> sseService.remove(lobby.getId(), emitter));
-
-		return emitter;
-	}
+    return emitter;
+}
 
     public void pushLobbyUpdate(Lobby lobby) {
         LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);

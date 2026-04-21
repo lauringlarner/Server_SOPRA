@@ -436,6 +436,16 @@ public class LobbyService {
 
 		// Send initial lobby state
         try {
+
+
+            /////////////////////////////////////// test
+            for (int i = 0; i < 100; i++) {
+                emitter.send(SseEmitter.event().data("test " + i));
+                Thread.sleep(50);
+            }
+            /////////////////////////////////////////
+
+            
             emitter.send(SseEmitter.event()
                 .name("lobbyUpdate")
                 .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));

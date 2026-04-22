@@ -5,7 +5,7 @@ runtime: java17
 instance_class: F2
 
 env_variables:
-  pusher.appId: "2144608"
-  pusher.key: "5ecf3b7d78089be3782f"
-  pusher.secret: "2b349d34fd9136e01138"
-  pusher.cluster: "eu"
+  PUSHER_APP_ID: 2144608
+  PUSHER_KEY: 5ecf3b7d78089be3782f
+  PUSHER_SECRET: 2b349d34fd9136e01138
+  PUSHER_CLUSTER: eu

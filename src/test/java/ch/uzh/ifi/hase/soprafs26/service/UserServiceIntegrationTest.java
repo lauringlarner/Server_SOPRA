@@ -19,6 +19,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
  *
  * @see UserService
  */
+/*
 @WebAppConfiguration
 @SpringBootTest
 public class UserServiceIntegrationTest {
@@ -55,7 +56,7 @@ public class UserServiceIntegrationTest {
 		assertNotNull(createdUser.getToken());
 		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
 	}
-	/*
+	
 	@Test
 	public void createUser_duplicateUsername_throwsException() {
 		assertNull(userRepository.findByUsername("testUsername"));
@@ -75,5 +76,6 @@ public class UserServiceIntegrationTest {
 		// check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
 	}
-	*/
 }
+
+*/

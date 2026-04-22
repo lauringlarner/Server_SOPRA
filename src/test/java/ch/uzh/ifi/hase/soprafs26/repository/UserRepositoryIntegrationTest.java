@@ -11,9 +11,9 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-//@DataJpaTest
+@DataJpaTest
 public class UserRepositoryIntegrationTest {
-	/*
+
 	@Autowired
 	private TestEntityManager entityManager;
 
@@ -65,5 +65,4 @@ public class UserRepositoryIntegrationTest {
 		assertEquals(found.getUsername(), user.getUsername());
 		assertEquals(found.getToken(), user.getToken());
 	}
-	*/
 }

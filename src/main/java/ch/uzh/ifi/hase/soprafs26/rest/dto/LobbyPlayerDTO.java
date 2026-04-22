@@ -1,14 +1,17 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 
 public class LobbyPlayerDTO {
     
     private UUID id;
 
-    private String joinedAt;
+    private LocalDateTime joinedAt;
 
     private TeamType teamType;
 
@@ -16,7 +19,7 @@ public class LobbyPlayerDTO {
 
     private boolean isReady;
 
-    private UserGetDTO userGetDTO;
+    private User user;
 
 
     public UUID getId() {
@@ -27,11 +30,11 @@ public class LobbyPlayerDTO {
         this.id = id;
     }
 
-    public String getJoinedAt() {
+    public LocalDateTime getJoinedAt() {
         return joinedAt;
     }
 
-    public void setJoinedAt(String joinedAt) {
+    public void setJoinedAt(LocalDateTime joinedAt) {
         this.joinedAt = joinedAt;
     }
 
@@ -59,12 +62,12 @@ public class LobbyPlayerDTO {
         this.isReady = isReady;
     }
     // User getter returns UserGetDTO instead of the actual User to hide token
-    public UserGetDTO getUserGetDTO() {
-        return userGetDTO; 
+    public UserGetDTO getUser() {
+        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
     }
 
-    public void setUserGetDTO(UserGetDTO userGetDTO) {
-        this.userGetDTO = userGetDTO;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     

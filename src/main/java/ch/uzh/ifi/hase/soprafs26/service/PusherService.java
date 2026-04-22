@@ -15,10 +15,10 @@ public class PusherService {
     private final Logger log = LoggerFactory.getLogger(PusherService.class);
 
     public PusherService(
-            @Value("${pusher.appId}") String appId,
-            @Value("${pusher.key}") String key,
-            @Value("${pusher.secret}") String secret,
-            @Value("${pusher.cluster}") String cluster
+            @Value("${PUSHER_APP_ID}") String appId,
+            @Value("${PUSHER_KEY}") String key,
+            @Value("${PUSHER_SECRET}") String secret,
+            @Value("${PUSHER_CLUSTER}") String cluster
         ) {
 
         this.pusher = new Pusher(appId, key, secret);

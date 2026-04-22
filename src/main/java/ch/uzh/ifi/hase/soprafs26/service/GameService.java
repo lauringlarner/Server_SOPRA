@@ -69,7 +69,12 @@ public class GameService {
 		// Build one canonical 4x4 board and derive the flat word list from it.
 		for (int row = 0; row < boardSize; row++) {
 			for (int col = 0; col < boardSize; col++) {
-				String word = Words.Word();
+				String word;
+
+				do {
+            		word = Words.Word();
+        		} while (wordList.contains(word));
+
 				wordList.add(word);
 				tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
 			}

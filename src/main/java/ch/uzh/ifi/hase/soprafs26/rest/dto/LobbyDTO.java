@@ -1,6 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,13 +13,15 @@ public class LobbyDTO {
 
     private UUID gameId;
 
-    private LocalDateTime createdAt;
+    private String createdAt;
 
-    public LocalDateTime getCreatedAt() {
+    private List<LobbyPlayerDTO> lobbyPlayers;
+    
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -32,7 +33,6 @@ public class LobbyDTO {
         this.gameId = gameId;
     }
 
-    private List<LobbyPlayerDTO> lobbyPlayers;
 
     public String getJoinCode() {
         return joinCode;

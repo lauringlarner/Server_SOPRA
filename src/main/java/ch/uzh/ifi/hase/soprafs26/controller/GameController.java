@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
@@ -46,16 +46,16 @@ public class GameController {
         this.leaderboardService = leaderboardService;
     }
 
-
-    @GetMapping(value = "/games/{gameId}/stream", produces = "text/event-stream")
+    
+    @GetMapping("/games/{gameId}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public SseEmitter getGameByIdEmitter(@PathVariable UUID gameId,
+    public GameDTO getGameByIdEmitter(@PathVariable UUID gameId,
         @RequestHeader(value = "Authorization", required = false) String token) {
         User user = authService.authenticateToken(token);
-        return gameOrchestrationService.startGameStream(user, gameId);
+        return gameOrchestrationService.getGame(user, gameId);
     }
-
+    
 
     @DeleteMapping("/games/{gameId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

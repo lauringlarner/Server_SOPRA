@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
@@ -29,20 +28,20 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 @Transactional
 public class LobbyService {
 
+    private final PusherService pusherService;
+
     private final LobbyPlayerRepository lobbyPlayerRepository;
 
 	private final LobbyRepository lobbyRepository;
-
-    private final SseService sseService;
 
     private final Logger log = LoggerFactory.getLogger(LobbyService.class);
 
 	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository,
                         @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository,
-                        SseService sseService) {
+                        PusherService pusherService) {
 		this.lobbyRepository = lobbyRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
-        this.sseService = sseService;
+        this.pusherService = pusherService;
 	}
 
     //////////////
@@ -99,6 +98,9 @@ public class LobbyService {
 
         lobbyPlayerRepository.save(lobbyPlayer);
         lobbyPlayerRepository.flush();
+
+        // pusher update
+        pushLobbyUpdate(newLobby);
 
         log.debug("Created Lobby: {}", newLobby);
 		return newLobby;
@@ -168,7 +170,7 @@ public class LobbyService {
         lobbyPlayerRepository.save(lobbyPlayer);
         lobbyPlayerRepository.flush();
 
-        // SSE pushes update
+        // pushere update
         pushLobbyUpdate(lobbyToJoin);
 
         log.debug("Lobby {} added new Player: {}", lobbyToJoin,lobbyPlayer);
@@ -190,7 +192,7 @@ public class LobbyService {
         validateTeamType(teamType); // BAD_REQUEST on failure
         lobbyPlayer.setTeamType(teamType);
         lobbyPlayerRepository.flush();
-        // SSE push update
+        // pusher update
         pushLobbyUpdate(lobbyPlayer.getLobby());
         
         log.debug("Player {} successfully updated their team type",lobbyPlayer);
@@ -200,7 +202,7 @@ public class LobbyService {
         validateReadyStatus(readyStatus); // BAD_REQUEST on failure 
         lobbyPlayer.setIsReady(readyStatus);
         lobbyPlayerRepository.flush();
-        // SSE push update
+        // pusher update
         pushLobbyUpdate(lobbyPlayer.getLobby());
         
         log.debug("Player {} successfully updated their ready status",lobbyPlayer);
@@ -219,7 +221,7 @@ public class LobbyService {
         validateGameDuration(gameDuration); // BAD_REQUEST on failure
         lobby.setGameDuration(gameDuration);
         lobbyRepository.flush();
-        // SSE push update
+        // pusher update
         pushLobbyUpdate(lobby);
         
         log.debug("Lobby {} successfully changed their settings",lobby);
@@ -228,7 +230,7 @@ public class LobbyService {
     public void setLobbyGameId(Lobby lobby, UUID gameId) {
         lobby.setGameId(gameId);
         lobbyRepository.flush();
-        // Notify connected lobby clients immediately so they can transition into the game.
+        // pusher update
         pushLobbyUpdate(lobby);
         
         log.debug("Lobby {} is now running the game {}", lobby, gameId);
@@ -254,7 +256,7 @@ public class LobbyService {
         lobbyPlayerRepository.delete(lobbyPlayer);
         lobbyPlayerRepository.flush();
 
-        // SSE push update
+        // pusher update
         pushLobbyUpdate(lobby);
         
         log.debug("Player successfully deleted");
@@ -427,37 +429,13 @@ public class LobbyService {
         return code.toString();
     }
                   
-    ///////////////////
-    // SSE functions //
-    ///////////////////
-    
-    public SseEmitter createAndRegisterLobbyStream(Lobby lobby) {
-		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-		// Send initial lobby state
-        try {
-            emitter.send(SseEmitter.event()
-                .name("lobbyUpdate")
-                .data(DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby)));
-        } catch (Exception e) {
-            log.error("Initial SSE send failed for lobby {}", lobby.getId(), e);
-            emitter.completeWithError(e);
-            sseService.remove(lobby.getId(), emitter);
-        }
-
-		// register emitter
-		sseService.register(lobby.getId(), emitter);
-
-		// lifecycle cleanup
-		emitter.onCompletion(() -> sseService.remove(lobby.getId(), emitter));
-        emitter.onTimeout(() -> sseService.remove(lobby.getId(), emitter));
-
-		return emitter;
-	}
+    ////////////
+    // Pusher //
+    ////////////
 
     public void pushLobbyUpdate(Lobby lobby) {
         LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
-        sseService.push(lobby.getId(), "lobbyUpdate", lobbyDTO);
+        pusherService.trigger("lobby-" + lobby.getId(), "LobbyUpdate",lobbyDTO);
     }
 
 }

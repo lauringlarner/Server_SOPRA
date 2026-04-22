@@ -3,7 +3,6 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
@@ -23,6 +21,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameSettingsDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyAccessInfoDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ReadyStatusDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TeamTypeDTO;
@@ -67,10 +66,10 @@ public class LobbyController {
     }
 
 
-    @GetMapping(value = "/lobbies/{lobbyId}/stream", produces = "text/event-stream")
+    @GetMapping("/lobbies/{lobbyId}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public ResponseEntity<SseEmitter> getLobbyByIdEmitter(@PathVariable UUID lobbyId,
+    public LobbyDTO getLobbyById(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
@@ -82,13 +81,7 @@ public class LobbyController {
         // validate lobbyPlayer is in lobby or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
 
-        SseEmitter emitter = lobbyService.createAndRegisterLobbyStream(lobby);
-
-        return ResponseEntity.ok()
-            .header("Cache-Control", "no-cache, no-transform")
-            .header("Connection", "keep-alive")
-            .header("X-Accel-Buffering", "no")
-            .body(emitter);
+        return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
     }
     
 

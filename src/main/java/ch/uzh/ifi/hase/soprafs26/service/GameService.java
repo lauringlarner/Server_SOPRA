@@ -148,7 +148,7 @@ public class GameService {
 
 	public void pushGameUpdate(Game game) {
 		GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);
-		pusherService.trigger("Game-" + game.getId(), "GameUpdate", gameDTO);
+		pusherService.trigger("game-" + game.getId(), "GameUpdate", gameDTO);
 	}
 
 

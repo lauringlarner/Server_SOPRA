@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
@@ -35,22 +34,23 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 @Transactional
 public class GameService {
 
-	private final Logger log = LoggerFactory.getLogger(GameService.class);
+	private final PusherService pusherService;
+
+    private final Logger log = LoggerFactory.getLogger(GameService.class);
 
 	private final GameRepository gameRepository;
 	private final ScoreService scoreService;
 	private final LeaderboardService leaderboardService;
-	private final SseService sseService;
 
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
 					   	ScoreService scoreService,
-					   	LeaderboardService leaderboardService,
-						SseService sseService) {
+					   	LeaderboardService leaderboardService, 
+						PusherService pusherService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
-		this.sseService = sseService;
+        this.pusherService = pusherService;
 	}
 
 	//////////////
@@ -93,6 +93,8 @@ public class GameService {
 
 		newGame = gameRepository.save(newGame);
 		gameRepository.flush();
+
+		pushGameUpdate(newGame);
 
 		log.debug("Created Information for Game: {}", newGame);
 		return newGame;
@@ -140,37 +142,13 @@ public class GameService {
     ///////////////
 	
 	
-    ///////////////////
-    // SSE functions //
-    ///////////////////
-
-	public SseEmitter createAndRegisterGameStream(Game game) {
-		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-
-		// send initial game state
-		try {
-			emitter.send(SseEmitter.event()
-				.name("gameUpdate")
-				.data(DTOMapper.INSTANCE.convertEntityToGameDTO(game)));
-		} catch (Exception e) {
-            log.error("Initial SSE send failed for game {}", game.getId(), e);
-            emitter.completeWithError(e);
-            sseService.remove(game.getId(), emitter);
-		}
-
-		// register emitter
-		sseService.register(game.getId(), emitter);
-
-		// lifecycle cleanup
-		emitter.onCompletion(() -> sseService.remove(game.getId(), emitter));
-		emitter.onTimeout(() -> sseService.remove(game.getId(), emitter));
-
-		return emitter;
-	}
+    ////////////
+    // Pusher //
+    ////////////
 
 	public void pushGameUpdate(Game game) {
 		GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);
-		sseService.push(game.getId(), "gameUpdate", gameDTO);
+		pusherService.trigger("Game-" + game.getId(), "GameUpdate", gameDTO);
 	}
 
 
@@ -238,6 +216,7 @@ public class GameService {
 	public void processSubmissionAsync(UUID gameId, byte[] fileBytes, String object, String team) {
 		try {
 			processSubmission(gameId, fileBytes, object, team);
+			log.error("Submission for game {} sucessfull", gameId);
 		} catch (ResponseStatusException exception) {
 			log.debug("Submission for game {} was not applied: {}", gameId, exception.getReason());
 		} catch (Throwable exception) {

@@ -8,13 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 
 
 
@@ -38,6 +39,16 @@ public class GameOrchestrationService {
     }
 
 
+    public GameDTO getGame(User user, UUID gameId) {
+        // fetch Game from gameId and player from user or Not Found
+        Game game = gameService.getGameById(gameId);
+        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
+
+        // validate player is in game or FORBIDDEN
+        lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
+
+        return DTOMapper.INSTANCE.convertEntityToGameDTO(game);
+    }
 
 
     public Game startGame(User user, UUID lobbyId) {
@@ -66,21 +77,6 @@ public class GameOrchestrationService {
 
         return game;
     }
-
-
-    public SseEmitter startGameStream(User user, UUID gameId) {
-
-        // fetch Game from gameId and player from user or Not Found
-        Game game = gameService.getGameById(gameId);
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-
-        // validate player is in game or FORBIDDEN
-        lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
-
-        // create and register to SSE
-        return gameService.createAndRegisterGameStream(game);
-    }
-
 
     public void submitImageAsync(User user, UUID gameId, MultipartFile file, String object) {
         // fetch Game from gameId and player from user or Not Found

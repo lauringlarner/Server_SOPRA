@@ -2,12 +2,14 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import com.pusher.rest.Pusher;
 
 import ch.uzh.ifi.hase.soprafs26.config.SecretManagerService;
 
+@Profile("!test")
 @Service
 public class PusherService {
 

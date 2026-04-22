@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -30,7 +32,7 @@ public class PusherService {
         // if env variables missing locally -> use secret manager
         if (isMissing(appId, key, secret, cluster)) {
 
-            String projectId = System.getenv("GOOGLE_CLOUD_PROJECT");
+            String projectId = com.google.cloud.ServiceOptions.getDefaultProjectId();
             if (projectId == null || projectId.isBlank()) {
                 log.debug("GOOGLE_CLOUD_PROJECT resulted in faulty projectId {}", projectId);
 
@@ -38,10 +40,10 @@ public class PusherService {
                     "GOOGLE_CLOUD_PROJECT is not set. required for secret manager"); 
             }  
 
-            appId = secrets.getSecret(projectId, "pusher-app-id");
-            key = secrets.getSecret(projectId, "pusher-key");
-            secret = secrets.getSecret(projectId, "pusher-secret");
-            cluster = secrets.getSecret(projectId, "pusher-cluster");
+            appId = Objects.requireNonNull(secrets.getSecret(projectId, "pusher-app-id"));
+            key = Objects.requireNonNull(secrets.getSecret(projectId, "pusher-key"));
+            secret = Objects.requireNonNull(secrets.getSecret(projectId, "pusher-secret"));
+            cluster = Objects.requireNonNull(secrets.getSecret(projectId, "pusher-cluster"));
         }
 
         this.pusher = new Pusher(appId, key, secret);

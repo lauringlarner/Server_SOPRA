@@ -61,6 +61,7 @@ dependencies {
 
     implementation platform('com.google.cloud:libraries-bom:26.30.0')
     implementation 'com.google.cloud:google-cloud-secretmanager'
+    implementation 'com.google.cloud:google-cloud-core'
 }
 
 bootJar {

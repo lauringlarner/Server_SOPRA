@@ -40,60 +40,59 @@ public class ScoreService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tile is already claimed!");
         }
 
-        if ("1".equals(team)) {
-            tile.setStatus(TileStatus.CLAIMED_TEAM1);
-            game.setScore_1(game.getScore_1() + tile.getValue());
-        } else if ("2".equals(team)) {
-            tile.setStatus(TileStatus.CLAIMED_TEAM2);
-            game.setScore_2(game.getScore_2() + tile.getValue());
-        } else {
+        if (null == team) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");
+        } else switch (team) {
+            case "1" -> {
+                tile.setStatus(TileStatus.CLAIMED_TEAM1);
+                
+            }
+            case "2" -> {
+                tile.setStatus(TileStatus.CLAIMED_TEAM2);
+                
+            }
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team not in Game!");
         }
 
         game.setTileGrid(tileGrid);
+
+        int[] pointsPerTeam = calculateTotalPointsDefault(game);
+        game.setScore_1(pointsPerTeam[0]);
+        game.setScore_2(pointsPerTeam[1]);
     }
     
+    public int[] calculatePointsPerTile(Game game) {
+        int PointsTeam1 = 0;
+        int PointsTeam2 = 0;
+        int boardSize = game.getBoardSize();
+        Tile[][] tileGrid = game.getTileGrid();
 
-    // not used anywhere yet!
-    public int[] calculateBonusPoints(Game game) {
-        final int rowBonus = 5;
-        final int colBonus = 5;
-        final int diagBonus = 5;
+        for (int col = 0; col < boardSize; col++) {
+            for (int row = 0; row < boardSize; row++) {
+                Tile tile = tileGrid[row][col];
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM1) {
+                    PointsTeam1++;
+                }
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM2) {
+                    PointsTeam2++;
+                }
+            }
+        }
 
+        return new int[]{PointsTeam1,PointsTeam2};
+    }
+
+    public int[] calculateRowBonusPoints(Game game, int rowBonus) {
         int bonusPointsTeam1 = 0;
         int bonusPointsTeam2 = 0;
         int boardSize = game.getBoardSize();
         Tile[][] tileGrid = game.getTileGrid();
 
-        // row bonus
         for (int col = 0; col < boardSize; col++) {
             int claimedTeam1 = 0;
             int claimedTeam2 = 0;
 
             for (int row = 0; row < boardSize; row++) {
-                Tile tile = tileGrid[row][col];
-                if (tile.getStatus() == TileStatus.CLAIMED_TEAM1) {
-                    claimedTeam1++;
-                }
-                if (tile.getStatus() == TileStatus.CLAIMED_TEAM2) {
-                    claimedTeam2++;
-                }
-            }
-
-            if (claimedTeam1 == boardSize) {
-                bonusPointsTeam1 = bonusPointsTeam1 + colBonus;
-            }
-            if (claimedTeam2 == boardSize) {
-                bonusPointsTeam2 = bonusPointsTeam2 + colBonus;
-            }
-        }
-
-        // col bonus
-        for (int row = 0; row < boardSize; row++) {
-            int claimedTeam1 = 0;
-            int claimedTeam2 = 0;
-
-            for (int col = 0; col < boardSize; col++) {
                 Tile tile = tileGrid[row][col];
                 if (tile.getStatus() == TileStatus.CLAIMED_TEAM1) {
                     claimedTeam1++;
@@ -111,6 +110,46 @@ public class ScoreService {
             }
         }
 
+        return new int[]{bonusPointsTeam1,bonusPointsTeam2};
+    }
+
+    public int[] calculateColBonusPoints(Game game, int colBonus) {
+        int bonusPointsTeam1 = 0;
+        int bonusPointsTeam2 = 0;
+        int boardSize = game.getBoardSize();
+        Tile[][] tileGrid = game.getTileGrid();
+
+        for (int row = 0; row < boardSize; row++) {
+            int claimedTeam1 = 0;
+            int claimedTeam2 = 0;
+
+            for (int col = 0; col < boardSize; col++) {
+                Tile tile = tileGrid[row][col];
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM1) {
+                    claimedTeam1++;
+                }
+                if (tile.getStatus() == TileStatus.CLAIMED_TEAM2) {
+                    claimedTeam2++;
+                }
+            }
+
+            if (claimedTeam1 == boardSize) {
+                bonusPointsTeam1 = bonusPointsTeam1 + colBonus;
+            }
+            if (claimedTeam2 == boardSize) {
+                bonusPointsTeam2 = bonusPointsTeam2 + colBonus;
+            }
+        }
+
+        return new int[]{bonusPointsTeam1,bonusPointsTeam2};
+    }
+
+    public int[] calculateDiagBonusPoints(Game game, int diagBonus) {
+        int bonusPointsTeam1 = 0;
+        int bonusPointsTeam2 = 0;
+        int boardSize = game.getBoardSize();
+        Tile[][] tileGrid = game.getTileGrid();
+        
         // diag bonus
         // TLBR->top left to bottom right, TRBL->top right to bottom left
         int claimedTeam1TLBR = 0;
@@ -151,6 +190,23 @@ public class ScoreService {
         }
 
         return new int[]{bonusPointsTeam1,bonusPointsTeam2};
+    }
+
+
+    public int[] calculateTotalPointsDefault(Game game) {
+        final int rowBonus = 3;
+        final int colBonus = 3;
+        final int diagBonus = 4;
+
+        int[] tilePointsPerTeam = calculatePointsPerTile(game);
+        int[] rowPointsPerTeam = calculateRowBonusPoints(game, rowBonus);
+        int[] colPointsPerTeam = calculateColBonusPoints(game, colBonus);
+        int[] diagPointsPerTeam = calculateDiagBonusPoints(game, diagBonus);
+
+        int pointsTeam1 = tilePointsPerTeam[0] + rowPointsPerTeam[0] + colPointsPerTeam[0] + diagPointsPerTeam[0];
+        int pointsTeam2 = tilePointsPerTeam[1] + rowPointsPerTeam[1] + colPointsPerTeam[1] + diagPointsPerTeam[1];
+
+        return new int[]{pointsTeam1,pointsTeam2};
     }
     
     

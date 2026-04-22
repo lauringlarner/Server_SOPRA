@@ -1,11 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import java.util.UUID;
-
+import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class UserGetDTO {
 
@@ -18,8 +17,9 @@ public class UserGetDTO {
 	@JsonIgnore
 	private String token;
 	private UserStatus status;
+	private String[] wordList;
 	@JsonProperty("creation_date")
-	private String createdAt;
+	private LocalDateTime createdAt;
 
 	public UUID getId() {
 		return id;
@@ -53,10 +53,16 @@ public class UserGetDTO {
 		this.status = status;
 	}
 
-	public String getCreatedAt() {
+	public void setWordList(String[] wordList){
+		this.wordList = wordList;}
+
+	public String[] getWordList() {
+		return wordList;
+	}
+	public LocalDateTime getCreatedAt() {
 		return createdAt;}
 
-	public void setCreatedAt(String createdAt) {
+	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
 

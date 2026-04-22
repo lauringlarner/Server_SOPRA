@@ -17,7 +17,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTest {
-	/* 
+
 	@Mock
 	private UserRepository userRepository;
 
@@ -79,5 +79,4 @@ public class UserServiceTest {
 		// then -> attempt to create second user with same user -> check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
-	*/
 }

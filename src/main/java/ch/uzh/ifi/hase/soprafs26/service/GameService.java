@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -92,6 +93,7 @@ public class GameService {
 		newGame.setScore_2(0);
 		// set game duration setting from lobby
 		newGame.setGameDuration(lobby.getGameDuration());
+		newGame.setStartedAt(Instant.now());
 
 		newGame.setBoardSize(boardSize);
 		newGame.setTileGrid(tileGrid);

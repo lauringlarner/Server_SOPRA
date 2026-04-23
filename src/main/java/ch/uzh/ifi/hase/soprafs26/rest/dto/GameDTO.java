@@ -15,6 +15,7 @@ public class GameDTO {
 	private int score_1;
 	private int score_2;
 	private Integer gameDuration;
+	private String startedAt;
 	private UUID lobbyId;
 	private Tile[][] tileGrid;
 
@@ -36,6 +37,14 @@ public class GameDTO {
 
 	public void setGameDuration(Integer gameDuration) {
 		this.gameDuration = gameDuration;
+	}
+
+	public String getStartedAt() {
+		return startedAt;
+	}
+
+	public void setStartedAt(String startedAt) {
+		this.startedAt = startedAt;
 	}
 
 	public void setId(UUID id) {
@@ -91,5 +100,4 @@ public class GameDTO {
 		this.tileGrid = tileGrid;
 	}
 }
-
 

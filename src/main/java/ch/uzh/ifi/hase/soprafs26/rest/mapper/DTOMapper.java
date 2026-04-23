@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
+import java.time.Instant;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -74,6 +76,7 @@ public interface DTOMapper {
 	@Mapping(source = "score_1", target = "score_1")
 	@Mapping(source = "score_2", target = "score_2")
 	@Mapping(source = "gameDuration", target = "gameDuration")
+	@Mapping(source = "startedAt", target = "startedAt")
 	@Mapping(source = "lobbyId", target = "lobbyId")
 	@Mapping(source = "tileGrid", target = "tileGrid")
 	GameDTO convertEntityToGameDTO(Game game);
@@ -97,5 +100,9 @@ public interface DTOMapper {
 	@Mapping(source = "gameId", target = "gameId")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
+
+	default String map(Instant value) {
+		return value == null ? null : value.toString();
+	}
 
 }

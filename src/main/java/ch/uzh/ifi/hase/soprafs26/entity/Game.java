@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -55,6 +56,9 @@ public class Game implements Serializable {
 	private Integer gameDuration;
 
 	@Column(nullable = false)
+	private Instant startedAt;
+
+	@Column(nullable = false)
 	private UUID lobbyId;
 
 	@Column(nullable = false)
@@ -77,6 +81,14 @@ public class Game implements Serializable {
 
 	public void setGameDuration(Integer gameDuration) {
 		this.gameDuration = gameDuration;
+	}
+
+	public Instant getStartedAt() {
+		return startedAt;
+	}
+
+	public void setStartedAt(Instant startedAt) {
+		this.startedAt = startedAt;
 	}
 
 	public UUID getId() {

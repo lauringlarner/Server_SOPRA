@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
@@ -37,6 +38,9 @@ public class LobbyServiceIntegrationTest {
 
 	@Autowired
 	private LobbyService lobbyService;
+
+    @MockitoBean
+    private PusherService pusherService;
 
 
     @Test

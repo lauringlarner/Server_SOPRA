@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
@@ -298,6 +299,17 @@ public class UserControllerTest {
 		mockMvc.perform(getRequest)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[0].username", is(user.getUsername())));
+	}
+
+	// PasswordChangeDTO: getters/setters work
+	@Test
+	public void passwordChangeDTO_settersAndGetters_work() {
+		PasswordChangeDTO dto = new PasswordChangeDTO();
+		dto.setOldPassword("OldPassword123!");
+		dto.setNewPassword("NewPassword123!");
+
+		assertEquals("OldPassword123!", dto.getOldPassword());
+		assertEquals("NewPassword123!", dto.getNewPassword());
 	}
 
 	/**

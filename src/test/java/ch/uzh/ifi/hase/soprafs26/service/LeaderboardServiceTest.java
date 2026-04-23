@@ -13,6 +13,9 @@ import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.constant.TileStatus;
 import ch.uzh.ifi.hase.soprafs26.repository.LeaderboardRepository;
 
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
+
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -118,5 +121,39 @@ public class LeaderboardServiceTest {
         Mockito.when(leaderboardRepository.findByGameId(game.getId())).thenReturn(null);
 
         assertThrows(Exception.class, () -> leaderboardService.getLeaderboard(game.getId()));
+    }
+
+    // LeaderboardGetDTO: scores and gameId correct
+    @Test
+    public void leaderboardGetDTO_settersAndGetters_work() {
+        UUID gameId = UUID.randomUUID();
+        LeaderboardGetDTO dto = new LeaderboardGetDTO(gameId);
+        dto.setTeam1Score(10);
+        dto.setTeam2Score(7);
+
+        assertEquals(gameId, dto.getGameId());
+        assertEquals(10, dto.getTeam1Score());
+        assertEquals(7, dto.getTeam2Score());
+    }
+
+    // LeaderboardGetDTO: tileGrid sets correctly
+    @Test
+    public void leaderboardGetDTO_tileGrid_setsCorrectly() {
+        UUID gameId = UUID.randomUUID();
+        LeaderboardGetDTO dto = new LeaderboardGetDTO(gameId);
+        Tile[][] grid = new Tile[][] { { new Tile("cat", 3, TileStatus.CLAIMED_TEAM1) } };
+        dto.setTileGrid(grid);
+
+        assertEquals(grid, dto.getTileGrid());
+    }
+
+    // LeaderboardPostDTO: gameId getter/setter
+    @Test
+    public void leaderboardPostDTO_setterAndGetter_work() {
+        UUID gameId = UUID.randomUUID();
+        LeaderboardPostDTO dto = new LeaderboardPostDTO();
+        dto.setGameId(gameId);
+
+        assertEquals(gameId, dto.getGameId());
     }
 }

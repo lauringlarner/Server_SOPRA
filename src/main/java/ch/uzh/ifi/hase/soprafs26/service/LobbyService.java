@@ -213,6 +213,7 @@ public class LobbyService {
         
         for (LobbyPlayer lobbyPlayer : LobbyPlayers) {
             lobbyPlayer.setIsReady(false);
+            lobbyPlayerRepository.flush();
         }
     }
     

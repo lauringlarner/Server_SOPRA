@@ -263,8 +263,26 @@ public class LobbyServiceTest {
     }
 
     @Test
-    void joinLobby_nullInput_throwsBadRequest() {
+    void joinLobby_nullLobbyPlayer_nullLobby_throwsBadRequest() {
         LobbyPlayer lp = null;
+        Lobby lobby = null;
+
+        assertThrows(ResponseStatusException.class,
+            () -> lobbyService.joinLobby(lp, lobby));
+    }
+
+    @Test
+    void joinLobby_nullLobbyPlayer_throwsBadRequest() {
+        Lobby lobby = new Lobby();
+        LobbyPlayer lp = null;
+
+        assertThrows(ResponseStatusException.class,
+            () -> lobbyService.joinLobby(lp, lobby));
+    }
+
+    @Test
+    void joinLobby_nullLobby_throwsBadRequest() {
+        LobbyPlayer lp = new LobbyPlayer();
         Lobby lobby = null;
 
         assertThrows(ResponseStatusException.class,

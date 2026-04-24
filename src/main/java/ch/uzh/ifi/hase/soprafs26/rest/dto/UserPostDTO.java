@@ -8,9 +8,6 @@ public class UserPostDTO {
 
 	private String email;
 
-
-
-
 	public String getUsername() {
 		return username;
 	}

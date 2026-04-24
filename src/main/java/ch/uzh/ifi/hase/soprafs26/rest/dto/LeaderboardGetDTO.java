@@ -1,8 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import ch.uzh.ifi.hase.soprafs26.entity.Tile;
-
 import java.util.UUID;
+
+import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 
 public class LeaderboardGetDTO {
 

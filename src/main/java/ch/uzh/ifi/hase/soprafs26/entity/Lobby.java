@@ -38,20 +38,9 @@ public class Lobby {
     @OneToMany(mappedBy="lobby", cascade=CascadeType.ALL, orphanRemoval=true)
     private List<LobbyPlayer> lobbyPlayers = new ArrayList<>();
 
-    // Game settings
     @Column(nullable = false)
 	private Integer gameDuration;
 
-    /*
-    @Column(nullable = false)
-	private Integer bingoBoardSize; // bingoBoardSize = 4 -> 4 x 4 Board, i.e. 16 items
-
-    @Column(nullable = false)
-	private Integer numberOfRounds;
-
-    @Column(nullable = false)
-	private GameMode gameMode;   
-    */
   
     public static long getSerialversionuid() {
         return serialVersionUID;
@@ -87,14 +76,6 @@ public class Lobby {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public void startGame() {
-        // implementation
-    }
-
-    public void closeLobby() {
-        // implementation
     }
 
     public void addPlayer(LobbyPlayer lobbyPlayer) {

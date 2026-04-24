@@ -182,6 +182,9 @@ public class LobbyService {
         Lobby lobby = getLobbyByLobbyId(lobbyId);
         lobby.setGameId(null);
         updateAllLobbyPlayersReadyStatusToFalse(lobby);
+        lobbyPlayerRepository.flush();
+        lobbyRepository.flush();
+        pushLobbyUpdate(lobby);
     }
 
     /////////////

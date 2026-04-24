@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
+import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
@@ -76,6 +77,18 @@ public class GameOrchestrationService {
         lobbyService.setLobbyGameId(lobby, game.getId());
 
         return game;
+    }
+
+    public Leaderboard getLeaderboard(User user, UUID lobbyId, UUID gameId) {
+        Game game = gameService.getGameById(gameId);
+        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
+
+        if (!game.getLobbyId().equals(lobbyId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found in lobby!");
+        }
+
+        lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
+        return leaderboardService.getLeaderboard(gameId);
     }
 
     public void submitImageAsync(User user, UUID gameId, MultipartFile file, String object) {

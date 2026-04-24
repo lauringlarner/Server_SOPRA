@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.util.ArrayList;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,16 +44,19 @@ public class GameService {
 	private final GameRepository gameRepository;
 	private final ScoreService scoreService;
 	private final LeaderboardService leaderboardService;
+	private final LobbyService lobbyService;
 
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
 					   	ScoreService scoreService,
 					   	LeaderboardService leaderboardService, 
-						PusherService pusherService) {
+						PusherService pusherService,
+						LobbyService lobbyService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
         this.pusherService = pusherService;
+        this.lobbyService = lobbyService;
 	}
 
 	//////////////
@@ -115,6 +120,10 @@ public class GameService {
 		return this.gameRepository.findAll();
 	}
 
+	public List<Game> getGamesByStatus(GameStatus status) {
+		return gameRepository.findAllByStatus(status);
+	}
+
 	public Game getGameById(UUID gameId) {
 		return gameRepository.findById(gameId)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
@@ -138,6 +147,36 @@ public class GameService {
 		gameRepository.delete(game);
 
         log.debug("Game successfully deleted");
+	}
+
+	public synchronized boolean finishGameIfExpired(UUID gameId) {
+		Game game = getGameById(gameId);
+		if (game.getStatus() != GameStatus.IN_PROGRESS) {
+			return false;
+		}
+		if (!isExpired(game, Instant.now())) {
+			return false;
+		}
+
+		clearProcessingTiles(game);
+		game.setStatus(GameStatus.ENDED);
+		leaderboardService.initOrUpdate(game);
+		gameRepository.flush();
+		pushGameUpdate(game);
+		lobbyService.resetLobbyAfterGame(game.getLobbyId());
+
+		log.debug("Game {} ended because the timer expired", gameId);
+		return true;
+	}
+
+	@Scheduled(fixedRate = 1000)
+	public void finishExpiredGames() {
+		Instant now = Instant.now();
+		for (Game game : getGamesByStatus(GameStatus.IN_PROGRESS)) {
+			if (isExpired(game, now)) {
+				finishGameIfExpired(game.getId());
+			}
+		}
 	}
 	
 	////////////////
@@ -197,6 +236,8 @@ public class GameService {
 	}
 
 	public void validateSubmissionRequest(Game game, MultipartFile file, String object) {
+		validateGameIsActive(game);
+
 		if (file == null || file.isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is missing!");
 		}
@@ -210,6 +251,7 @@ public class GameService {
 	}
 
 	public void markSubmissionProcessing(Game game, String object, String team) {
+		validateGameIsActive(game);
 		int indexOfWord = checkWordList(game.getWordList(), object);
 		Tile[][] tileGrid = game.getTileGrid();
 		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), indexOfWord);
@@ -222,18 +264,21 @@ public class GameService {
 	@Async
 	public void processSubmissionAsync(UUID gameId, byte[] fileBytes, String object, String team) {
 		try {
-			processSubmission(gameId, fileBytes, object, team);
-			log.error("Submission for game {} sucessfull", gameId);
+			boolean objectDetected = VisionQuickstartObjectLocalization.analyzeimage(fileBytes, object) == 1;
+			processSubmissionResult(gameId, object, team, objectDetected);
+			log.debug("Submission for game {} succeeded", gameId);
 		} catch (ResponseStatusException exception) {
 			log.debug("Submission for game {} was not applied: {}", gameId, exception.getReason());
 		} catch (Throwable exception) {
+			resetSubmissionIfActive(gameId, object, team);
 			log.error("Submission for game {} failed", gameId, exception);
 		}
 	}
 
-	@Transactional
-	public void processSubmission(UUID gameId, byte[] fileBytes, String object, String team) {
+	public void processSubmissionResult(UUID gameId, String object, String team, boolean objectDetected) {
 		Game game = getGameById(gameId);
+		validateGameIsActive(game);
+
 		int indexOfWord = checkWordList(game.getWordList(), object);
 		Tile[][] tileGrid = game.getTileGrid();
 		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), indexOfWord);
@@ -243,25 +288,39 @@ public class GameService {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "Tile is no longer reserved for this submission!");
 		}
 
-		try {
-			if (VisionQuickstartObjectLocalization.analyzeimage(fileBytes, object) != 1) {
-				resetTileStatus(game, indexOfWord);
-				return;
-			}
-
-			tile.setStatus(TileStatus.UNCLAIMED);
-			game.setTileGrid(tileGrid);
-			game.getWordListScore().set(indexOfWord, "1");
-
-			scoreService.claimTile(game, indexOfWord, team);
-			leaderboardService.updateLeaderboard(game);
-
-			gameRepository.flush();
-			pushGameUpdate(game);
-		} catch (Throwable exception) {
+		if (!objectDetected) {
 			resetTileStatus(game, indexOfWord);
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error with image type!");
+			return;
 		}
+
+		tile.setStatus(TileStatus.UNCLAIMED);
+		game.setTileGrid(tileGrid);
+		game.getWordListScore().set(indexOfWord, "1");
+
+		scoreService.claimTile(game, indexOfWord, team);
+		leaderboardService.updateLeaderboard(game);
+
+		gameRepository.flush();
+		pushGameUpdate(game);
+	}
+
+	private void resetSubmissionIfActive(UUID gameId, String object, String team) {
+		Game game = getGameById(gameId);
+		if (game.getStatus() != GameStatus.IN_PROGRESS) {
+			return;
+		}
+		if (isExpired(game, Instant.now())) {
+			finishGameIfExpired(gameId);
+			return;
+		}
+
+		int indexOfWord = checkWordList(game.getWordList(), object);
+		Tile tile = getTileAtIndex(game, indexOfWord);
+		if (tile.getStatus() != getProcessingStatus(team)) {
+			return;
+		}
+
+		resetTileStatus(game, indexOfWord);
 	}
 
 	private Tile getTileAtIndex(Tile[][] tileGrid, int boardSize, int tileIndex) {
@@ -292,6 +351,45 @@ public class GameService {
 		game.setTileGrid(tileGrid);
 		gameRepository.flush();
 		pushGameUpdate(game);
+	}
+
+	private void validateGameIsActive(Game game) {
+		if (game.getStatus() != GameStatus.IN_PROGRESS) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Game has already ended.");
+		}
+
+		if (isExpired(game, Instant.now())) {
+			finishGameIfExpired(game.getId());
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Game has already ended.");
+		}
+	}
+
+	private boolean isExpired(Game game, Instant now) {
+		if (game.getStartedAt() == null || game.getGameDuration() == null) {
+			return false;
+		}
+
+		long totalSeconds = Duration.ofMinutes(game.getGameDuration()).getSeconds();
+		long elapsedSeconds = Duration.between(game.getStartedAt(), now).getSeconds();
+		return elapsedSeconds >= totalSeconds;
+	}
+
+	private void clearProcessingTiles(Game game) {
+		Tile[][] tileGrid = game.getTileGrid();
+		boolean changed = false;
+
+		for (Tile[] row : tileGrid) {
+			for (Tile tile : row) {
+				if (tile.getStatus() == TileStatus.PROCESSING_TEAM1 || tile.getStatus() == TileStatus.PROCESSING_TEAM2) {
+					tile.setStatus(TileStatus.UNCLAIMED);
+					changed = true;
+				}
+			}
+		}
+
+		if (changed) {
+			game.setTileGrid(tileGrid);
+		}
 	}
 
 }

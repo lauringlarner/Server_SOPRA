@@ -8,7 +8,7 @@ public class LobbyPlayerDTO {
     
     private UUID id;
 
-    private String joinedAt;
+    private String joinedAt; // needs to be String for pusher
 
     private TeamType teamType;
 
@@ -58,7 +58,7 @@ public class LobbyPlayerDTO {
     public void setIsReady(boolean isReady) {
         this.isReady = isReady;
     }
-    // User getter returns UserGetDTO instead of the actual User to hide token
+
     public UserGetDTO getUserGetDTO() {
         return userGetDTO; 
     }

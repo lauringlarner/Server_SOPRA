@@ -19,7 +19,7 @@ public class UserGetDTO {
 	private String token;
 	private UserStatus status;
 	@JsonProperty("creation_date")
-	private String createdAt;
+	private String createdAt; // needs to be String for pusher
 
 	public UUID getId() {
 		return id;
@@ -63,7 +63,6 @@ public class UserGetDTO {
 	public String getEmail() { 
 		return email; 
 		}
-
 
 	public void setEmail(String email) { 
 		this.email = email; 

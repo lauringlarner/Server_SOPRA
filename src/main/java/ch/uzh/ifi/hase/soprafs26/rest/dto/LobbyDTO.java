@@ -13,7 +13,7 @@ public class LobbyDTO {
 
     private UUID gameId;
 
-    private String createdAt;
+    private String createdAt; // needs to be String for pusher
 
     private List<LobbyPlayerDTO> lobbyPlayers;
     

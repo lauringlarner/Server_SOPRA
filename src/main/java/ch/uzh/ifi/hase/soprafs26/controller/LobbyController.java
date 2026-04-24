@@ -99,7 +99,7 @@ public class LobbyController {
         String joinCode = lobbyJoinCodeDTO.getJoinCode();
         Lobby lobby = lobbyService.getLobbyByJoinCode(joinCode);
 
-        // create non-host player and join lobby or CONFLICT if user already has a player
+        // create non-host player and join lobby or CONFLICT if user already has a player or lobby is not open
         LobbyPlayer lobbyPlayer = lobbyService.createLobbyPlayer(user, false);
         lobbyService.joinLobby(lobbyPlayer, lobby);
 

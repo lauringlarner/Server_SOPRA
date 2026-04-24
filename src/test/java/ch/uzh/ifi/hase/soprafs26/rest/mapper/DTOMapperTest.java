@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ErrorDTO;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -89,6 +92,37 @@ public class DTOMapperTest {
 		assertEquals(user.getGamesPlayed(), userGetDTO.getGamesPlayed());
 		assertEquals(user.getGamesWon(), userGetDTO.getGamesWon());
 		assertEquals(user.getCorrectItemsFound(), userGetDTO.getCorrectItemsFound());
+	}
+
+	@Test
+	public void testLoginResponse_fromUser_toUserLoginResponseDTO_success() {
+		User user = new User();
+		user.setUsername("testuser");
+		user.setToken("token123");
+		user.setStatus(UserStatus.ONLINE);
+
+		UserLoginResponseDTO dto = DTOMapper.INSTANCE.convertEntityToUserLoginResponseDTO(user);
+
+		assertEquals(user.getUsername(), dto.getUsername());
+		assertEquals(user.getToken(), dto.getToken());
+		assertEquals(user.getStatus(), dto.getStatus());
+	}
+
+	// ErrorDTO: constructor sets reason
+	@Test
+	public void errorDTO_constructor_setsReason() {
+		ErrorDTO dto = new ErrorDTO("Something went wrong");
+
+		assertEquals("Something went wrong", dto.getReason());
+	}
+
+	// ErrorDTO: setter updates reason
+	@Test
+	public void errorDTO_setter_updatesReason() {
+		ErrorDTO dto = new ErrorDTO("initial");
+		dto.setReason("updated reason");
+
+		assertEquals("updated reason", dto.getReason());
 	}
 
 	@Test

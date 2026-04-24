@@ -76,8 +76,6 @@ public class GameController {
         User user = authService.authenticateToken(token);
         gameOrchestrationService.submitImageAsync(user, gameId, file, object);
     }
-
-
     @PostMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
@@ -113,3 +111,4 @@ public class GameController {
         return dto;
     }
 }
+

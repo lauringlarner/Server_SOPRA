@@ -36,6 +36,8 @@ public class LobbyService {
 
     private final Logger log = LoggerFactory.getLogger(LobbyService.class);
 
+    private static final SecureRandom secureRandom = new SecureRandom();
+
 	public LobbyService(@Qualifier("lobbyRepository") LobbyRepository lobbyRepository,
                         @Qualifier("lobbyPlayerRepository") LobbyPlayerRepository lobbyPlayerRepository,
                         PusherService pusherService) {
@@ -138,11 +140,11 @@ public class LobbyService {
 	}
     
     public LobbyPlayer getLobbyPlayerById(UUID playerId) {
-        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findById(playerId).orElseThrow(() -> {
-            log.debug("Player not found by id!");
-            return new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
+        return lobbyPlayerRepository.findById(playerId)
+            .orElseThrow(() -> {
+                log.debug("Player not found by id!");
+                return new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
         });
-        return lobbyPlayer;
     }
     
     /////////////
@@ -212,10 +214,11 @@ public class LobbyService {
     }
     
     public void updateAllLobbyPlayersReadyStatusToFalse(Lobby lobby) {
-        List<LobbyPlayer> LobbyPlayers = lobby.getLobbyPlayers();
+        List<LobbyPlayer> lobbyPlayers = lobby.getLobbyPlayers();
         
-        for (LobbyPlayer lobbyPlayer : LobbyPlayers) {
+        for (LobbyPlayer lobbyPlayer : lobbyPlayers) {
             lobbyPlayer.setIsReady(false);
+            lobbyPlayerRepository.flush();
         }
     }
     
@@ -421,12 +424,10 @@ public class LobbyService {
         final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         final int CODE_LENGTH = 6;
 
-        final SecureRandom random = new SecureRandom();
-
         StringBuilder code = new StringBuilder(CODE_LENGTH);
 
         for (int i = 0; i < CODE_LENGTH; i++) {
-            int index = random.nextInt(CHARACTERS.length());
+            int index = secureRandom.nextInt(CHARACTERS.length());
             code.append(CHARACTERS.charAt(index));
         }
         return code.toString();

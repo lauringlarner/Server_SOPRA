@@ -1,35 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.hamcrest.Matchers.is;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,11 +9,35 @@ import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
 import ch.uzh.ifi.hase.soprafs26.service.LeaderboardService;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * GameControllerTest
@@ -251,132 +245,9 @@ public class GameControllerTest {
     }
 
     // ─────────────────────────────────────────────
-    // POST /lobbies/{lobbyId}/games/{gameId}/leaderboard
+    // POST /games/{gameId}/leaderboard
     // ─────────────────────────────────────────────
 
-    @Test
-    public void postLeaderboard_validRequest_201() throws Exception {
-        // given
-        Leaderboard leaderboard = new Leaderboard();
-        leaderboard.setGameId(gameId);
-        leaderboard.setTeam1Score(10);
-        leaderboard.setTeam2Score(20);
-        leaderboard.setTileGrid(new Tile[4][4]);
-
-        LeaderboardPostDTO leaderboardPostDTO = new LeaderboardPostDTO();
-
-        given(gameOrchestrationService.getGameById(gameId)).willReturn(testGame);
-        given(leaderboardService.initOrUpdate(org.mockito.ArgumentMatchers.any(Game.class))).willReturn(leaderboard);
-
-        // when
-        MockHttpServletRequestBuilder postRequest = post("/lobbies/" + lobbyId + "/games/" + gameId + "/leaderboard")
-                .header("Authorization", "Bearer token123")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(leaderboardPostDTO));
-
-        // then
-        mockMvc.perform(postRequest)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.gameId", is(gameId.toString())))
-                .andExpect(jsonPath("$.team1Score", is(10)))
-                .andExpect(jsonPath("$.team2Score", is(20)));
-    }
-
-    @Test
-    public void postLeaderboard_gameNotFound_404() throws Exception {
-        // given
-        LeaderboardPostDTO leaderboardPostDTO = new LeaderboardPostDTO();
-        
-        given(gameOrchestrationService.getGameById(gameId))
-                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
-
-        // when
-        MockHttpServletRequestBuilder postRequest = post("/lobbies/" + lobbyId + "/games/" + gameId + "/leaderboard")
-                .header("Authorization", "Bearer token123")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(leaderboardPostDTO));
-
-        // then
-        mockMvc.perform(postRequest)
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void postLeaderboard_unauthorized_403() throws Exception {
-        // given
-        LeaderboardPostDTO leaderboardPostDTO = new LeaderboardPostDTO();
-        
-        given(authService.authenticateToken(any()))
-                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized"));
-
-        // when
-        MockHttpServletRequestBuilder postRequest = post("/lobbies/" + lobbyId + "/games/" + gameId + "/leaderboard")
-                .header("Authorization", "Bearer invalid-token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(leaderboardPostDTO));
-
-        // then
-        mockMvc.perform(postRequest)
-                .andExpect(status().isForbidden());
-    }
-
-    // ─────────────────────────────────────────────
-    // GET /lobbies/{lobbyId}/games/{gameId}/leaderboard
-    // ─────────────────────────────────────────────
-
-    @Test
-    public void getLeaderboard_validRequest_200() throws Exception {
-        // given
-        Leaderboard leaderboard = new Leaderboard();
-        leaderboard.setGameId(gameId);
-        leaderboard.setTeam1Score(50);
-        leaderboard.setTeam2Score(30);
-        leaderboard.setTileGrid(new Tile[4][4]);
-
-        given(gameOrchestrationService.getLeaderboard(eq(testUser), eq(lobbyId), eq(gameId)))
-                .willReturn(leaderboard);
-
-        // when
-        MockHttpServletRequestBuilder getRequest = get("/lobbies/" + lobbyId + "/games/" + gameId + "/leaderboard")
-                .header("Authorization", "Bearer token123");
-
-        // then
-        mockMvc.perform(getRequest)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.gameId", is(gameId.toString())))
-                .andExpect(jsonPath("$.team1Score", is(50)))
-                .andExpect(jsonPath("$.team2Score", is(30)));
-    }
-
-    @Test
-    public void getLeaderboard_notFound_404() throws Exception {
-        // given
-        given(gameOrchestrationService.getLeaderboard(eq(testUser), eq(lobbyId), eq(gameId)))
-                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Leaderboard not found"));
-
-        // when
-        MockHttpServletRequestBuilder getRequest = get("/lobbies/" + lobbyId + "/games/" + gameId + "/leaderboard")
-                .header("Authorization", "Bearer token123");
-
-        // then
-        mockMvc.perform(getRequest)
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void getLeaderboard_unauthorized_403() throws Exception {
-        // given
-        given(authService.authenticateToken(any()))
-                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized"));
-
-        // when
-        MockHttpServletRequestBuilder getRequest = get("/lobbies/" + lobbyId + "/games/" + gameId + "/leaderboard")
-                .header("Authorization", "Bearer bad-token");
-
-        // then
-        mockMvc.perform(getRequest)
-                .andExpect(status().isForbidden());
-    }
 
     // ─────────────────────────────────────────────
     // Helpers

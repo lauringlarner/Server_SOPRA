@@ -3,25 +3,29 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import jakarta.transaction.Transactional;
 
 /**
  * Test class for the UserResource REST resource.
  *
  * @see UserService
  */
-/*
 @WebAppConfiguration
 @SpringBootTest
+@Transactional
 public class UserServiceIntegrationTest {
 
 	@Qualifier("userRepository")
@@ -30,6 +34,9 @@ public class UserServiceIntegrationTest {
 
 	@Autowired
 	private UserService userService;
+
+	@MockitoBean
+	private PusherService pusherService;
 
 	@BeforeEach
 	public void setup() {
@@ -56,7 +63,7 @@ public class UserServiceIntegrationTest {
 		assertNotNull(createdUser.getToken());
 		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
 	}
-	
+
 	@Test
 	public void createUser_duplicateUsername_throwsException() {
 		assertNull(userRepository.findByUsername("testUsername"));
@@ -117,5 +124,3 @@ public class UserServiceIntegrationTest {
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
 }
-
-*/

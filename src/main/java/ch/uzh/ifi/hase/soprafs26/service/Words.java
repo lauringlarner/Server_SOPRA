@@ -12,7 +12,10 @@ public class Words {
              BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String line;
             while ((line = br.readLine()) != null) {
-                words.add(line.trim());
+                String word = line.trim();
+                if (!word.isEmpty()) {
+                    words.add(word);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -184,6 +184,20 @@ public class GameServiceTest {
     }
 
     @Test
+    public void createGame_wordListHasNoBlankEntries() {
+        given(gameRepository.save(any(Game.class))).willAnswer(inv -> {
+            Game g = inv.getArgument(0);
+            g.setId(gameId);
+            return g;
+        });
+        doNothing().when(pusherService).trigger(anyString(), anyString(), any());
+
+        Game result = gameService.createGame(testLobby);
+
+        assertTrue(result.getWordList().stream().noneMatch(word -> word == null || word.isBlank()));
+    }
+
+    @Test
     public void createGame_pusherTriggered() {
         given(gameRepository.save(any(Game.class))).willAnswer(inv -> {
             Game g = inv.getArgument(0);

@@ -17,6 +17,13 @@ public class WordsTest {
         assertTrue(words.length > 0);
     }
 
+    @Test
+    public void wordList_containsNoBlankEntries() {
+        String[] words = Words.WordList();
+
+        assertTrue(Arrays.stream(words).noneMatch(word -> word == null || word.isBlank()));
+    }
+
     // random word → not null and exists in the list
     @Test
     public void word_returnsValidWord() {
@@ -24,6 +31,7 @@ public class WordsTest {
         String[] wordList = Words.WordList();
 
         assertNotNull(word);
+        assertFalse(word.isBlank());
         assertTrue(Arrays.asList(wordList).contains(word));
     }
 }

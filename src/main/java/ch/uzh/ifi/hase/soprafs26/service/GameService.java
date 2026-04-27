@@ -79,6 +79,9 @@ public class GameService {
 
 				do {
             		word = Words.Word();
+					if (word == null || word.isBlank()) {
+						throw new IllegalStateException("Generated blank board word");
+					}
         		} while (wordList.contains(word));
 
 				wordList.add(word);

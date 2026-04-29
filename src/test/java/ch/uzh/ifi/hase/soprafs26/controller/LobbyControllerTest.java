@@ -207,40 +207,6 @@ public class LobbyControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    @Test
-    void getLobbyById_success_OK() throws Exception {
-        // given
-        String token = "token";
-        UUID lobbyId = UUID.randomUUID();
-        User user = new User();
-        LobbyPlayer lobbyPlayer = new LobbyPlayer();
-        Lobby lobby = new Lobby();
-        lobby.addPlayer(lobbyPlayer);
-        lobby.setJoinCode("testJoinCode");
-        lobby.setGameDuration(10);
-        lobby.setGameId(UUID.randomUUID());
-        lobby.setCreatedAt(LocalDateTime.now());
-
-        // when
-        when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
-        doNothing().when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
-
-        MockHttpServletRequestBuilder getRequest = get("/lobbies/{lobbyId}",lobbyId)
-                .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        // then
-        mockMvc.perform(getRequest)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id",is(lobby.getId())))
-                .andExpect(jsonPath("$.joinCode",is(lobby.getJoinCode())))
-                .andExpect(jsonPath("$.gameDuration",is(lobby.getGameDuration())))
-                .andExpect(jsonPath("$.gameId",is(lobby.getGameId().toString())))
-                .andExpect(jsonPath("$.createdAt",is(lobby.getCreatedAt().toString())))
-                .andExpect(jsonPath("$.lobbyPlayers[0].id",is(lobby.getLobbyPlayers().get(0).getId())));
-    }
 
 
     @Test

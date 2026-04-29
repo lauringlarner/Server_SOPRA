@@ -18,11 +18,6 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import jakarta.transaction.Transactional;
 
-/**
- * Test class for the UserResource REST resource.
- *
- * @see UserService
- */
 @WebAppConfiguration
 @SpringBootTest
 @Transactional
@@ -43,9 +38,11 @@ public class UserServiceIntegrationTest {
 		userRepository.deleteAll();
 	}
 
+	@MockitoBean
+	public PusherService pusherService;
+
 	@Test
 	public void createUser_validInputs_success() {
-		// given
 		assertNull(userRepository.findByUsername("testUsername"));
 
 		User testUser = new User();
@@ -53,10 +50,8 @@ public class UserServiceIntegrationTest {
 		testUser.setEmail("test@example.com");
 		testUser.setPassword("Password123!");
 
-		// when
 		User createdUser = userService.createUser(testUser);
 
-		// then
 		assertEquals(testUser.getId(), createdUser.getId());
 		assertEquals(testUser.getUsername(), createdUser.getUsername());
 		assertEquals(testUser.getEmail(), createdUser.getEmail());
@@ -74,13 +69,11 @@ public class UserServiceIntegrationTest {
 		testUser.setPassword("Password123!");
 		userService.createUser(testUser);
 
-		// attempt to create second user with same username
 		User testUser2 = new User();
 		testUser2.setUsername("testUsername");
 		testUser2.setEmail("other@example.com");
 		testUser2.setPassword("Password123!");
 
-		// check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
 	}
 

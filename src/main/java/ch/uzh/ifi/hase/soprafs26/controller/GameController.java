@@ -77,8 +77,7 @@ public class GameController {
         gameOrchestrationService.submitImageAsync(user, gameId, file, object);
     }
 
-
-    @PostMapping("/games/{gameId}/leaderboard")
+    @PostMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public LeaderboardGetDTO postLeaderboard(@PathVariable UUID lobbyId,
@@ -97,14 +96,14 @@ public class GameController {
     }
 
 
-    @GetMapping("/games/{gameId}/leaderboard")
+    @GetMapping("/lobbies/{lobbyId}/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public LeaderboardGetDTO getLeaderboard(@PathVariable UUID lobbyId,
                                             @PathVariable UUID gameId,
                                             @RequestHeader(value = "Authorization", required = false) String token) {
-        authService.authenticateToken(token);
-        Leaderboard leaderboard = leaderboardService.getLeaderboard(gameId);
+        User user = authService.authenticateToken(token);
+        Leaderboard leaderboard = gameOrchestrationService.getLeaderboard(user, lobbyId, gameId);
 
         LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
         dto.setTeam1Score(leaderboard.getTeam1Score());
@@ -113,3 +112,4 @@ public class GameController {
         return dto;
     }
 }
+

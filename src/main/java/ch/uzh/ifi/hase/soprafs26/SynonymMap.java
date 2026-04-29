@@ -96,6 +96,31 @@ public class SynonymMap {
         SYNONYMS.put("shower",            List.of("shower cabin", "shower cubicle", "shower unit"));
         SYNONYMS.put("bathtub",           List.of("bath", "soaking tub", "tub"));
         SYNONYMS.put("clock",             List.of("wall clock", "timepiece", "alarm clock", "timer"));
+
+        // --New Words--------------------------------------
+        SYNONYMS.put("bottle",     List.of("flask", "container", "water bottle", "jar"));
+        SYNONYMS.put("mailbox",    List.of("postbox", "letter box", "mail slot", "post box"));
+        SYNONYMS.put("glasses",    List.of("spectacles", "eyewear", "frames", "lenses"));
+        SYNONYMS.put("swan",       List.of("waterfowl", "bird", "cygnet", "aquatic bird"));
+        SYNONYMS.put("pigeon",     List.of("dove", "city bird", "rock pigeon", "bird"));
+        SYNONYMS.put("billboard",  List.of("hoarding", "advertisement board", "signboard", "display board"));
+        SYNONYMS.put("doorbell",   List.of("bell", "chime", "entry bell", "ringer"));
+        SYNONYMS.put("balcony",    List.of("terrace", "veranda", "patio", "deck"));
+        SYNONYMS.put("hydrant",    List.of("fire hydrant", "water outlet", "fire plug"));
+        SYNONYMS.put("dog",        List.of("canine", "puppy", "hound", "pooch"));
+        SYNONYMS.put("cat",        List.of("feline", "kitten", "kitty", "house cat"));
+        SYNONYMS.put("umbrella",   List.of("parasol", "rain shield", "sunshade"));
+        SYNONYMS.put("tv screen",  List.of("television", "monitor", "display", "screen"));
+        SYNONYMS.put("slippers",   List.of("house shoes", "slides", "indoor shoes", "sandals"));
+        SYNONYMS.put("chessboard", List.of("checkerboard", "game board", "board"));
+        SYNONYMS.put("charger",    List.of("power adapter", "battery charger", "adapter"));
+        SYNONYMS.put("statue",     List.of("sculpture", "monument", "figure", "idol"));
+        SYNONYMS.put("pizza",      List.of("pie", "pizza pie", "flatbread", "slice"));
+        SYNONYMS.put("plate",      List.of("dish", "platter", "serving plate"));
+        SYNONYMS.put("spoon",      List.of("tablespoon", "teaspoon", "utensil"));
+        SYNONYMS.put("fork",       List.of("dining fork", "table fork", "utensil"));
+        SYNONYMS.put("knife",      List.of("blade", "kitchen knife", "cutlery"));
+        SYNONYMS.put("towel",      List.of("bath towel", "hand towel", "cloth"));
     }
  
     /**

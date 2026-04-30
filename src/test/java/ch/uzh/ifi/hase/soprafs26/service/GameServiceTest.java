@@ -59,6 +59,7 @@ public class GameServiceTest {
         testLobby = new Lobby();
         testLobby.setId(UUID.randomUUID());
         testLobby.setGameDuration(120);
+        testLobby.setListType("all");
 
         testGame = new Game();
         testGame.setId(gameId);
@@ -329,19 +330,6 @@ public class GameServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Word is already taken by a team!"));
-    }
-
-    // ─────────────────────────────────────────────
-    // WordList (static helper)
-    // ─────────────────────────────────────────────
-
-    @Test
-    public void wordList_returns16Words() {
-        List<String> result = GameService.WordList();
-
-        assertNotNull(result);
-        assertEquals(16, result.size());
-        result.forEach(w -> assertNotNull(w));
     }
 
     @Test

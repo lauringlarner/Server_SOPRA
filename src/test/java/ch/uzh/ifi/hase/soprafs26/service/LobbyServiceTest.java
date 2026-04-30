@@ -412,7 +412,7 @@ public class LobbyServiceTest {
     void updateLobbySettings_success() {
         Lobby lobby = new Lobby();
 
-        lobbyService.updateLobbySettings(lobby, 10);
+        lobbyService.updateLobbySettings(lobby, 10, "all");
 
         assertEquals(10, lobby.getGameDuration());
         verify(lobbyRepository).flush();
@@ -423,7 +423,7 @@ public class LobbyServiceTest {
         Lobby lobby = new Lobby();
 
         assertThrows(ResponseStatusException.class,
-            () -> lobbyService.updateLobbySettings(lobby, 999));
+            () -> lobbyService.updateLobbySettings(lobby, 999, "all"));
     }
 
     ////////////////////
@@ -771,19 +771,19 @@ public class LobbyServiceTest {
         Lobby lobby = new Lobby();
 
         assertDoesNotThrow(() ->
-            lobbyService.updateLobbySettings(lobby, 10));
+            lobbyService.updateLobbySettings(lobby, 10, "all"));
     }
 
     @Test
     void validateGameDuration_tooSmall_throwsBadRequest() {
         assertThrows(ResponseStatusException.class,
-            () -> lobbyService.updateLobbySettings(new Lobby(), 1));
+            () -> lobbyService.updateLobbySettings(new Lobby(), 1, "all"));
     }
 
     @Test
     void validateGameDuration_tooLarge_throwsBadRequest() {
         assertThrows(ResponseStatusException.class,
-            () -> lobbyService.updateLobbySettings(new Lobby(), 999));
+            () -> lobbyService.updateLobbySettings(new Lobby(), 999, "all"));
     }
 
     /////////////////////////

@@ -778,7 +778,7 @@ public class LobbyControllerTest {
         doNothing().when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         doNothing().when(lobbyService).validateLobbyPlayerIsHost(lobbyPlayer);
         doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid gameDuration"))
-                .when(lobbyService).updateLobbySettings(lobby, gameSettingsDTO.getGameDuration());
+                .when(lobbyService).updateLobbySettings(lobby, gameSettingsDTO.getGameDuration(), gameSettingsDTO.getListType());
 
         MockHttpServletRequestBuilder putRequest = put("/lobbies/{lobbyId}/settings", lobbyId)
                 .header("Authorization", token)
@@ -808,7 +808,7 @@ public class LobbyControllerTest {
         when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
         doNothing().when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         doNothing().when(lobbyService).validateLobbyPlayerIsHost(lobbyPlayer);
-        doNothing().when(lobbyService).updateLobbySettings(lobby, gameSettingsDTO.getGameDuration());
+        doNothing().when(lobbyService).updateLobbySettings(lobby, gameSettingsDTO.getGameDuration(), gameSettingsDTO.getListType());
 
         MockHttpServletRequestBuilder putRequest = put("/lobbies/{lobbyId}/settings", lobbyId)
                 .header("Authorization", token)

@@ -52,13 +52,16 @@ public class GameService {
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
 					   	ScoreService scoreService,
-					   	LeaderboardService leaderboardService, 
-						PusherService pusherService, GameTimerRepository gameTimerRepository) {
+					   	LeaderboardService leaderboardService,
+						PusherService pusherService,
+						GameTimerRepository gameTimerRepository,
+						LobbyService lobbyService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
         this.pusherService = pusherService;
         this.gameTimerRepository = gameTimerRepository;
+		this.lobbyService = lobbyService;
 	}
 
 	//////////////

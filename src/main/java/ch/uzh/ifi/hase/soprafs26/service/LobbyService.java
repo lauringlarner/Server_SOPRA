@@ -88,6 +88,7 @@ public class LobbyService {
         newLobby.setCreatedAt(LocalDateTime.now());
         newLobby.setJoinCode(generateJoinCode());
         newLobby.addPlayer(lobbyPlayer);
+        newLobby.setListType("all");
 
         // Default Game Settings
         newLobby.setGameDuration(10);
@@ -223,13 +224,15 @@ public class LobbyService {
     }
     
     
-    public void updateLobbySettings(Lobby lobby, Integer gameDuration) {
+    public void updateLobbySettings(Lobby lobby, Integer gameDuration, String listType) {
         validateGameDuration(gameDuration); // BAD_REQUEST on failure
+        validateListType(listType); // BAD_REQUEST on failure
         lobby.setGameDuration(gameDuration);
+        lobby.setListType(listType);
         lobbyRepository.flush();
         // pusher update
         pushLobbyUpdate(lobby);
-        
+
         log.debug("Lobby {} successfully changed their settings",lobby);
     }
    
@@ -360,6 +363,12 @@ public class LobbyService {
     }
 
     
+    private void validateListType(String listType) {
+        if (listType == null || (!listType.equals("inside") && !listType.equals("outside") && !listType.equals("all"))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid list type! Must be 'inside', 'outside', or 'all'");
+        }
+    }
+
     private void validateGameDuration(Integer gameDuration) {
         Integer minDuration = 5;
         Integer maxDuration = 20;

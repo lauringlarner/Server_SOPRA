@@ -99,6 +99,7 @@ public interface DTOMapper {
 	@Mapping(source = "gameDuration", target = "gameDuration")
 	@Mapping(source = "gameId", target = "gameId")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
+	@Mapping(source = "listType", target = "listType")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
 
 	default String map(Instant value) {

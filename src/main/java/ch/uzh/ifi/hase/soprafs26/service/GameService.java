@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import ch.uzh.ifi.hase.soprafs26.repository.GameTimerRepository;
 import java.util.ArrayList;
 import java.time.Instant;
 import java.util.List;
@@ -35,7 +36,9 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 @Transactional
 public class GameService {
 
-	private final PusherService pusherService;
+	private final GameTimerRepository gameTimerRepository;
+
+    private final PusherService pusherService;
 
     private final Logger log = LoggerFactory.getLogger(GameService.class);
 
@@ -47,11 +50,12 @@ public class GameService {
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
 					   	ScoreService scoreService,
 					   	LeaderboardService leaderboardService, 
-						PusherService pusherService) {
+						PusherService pusherService, GameTimerRepository gameTimerRepository) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
         this.pusherService = pusherService;
+        this.gameTimerRepository = gameTimerRepository;
 	}
 
 	//////////////
@@ -67,20 +71,21 @@ public class GameService {
 		newGame.setStatus(GameStatus.IN_PROGRESS);
 		newGame.setLobbyId(lobby.getId());
 
+		String listType=lobby.getListType();
+
 		// Build one canonical 4x4 board and derive the flat word list from it.
 		for (int row = 0; row < boardSize; row++) {
 			for (int col = 0; col < boardSize; col++) {
-				String word;
-
+				String word;				
 				do {
-            		word = Words.Word();
+            		word = Words.Word(listType);
         		} while (wordList.contains(word));
 
 				wordList.add(word);
 				tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
 			}
 		}
-
+		/* */
 		newGame.setWordList(wordList);
 		//set WordListScore
 		List<String> wordListScore = new ArrayList<>();
@@ -160,17 +165,17 @@ public class GameService {
 
 
 /* Not yet sorted, and in need of refactoring */
-
+	/* 
 	//returns a list of 16 randomly choosen words from the library
 	public static List<String> WordList() {
 		List<String> wordList = new ArrayList<>();
 
 		for (int i = 0; i < 16; i++) {
-			wordList.add(Words.Word());
+			wordList.add(Words.Word(lobby.getlistType()));
 		}
 
 		return wordList;
-	}
+	}*/
 
 	public int checkWordList(List<String> wordList, String object) {
 		for (int i = 0; i < wordList.size(); i++) {

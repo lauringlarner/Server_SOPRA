@@ -173,9 +173,10 @@ public class LobbyController {
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
         
-        // get gameDuration and update lobbys gameDuration or BAD_REQUEST
+        // get gameDuration and listType and update lobby settings or BAD_REQUEST
         Integer gameDuration = gameSettingsDTO.getGameDuration();
-        lobbyService.updateLobbySettings(lobby, gameDuration);
+        String listType = gameSettingsDTO.getListType();
+        lobbyService.updateLobbySettings(lobby, gameDuration, listType);
     }
 
 

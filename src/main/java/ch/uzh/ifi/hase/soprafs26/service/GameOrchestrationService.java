@@ -52,7 +52,7 @@ public class GameOrchestrationService {
     }
 
 
-    public Game startGame(User user, UUID lobbyId) {
+    public Game startGame(User user, UUID lobbyId, int isSingleplayer) {
 
         // fetch lobbyPlayer and lobby or Not Found
         Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);
@@ -67,8 +67,9 @@ public class GameOrchestrationService {
         lobbyService.validateAllPlayersReady(lobby);
         lobbyService.validateLobbyIsOpen(lobby);
         lobbyService.validateAllPlayersAreInValidTeams(lobby);
+        if (isSingleplayer == 0){
         lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
-
+        }
         // create game
         Game game = gameService.createGame(lobby);
         leaderboardService.initOrUpdate(game);

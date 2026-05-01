@@ -20,6 +20,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameSettingsDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.StartGameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyAccessInfoDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
@@ -184,12 +185,14 @@ public class LobbyController {
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public void createGame(@PathVariable UUID lobbyId,
-        @RequestHeader(value = "Authorization", required = false) String token) {
+        @RequestHeader(value = "Authorization", required = false) String token,
+        @RequestBody StartGameDTO startGameDTO)
+        {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
-        
+
         // starts game
-        gameOrchestrationService.startGame(user, lobbyId);
+        gameOrchestrationService.startGame(user, lobbyId, Boolean.TRUE.equals(startGameDTO.getIsSinglePlayer()) ? 1 : 0);
     }
     
 

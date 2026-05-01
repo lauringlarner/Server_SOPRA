@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -832,8 +833,9 @@ public class LobbyControllerTest {
                 .thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
         
         MockHttpServletRequestBuilder putRequest = post("/lobbies/{lobbyId}/start", lobbyId)
-                .header("Authorization", badToken)
-                .contentType(MediaType.APPLICATION_JSON);
+        .header("Authorization", badToken)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(putRequest)
@@ -849,12 +851,13 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"))
-                .when(gameOrchestrationService).startGame(user, badLobbyId);
+        when(gameOrchestrationService.startGame(user, badLobbyId, 0))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", badLobbyId)
                 .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -870,12 +873,13 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+        when(gameOrchestrationService.startGame(user, lobbyId, 0))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found"));
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
                 .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -891,13 +895,13 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not in lobby"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+        when(gameOrchestrationService.startGame(user, lobbyId, 0))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not in lobby"));
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
                 .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -913,13 +917,13 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not host"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+        when(gameOrchestrationService.startGame(user, lobbyId, 0))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not host"));
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
                 .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -935,13 +939,13 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-
-        doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Not all ready"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+        when(gameOrchestrationService.startGame(user, lobbyId, 0))
+                .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Not all ready"));
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
                 .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -957,13 +961,13 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-
-        doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Game already running"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+        when(gameOrchestrationService.startGame(user, lobbyId, 0))
+                .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Game already running"));
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
                 .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -976,16 +980,19 @@ public class LobbyControllerTest {
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
         User user = new User();
+        int isSingleplayer = 0;
+
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
 
         doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Invalid teams"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+                .when(gameOrchestrationService).startGame(user, lobbyId, isSingleplayer);
 
-        MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
-                .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+       MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
+        .header("Authorization", token)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -998,16 +1005,18 @@ public class LobbyControllerTest {
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
         User user = new User();
+        int isSingleplayer = 0;
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
 
         doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Team empty"))
-                .when(gameOrchestrationService).startGame(user, lobbyId);
+                .when(gameOrchestrationService).startGame(user, lobbyId, isSingleplayer);
 
         MockHttpServletRequestBuilder postRequest = post("/lobbies/{lobbyId}/start", lobbyId)
-                .header("Authorization", token)
-                .contentType(MediaType.APPLICATION_JSON);
+        .header("Authorization", token)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)
@@ -1021,15 +1030,18 @@ public class LobbyControllerTest {
         UUID lobbyId = UUID.randomUUID();
         User user = new User();
         Game game = new Game();
+        int isSingleplayer = 0;
+
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(gameOrchestrationService.startGame(user, lobbyId)).thenReturn(game);
+        when(gameOrchestrationService.startGame(user, lobbyId, isSingleplayer)).thenReturn(game);
 
         MockHttpServletRequestBuilder postRequest =
-                post("/lobbies/{lobbyId}/start", lobbyId)
-                        .header("Authorization", token)
-                        .contentType(MediaType.APPLICATION_JSON);
+        post("/lobbies/{lobbyId}/start", lobbyId)
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"isSinglePlayer\": 0}");
 
         // then
         mockMvc.perform(postRequest)

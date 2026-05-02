@@ -15,7 +15,9 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyPlayerDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.entity.ChatMessage;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ChatMessageGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ImageAnalysisResult;
@@ -101,6 +103,13 @@ public interface DTOMapper {
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	@Mapping(source = "listType", target = "listType")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
+
+	// chat mapper
+	@Mapping(source = "sender", target = "sender")
+	@Mapping(source = "teamType", target = "teamType")
+	@Mapping(source = "message", target = "message")
+	@Mapping(source = "sentAt", target = "sentAt")
+	ChatMessageGetDTO convertEntityToChatMessageGetDTO(ChatMessage chatMessage);
 
 	default String map(Instant value) {
 		return value == null ? null : value.toString();

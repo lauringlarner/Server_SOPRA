@@ -16,9 +16,11 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import jakarta.transaction.Transactional;
 
 @WebAppConfiguration
 @SpringBootTest
+@Transactional
 public class UserServiceIntegrationTest {
 
 	@Qualifier("userRepository")
@@ -28,13 +30,13 @@ public class UserServiceIntegrationTest {
 	@Autowired
 	private UserService userService;
 
+	@MockitoBean
+	private PusherService pusherService;
+
 	@BeforeEach
 	public void setup() {
 		userRepository.deleteAll();
 	}
-
-	@MockitoBean
-	public PusherService pusherService;
 
 	@Test
 	public void createUser_validInputs_success() {

@@ -80,13 +80,9 @@ public class GameOrchestrationService {
         return game;
     }
 
-    public Leaderboard getLeaderboard(User user, UUID lobbyId, UUID gameId) {
+    public Leaderboard getLeaderboard(User user, UUID gameId) {
         Game game = gameService.getGameById(gameId);
         LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-
-        if (!game.getLobbyId().equals(lobbyId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found in lobby!");
-        }
 
         lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
         return leaderboardService.getLeaderboard(gameId);

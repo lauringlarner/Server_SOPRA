@@ -38,9 +38,6 @@ public class UserServiceIntegrationTest {
 		userRepository.deleteAll();
 	}
 
-	@MockitoBean
-	public PusherService pusherService;
-
 	@Test
 	public void createUser_validInputs_success() {
 		assertNull(userRepository.findByUsername("testUsername"));

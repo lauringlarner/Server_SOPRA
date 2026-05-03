@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
@@ -161,6 +160,18 @@ public class UserService {
 
 		log.debug("Password changed for User: {}", user);
 		return user;
+	}
+
+	public void updateUserStats(User user, boolean gameWon) {
+		user.setGamesPlayed(user.getGamesPlayed()+1);
+		if (gameWon) {
+			user.setGamesWon(user.getGamesWon()+1);
+		}
+
+		user = userRepository.save(user);
+		userRepository.flush();
+
+		log.debug("Stats updatedfor User: {}", user);
 	}
 
 	/////////////

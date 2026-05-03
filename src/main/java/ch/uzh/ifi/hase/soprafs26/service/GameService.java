@@ -1,9 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
-import ch.uzh.ifi.hase.soprafs26.repository.GameTimerRepository;
-import java.util.ArrayList;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,11 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.constant.TileStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.GameTimerRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 /**
@@ -38,7 +39,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 @Transactional
 public class GameService {
 
-	private final GameTimerRepository gameTimerRepository;
+    private final GameTimerRepository gameTimerRepository;
 
     private final PusherService pusherService;
 
@@ -149,10 +150,30 @@ public class GameService {
     // Deletion //
     //////////////
 
-	public void deleteGame(Game game) {
-		gameRepository.delete(game);
+	public void deleteGame(UUID gameId) {
+		Game game = gameRepository.findById(gameId).orElse(null);
 
+		if (game == null) {
+        	return;
+    	}
+
+		gameRepository.delete(game);
         log.debug("Game successfully deleted");
+	}
+
+	@Async
+	public void deleteGameDelayed(UUID gameId) {
+		try {
+			Thread.sleep(30_000); // 30 second delay
+
+			if (!gameRepository.existsById(gameId)) {
+				return;
+			}
+
+			deleteGame(gameId);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	public synchronized boolean finishGameIfExpired(UUID gameId) {
@@ -193,6 +214,17 @@ public class GameService {
     // Utilities //    
     ///////////////
 	
+	public TeamType getWinningTeam(Game game) {
+		if (game.getScore_1() > game.getScore_2()) {
+			return TeamType.Team1;
+		}
+		else if (game.getScore_1() < game.getScore_2()) {
+			return TeamType.Team2;
+		}
+		else {
+			return null;
+		}
+	}
 	
     ////////////
     // Pusher //

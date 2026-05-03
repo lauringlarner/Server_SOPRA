@@ -270,7 +270,7 @@ public class GameServiceTest {
     public void deleteGame_validGame_deletesSuccessfully() {
         doNothing().when(gameRepository).delete(testGame);
 
-        assertDoesNotThrow(() -> gameService.deleteGame(testGame));
+        assertDoesNotThrow(() -> gameService.deleteGame(testGame.getId()));
 
         verify(gameRepository, times(1)).delete(testGame);
     }

@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -11,8 +12,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
-import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
+import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
@@ -28,15 +29,18 @@ public class GameOrchestrationService {
     private final GameService gameService;
     private final LobbyService lobbyService;
     private final LeaderboardService leaderboardService;
+    private final UserService userService;
 
     public GameOrchestrationService(
         GameService gameService,
         LobbyService lobbyService,
-        LeaderboardService leaderboardService
+        LeaderboardService leaderboardService,
+        UserService userService
     ) {
         this.gameService = gameService;
         this.lobbyService = lobbyService;
         this.leaderboardService = leaderboardService;
+        this.userService = userService;
     }
 
 
@@ -124,16 +128,31 @@ public class GameOrchestrationService {
         return gameService.getGameById(gameId);
     }
 
+    public void updateAllPlayersUserStats(Lobby lobby, TeamType winningTeam) {
+        List<LobbyPlayer> lobbyPlayers = lobby.getLobbyPlayers();
+        
+        for (LobbyPlayer lobbyPlayer : lobbyPlayers) {
+            if (lobbyPlayer.getTeamType() == winningTeam) {
+                userService.updateUserStats(lobbyPlayer.getUser(), true);
+            }
+            else {
+                userService.updateUserStats(lobbyPlayer.getUser(), false);
+            }
+        }
+    }
+
 
     public void deleteGame(User user, UUID gameId) {
         // fetch Game from gameId and player from user or Not Found
         Game game = gameService.getGameById(gameId);
+        Lobby lobby = lobbyService.getLobbyByLobbyId(game.getLobbyId());
         LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-
+        
         // validate player is in game or FORBIDDEN
         lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
-        lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
 
+        TeamType winningTeam = gameService.getWinningTeam(game);
+        updateAllPlayersUserStats(lobby, winningTeam);
         ///////////////////////////////////////////////////
         /// Update user stats would come here probably ? //
         ///////////////////////////////////////////////////
@@ -142,6 +161,6 @@ public class GameOrchestrationService {
         lobbyService.resetLobbyAfterGame(game.getLobbyId());
 
         // delete game
-        gameService.deleteGame(game);
+        gameService.deleteGameDelayed(game.getId());
     }
 }

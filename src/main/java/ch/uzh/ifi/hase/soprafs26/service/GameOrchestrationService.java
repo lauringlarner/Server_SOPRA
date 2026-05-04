@@ -143,7 +143,7 @@ public class GameOrchestrationService {
 
 
     public void deleteGame(User user, UUID gameId) {
-        // fetch Game from gameId and player from user or Not Found
+        // fetch Game from gameId, lobby from lobbyId and player from user or Not Found
         Game game = gameService.getGameById(gameId);
         Lobby lobby = lobbyService.getLobbyByLobbyId(game.getLobbyId());
         LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
@@ -151,11 +151,9 @@ public class GameOrchestrationService {
         // validate player is in game or FORBIDDEN
         lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
 
+        // update all Users stats 
         TeamType winningTeam = gameService.getWinningTeam(game);
         updateAllPlayersUserStats(lobby, winningTeam);
-        ///////////////////////////////////////////////////
-        /// Update user stats would come here probably ? //
-        ///////////////////////////////////////////////////
 
         // reset all players readyStatus to false and sets Lobbys gameId to null
         lobbyService.resetLobbyAfterGame(game.getLobbyId());

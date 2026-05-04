@@ -25,7 +25,7 @@ public class GameModeService {
 
         new GameModeDTO(
             "Lockout_no_bonus_points",
-            "Lockout Bingo with bonus points",
+            "Lockout Bingo without bonus points",
             List.of(
                 "Locate an item listed on the bingo board in the real world.",
                 "Tap the tile to open the camera and snap a photo of that item.",

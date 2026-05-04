@@ -1,10 +1,13 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.ChatMessage;
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.ChatMessageRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyPlayerRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +19,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,11 +35,15 @@ public class ChatServiceTest {
     @Mock
     private LobbyPlayerRepository lobbyPlayerRepository;
 
+    @Mock
+    private GameRepository gameRepository;
+
     @InjectMocks
     private ChatService chatService;
 
     private User testUser;
     private LobbyPlayer testLobbyPlayer;
+    private Game testGame;
     private UUID testGameId;
 
     @BeforeEach
@@ -50,6 +59,11 @@ public class ChatServiceTest {
         testLobbyPlayer = new LobbyPlayer();
         testLobbyPlayer.setUser(testUser);
         testLobbyPlayer.setTeamType(TeamType.Team1);
+
+        testGame = new Game();
+        testGame.setStatus(GameStatus.IN_PROGRESS);
+
+        Mockito.when(gameRepository.findById(testGameId)).thenReturn(Optional.of(testGame));
     }
 
     // sendMessage
@@ -97,6 +111,17 @@ public class ChatServiceTest {
         // when/then
         assertThrows(ResponseStatusException.class,
                 () -> chatService.sendMessage(testUser, testGameId, null));
+    }
+
+    @Test
+    public void sendMessage_gameNotInProgress_throwsForbidden() {
+        // given
+        testGame.setStatus(GameStatus.ENDED);
+        Mockito.when(lobbyPlayerRepository.findByUser(testUser)).thenReturn(testLobbyPlayer);
+
+        // when/then
+        assertThrows(ResponseStatusException.class,
+                () -> chatService.sendMessage(testUser, testGameId, "Hello!"));
     }
 
     @Test
@@ -162,5 +187,27 @@ public class ChatServiceTest {
 
         // then
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void getMessages_moreThan7_returnsLast7() {
+        // given
+        List<ChatMessage> messages = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            ChatMessage msg = new ChatMessage();
+            msg.setMessage("Message " + i);
+            messages.add(msg);
+        }
+
+        Mockito.when(chatMessageRepository.findByGameIdOrderBySentAtAsc(testGameId))
+                .thenReturn(messages);
+
+        // when
+        List<ChatMessage> result = chatService.getMessages(testGameId);
+
+        // then
+        assertEquals(7, result.size());
+        assertEquals("Message 4", result.get(0).getMessage());
+        assertEquals("Message 10", result.get(6).getMessage());
     }
 }

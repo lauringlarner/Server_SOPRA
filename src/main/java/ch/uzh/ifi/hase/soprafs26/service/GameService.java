@@ -81,15 +81,26 @@ public class GameService {
 		String listType=lobby.getListType();
 
 		// Build one canonical 4x4 board and derive the flat word list from it.
-		for (int row = 0; row < boardSize; row++) {
-			for (int col = 0; col < boardSize; col++) {
-				String word;				
-				do {
-            		word = Words.Word(listType);
-        		} while (wordList.contains(word));
+		if (listType.equals("demo")) {
+			String[] demoWords = Words.WordList("urban_objects_demo.csv");
+			for (int row = 0; row < boardSize; row++) {
+				for (int col = 0; col < boardSize; col++) {
+					String word = demoWords[row * boardSize + col];
+					wordList.add(word);
+					tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+				}
+			}
+		} else {
+			for (int row = 0; row < boardSize; row++) {
+				for (int col = 0; col < boardSize; col++) {
+					String word;
+					do {
+						word = Words.Word(listType);
+					} while (wordList.contains(word));
 
-				wordList.add(word);
-				tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+					wordList.add(word);
+					tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+				}
 			}
 		}
 		/* */

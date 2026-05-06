@@ -38,6 +38,12 @@ public class Words {
             System.out.println(word);
             return word;
         }
+        else if(typeOfWordList.equals("demo")){
+             String[] wordsList = WordList("urban_objects_demo.csv");
+             String word =wordsList[15];
+             System.out.println(word);
+            return word;
+        }
         else {
             String[] wordsList = WordList("urban_objects.csv");
             int randomNum = (int) (Math.random() * wordsList.length);

@@ -364,7 +364,7 @@ public class LobbyService {
 
     
     private void validateListType(String listType) {
-        if (listType == null || (!listType.equals("inside") && !listType.equals("outside") && !listType.equals("all"))) {
+        if (listType == null || (!listType.equals("inside") && !listType.equals("outside") && !listType.equals("all") && !listType.equals("demo"))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid list type! Must be 'inside', 'outside', or 'all'");
         }
     }

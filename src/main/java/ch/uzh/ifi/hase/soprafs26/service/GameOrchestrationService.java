@@ -75,7 +75,7 @@ public class GameOrchestrationService {
         lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
         }
         // create game
-        Game game = gameService.createGame(lobby);
+        Game game = gameService.createGame(lobby, isSingleplayer);
         leaderboardService.initOrUpdate(game);
 
         // set gameId in lobby and publish the started-lobby update to SSE subscribers

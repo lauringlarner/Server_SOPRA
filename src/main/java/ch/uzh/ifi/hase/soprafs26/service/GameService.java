@@ -70,6 +70,10 @@ public class GameService {
 	//////////////
 
 	public Game createGame(Lobby lobby) {
+		return createGame(lobby, 0);
+	}
+
+	public Game createGame(Lobby lobby, int isSingleplayer) {
 		Game newGame = new Game();
 		int boardSize = 4;
 		List<String> wordList = new ArrayList<>();
@@ -77,6 +81,7 @@ public class GameService {
 
 		newGame.setStatus(GameStatus.IN_PROGRESS);
 		newGame.setLobbyId(lobby.getId());
+		newGame.setIsSinglePlayer(isSingleplayer == 1);
 
 		String listType=lobby.getListType();
 

@@ -27,6 +27,9 @@ public class Leaderboard implements Serializable {
     @Column(nullable = false)
     private int team2Score;
 
+    @Column(nullable = false)
+    private Boolean isSinglePlayer = false;
+
     // playerId tracking will be added in a future update to support individual player scores and rankings
     // currently, the leaderboard only tracks team scores for simplicity and to align with the current game design
     @Column(columnDefinition = "TEXT")
@@ -66,6 +69,14 @@ public class Leaderboard implements Serializable {
 
     public void setTeam2Score(int team2Score) {
         this.team2Score = team2Score;
+    }
+
+    public Boolean getIsSinglePlayer() {
+        return isSinglePlayer;
+    }
+
+    public void setIsSinglePlayer(Boolean isSinglePlayer) {
+        this.isSinglePlayer = Boolean.TRUE.equals(isSinglePlayer);
     }
 
     public String getPlayerScoresJson() {

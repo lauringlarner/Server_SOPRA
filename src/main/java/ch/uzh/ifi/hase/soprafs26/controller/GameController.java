@@ -92,6 +92,7 @@ public class GameController {
         LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
         dto.setTeam1Score(leaderboard.getTeam1Score());
         dto.setTeam2Score(leaderboard.getTeam2Score());
+        dto.setIsSinglePlayer(leaderboard.getIsSinglePlayer());
         dto.setTileGrid(leaderboard.getTileGrid());
         return dto;
     }
@@ -108,8 +109,8 @@ public class GameController {
         LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
         dto.setTeam1Score(leaderboard.getTeam1Score());
         dto.setTeam2Score(leaderboard.getTeam2Score());
+        dto.setIsSinglePlayer(leaderboard.getIsSinglePlayer());
         dto.setTileGrid(leaderboard.getTileGrid());
         return dto;
     }
 }
-

@@ -53,6 +53,7 @@ public class LeaderboardServiceTest {
     // no existing leaderboard → creates new
     @Test
     public void Init() {
+        game.setIsSinglePlayer(true);
         Mockito.when(leaderboardRepository.findByGameId(game.getId())).thenReturn(null);
 
         Leaderboard result = leaderboardService.initOrUpdate(game);
@@ -60,6 +61,7 @@ public class LeaderboardServiceTest {
         assertEquals(game.getId(), result.getGameId());
         assertEquals(0, result.getTeam1Score());
         assertEquals(0, result.getTeam2Score());
+        assertTrue(result.getIsSinglePlayer());
     }
 
     // existing leaderboard → updates scores
@@ -81,6 +83,7 @@ public class LeaderboardServiceTest {
     // existing leaderboard → updates scores
     @Test
     public void updateLeaderboard_success() {
+        game.setIsSinglePlayer(true);
         Leaderboard existing = new Leaderboard();
         existing.setGameId(game.getId());
         existing.setTeam1Score(0);
@@ -92,6 +95,7 @@ public class LeaderboardServiceTest {
 
         assertEquals(3, result.getTeam1Score());
         assertEquals(1, result.getTeam2Score());
+        assertTrue(result.getIsSinglePlayer());
     }
 
     // leaderboard not found → 404
@@ -130,10 +134,12 @@ public class LeaderboardServiceTest {
         LeaderboardGetDTO dto = new LeaderboardGetDTO(gameId);
         dto.setTeam1Score(10);
         dto.setTeam2Score(7);
+        dto.setIsSinglePlayer(true);
 
         assertEquals(gameId, dto.getGameId());
         assertEquals(10, dto.getTeam1Score());
         assertEquals(7, dto.getTeam2Score());
+        assertTrue(dto.getIsSinglePlayer());
     }
 
     // LeaderboardGetDTO: tileGrid sets correctly

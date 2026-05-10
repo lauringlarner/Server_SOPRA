@@ -53,6 +53,9 @@ public class Game implements Serializable {
 	private int score_2;
 
 	@Column(nullable = false)
+	private Boolean isSinglePlayer = false;
+
+	@Column(nullable = false)
 	private Integer gameDuration;
 
 	@Column(nullable = false)
@@ -137,6 +140,14 @@ public class Game implements Serializable {
 
 	public void setScore_2(int score_2) {
 		this.score_2 = score_2;
+	}
+
+	public Boolean getIsSinglePlayer() {
+		return isSinglePlayer;
+	}
+
+	public void setIsSinglePlayer(Boolean isSinglePlayer) {
+		this.isSinglePlayer = Boolean.TRUE.equals(isSinglePlayer);
 	}
 
 	public int getBoardSize() {

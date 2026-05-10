@@ -176,6 +176,20 @@ public class GameServiceTest {
     }
 
     @Test
+    public void createGame_singlePlayerMode_setsSoloFlag() {
+        given(gameRepository.save(any(Game.class))).willAnswer(inv -> {
+            Game g = inv.getArgument(0);
+            g.setId(gameId);
+            return g;
+        });
+        doNothing().when(pusherService).trigger(anyString(), anyString(), any());
+
+        Game result = gameService.createGame(testLobby, 1);
+
+        assertTrue(result.getIsSinglePlayer());
+    }
+
+    @Test
     public void createGame_wordListHasNoDuplicates() {
         given(gameRepository.save(any(Game.class))).willAnswer(inv -> {
             Game g = inv.getArgument(0);

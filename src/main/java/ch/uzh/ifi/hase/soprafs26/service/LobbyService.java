@@ -371,7 +371,7 @@ public class LobbyService {
 
     private void validateGameDuration(Integer gameDuration) {
         Integer minDuration = 5;
-        Integer maxDuration = 20;
+        Integer maxDuration = 120;
         
         if (gameDuration < minDuration || gameDuration > maxDuration) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

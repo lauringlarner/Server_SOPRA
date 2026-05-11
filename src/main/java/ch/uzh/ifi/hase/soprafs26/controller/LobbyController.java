@@ -20,11 +20,11 @@ import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.LobbyPlayer;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameSettingsDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.StartGameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyAccessInfoDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ReadyStatusDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.StartGameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TeamTypeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
@@ -204,9 +204,15 @@ public class LobbyController {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
 
-        // fetch lobbyPlayer and lobby or NOT_FOUND
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);   
+        // fetch lobbyPlayer and lobby or returns NO_CONTENT (idempotent)
+        LobbyPlayer lobbyPlayer = lobbyService.findLobbyPlayerByUser(user);
+        if (lobbyPlayer == null) {
+            return;
+        }
+        Lobby lobby = lobbyService.findLobbyByLobbyId(lobbyId);    
+         if (lobby == null) {
+            return;
+        } 
 
         // validate lobbyPlayer is in lobby and is a host or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
@@ -225,9 +231,15 @@ public class LobbyController {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
 
-        // fetch lobbyPlayer and lobby or NOT_FOUND
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);    
+        // fetch lobbyPlayer and lobby or returns NO_CONTENT (idempotent)
+        LobbyPlayer lobbyPlayer = lobbyService.findLobbyPlayerByUser(user);
+        if (lobbyPlayer == null) {
+            return;
+        }
+        Lobby lobby = lobbyService.findLobbyByLobbyId(lobbyId);    
+         if (lobby == null) {
+            return;
+        }
 
         // validate lobbyPlayer is in lobby or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);

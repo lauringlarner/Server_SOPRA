@@ -147,6 +147,16 @@ public class LobbyService {
                 return new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
         });
     }
+
+    @Transactional(readOnly = true)
+    public LobbyPlayer findLobbyPlayerByUser(User user) {
+        return lobbyPlayerRepository.findByUser(user); 
+    }
+
+    @Transactional(readOnly = true)
+    public Lobby findLobbyByLobbyId(UUID lobbyId) {
+        return lobbyRepository.findById(lobbyId).orElse(null);
+    }
     
     /////////////
     // Actions //

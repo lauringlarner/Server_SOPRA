@@ -206,6 +206,53 @@ public class LobbyControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void getCurrentLobby_success_Ok() throws Exception {
+        // given
+        String token = "token";
+        User user = new User();
+        Lobby lobby = new Lobby();
+        UUID lobbyId = UUID.randomUUID();
+        lobby.setId(lobbyId);
+        lobby.setJoinCode("ABC123");
+        lobby.setGameDuration(10);
+        lobby.setListType("all");
+
+        // when
+        when(authService.authenticateToken(token)).thenReturn(user);
+        when(lobbyService.getCurrentLobbyByUser(user)).thenReturn(lobby);
+
+        MockHttpServletRequestBuilder getRequest = get("/lobbies/current")
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        // then
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(lobbyId.toString())))
+                .andExpect(jsonPath("$.joinCode", is(lobby.getJoinCode())));
+    }
+
+    @Test
+    void getCurrentLobby_noCurrentLobby_NotFound() throws Exception {
+        // given
+        String token = "token";
+        User user = new User();
+
+        // when
+        when(authService.authenticateToken(token)).thenReturn(user);
+        when(lobbyService.getCurrentLobbyByUser(user))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+
+        MockHttpServletRequestBuilder getRequest = get("/lobbies/current")
+                .header("Authorization", token)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        // then
+        mockMvc.perform(getRequest)
+                .andExpect(status().isNotFound());
+    }
+
 
 
     @Test

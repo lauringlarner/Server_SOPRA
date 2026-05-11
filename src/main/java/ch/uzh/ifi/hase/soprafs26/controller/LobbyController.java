@@ -81,6 +81,19 @@ public class LobbyController {
 
         return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
     }
+
+    @GetMapping("/lobbies/current")
+    @ResponseStatus(HttpStatus.OK)
+    public LobbyDTO getCurrentLobby(
+        @RequestHeader(value = "Authorization", required = false) String token) {
+		// authenticate and return user or UNAUTHORIZED
+        User user = authService.authenticateToken(token);
+
+        // fetch current lobby from authenticated user or NOT_FOUND
+        Lobby lobby = lobbyService.getCurrentLobbyByUser(user);
+
+        return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
+    }
     
 
     @PostMapping("/lobbies/join")

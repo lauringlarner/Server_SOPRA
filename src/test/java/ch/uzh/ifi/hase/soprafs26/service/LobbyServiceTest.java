@@ -215,6 +215,31 @@ public class LobbyServiceTest {
             () -> lobbyService.getLobbyPlayerByUser(user));
     }
 
+    @Test
+    void getCurrentLobbyByUser_success() {
+        User user = new User();
+        Lobby lobby = new Lobby();
+        LobbyPlayer lp = new LobbyPlayer();
+        lp.setLobby(lobby);
+
+        when(lobbyPlayerRepository.findByUser(user)).thenReturn(lp);
+
+        Lobby result = lobbyService.getCurrentLobbyByUser(user);
+
+        assertEquals(lobby, result);
+    }
+
+    @Test
+    void getCurrentLobbyByUser_playerWithoutLobby_throwsNotFound() {
+        User user = new User();
+        LobbyPlayer lp = new LobbyPlayer();
+
+        when(lobbyPlayerRepository.findByUser(user)).thenReturn(lp);
+
+        assertThrows(ResponseStatusException.class,
+            () -> lobbyService.getCurrentLobbyByUser(user));
+    }
+
     ////////////////////////
     // getLobbyPlayerById //
     ////////////////////////

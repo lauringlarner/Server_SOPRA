@@ -129,6 +129,17 @@ public class LobbyService {
         return lobbyRepository.findById(lobbyId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
     }
+
+    public Lobby getCurrentLobbyByUser(User user) {
+        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
+        Lobby lobby = lobbyPlayer.getLobby();
+
+        if (lobby == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found");
+        }
+
+        return lobby;
+    }
     
     
     public LobbyPlayer getLobbyPlayerByUser(User user) {

@@ -1,11 +1,9 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -1068,8 +1066,8 @@ public class LobbyControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @Test
-    void deleteLobby_invalidUser_NotFound() throws Exception {
+        @Test
+        void deleteLobby_invalidUser_NoContent() throws Exception {
         // given
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
@@ -1077,8 +1075,7 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(userWithoutPlayer);
-        when(lobbyService.getLobbyPlayerByUser(userWithoutPlayer))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found"));
+        when(lobbyService.findLobbyPlayerByUser(userWithoutPlayer)).thenReturn(null);
 
         MockHttpServletRequestBuilder deleteRequest = delete("/lobbies/{lobbyId}", lobbyId)
                 .header("Authorization", token)
@@ -1086,11 +1083,11 @@ public class LobbyControllerTest {
 
         // then
         mockMvc.perform(deleteRequest)
-                .andExpect(status().isNotFound());
-    }
+                .andExpect(status().isNoContent());
+        }
 
-    @Test
-    void deleteLobby_invalidLobbyId_NotFound() throws Exception {
+        @Test
+        void deleteLobby_invalidLobbyId_NoContent() throws Exception {
         // given
         String token = "token";
         UUID badLobbyId = UUID.randomUUID();
@@ -1099,9 +1096,8 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(badLobbyId))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+        when(lobbyService.findLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
+        when(lobbyService.findLobbyByLobbyId(badLobbyId)).thenReturn(null);
 
         MockHttpServletRequestBuilder deleteRequest = delete("/lobbies/{lobbyId}", badLobbyId)
                 .header("Authorization", token)
@@ -1109,11 +1105,11 @@ public class LobbyControllerTest {
 
         // then
         mockMvc.perform(deleteRequest)
-                .andExpect(status().isNotFound());
-    }
+                .andExpect(status().isNoContent());
+        }
 
-    @Test
-    void deleteLobby_lobbyPlayerNotInLobby_Forbidden() throws Exception {
+        @Test
+        void deleteLobby_lobbyPlayerNotInLobby_Forbidden() throws Exception {
         // given
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
@@ -1123,8 +1119,8 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
+        when(lobbyService.findLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
+        when(lobbyService.findLobbyByLobbyId(lobbyId)).thenReturn(lobby);
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Player not in lobby"))
                 .when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
 
@@ -1135,10 +1131,10 @@ public class LobbyControllerTest {
         // then
         mockMvc.perform(deleteRequest)
                 .andExpect(status().isForbidden());
-    }
+        }
 
-    @Test
-    void deleteLobby_lobbyPlayerNotHost_Forbidden() throws Exception {
+        @Test
+        void deleteLobby_lobbyPlayerNotHost_Forbidden() throws Exception {
         // given
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
@@ -1149,8 +1145,8 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
+        when(lobbyService.findLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
+        when(lobbyService.findLobbyByLobbyId(lobbyId)).thenReturn(lobby);
         doNothing().when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not host"))
                 .when(lobbyService).validateLobbyPlayerIsHost(lobbyPlayer);
@@ -1162,7 +1158,7 @@ public class LobbyControllerTest {
         // then
         mockMvc.perform(deleteRequest)
                 .andExpect(status().isForbidden());
-    }
+        }
 
     @Test
     void deleteLobby_success_NoContent() throws Exception {
@@ -1212,7 +1208,7 @@ public class LobbyControllerTest {
     }
 
     @Test
-    void deleteLobbyPlayer_invalidUser_NotFound() throws Exception {
+    void deleteLobbyPlayer_invalidUser_NoContent() throws Exception {
         // given
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
@@ -1220,8 +1216,7 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(userWithoutPlayer);
-        when(lobbyService.getLobbyPlayerByUser(userWithoutPlayer))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found"));
+        when(lobbyService.findLobbyPlayerByUser(userWithoutPlayer)).thenReturn(null);
 
         MockHttpServletRequestBuilder deleteRequest = delete("/lobbies/{lobbyId}/players/me", lobbyId)
                 .header("Authorization", token)
@@ -1229,11 +1224,11 @@ public class LobbyControllerTest {
 
         // then
         mockMvc.perform(deleteRequest)
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    void deleteLobbyPlayer_invalidLobbyId_NotFound() throws Exception {
+    void deleteLobbyPlayer_invalidLobbyId_NoContent() throws Exception {
         // given
         String token = "token";
         UUID badLobbyId = UUID.randomUUID();
@@ -1242,9 +1237,8 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(badLobbyId))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+        when(lobbyService.findLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
+        when(lobbyService.findLobbyByLobbyId(badLobbyId)).thenReturn(null);
 
         MockHttpServletRequestBuilder deleteRequest = delete("/lobbies/{lobbyId}/players/me", badLobbyId)
                 .header("Authorization", token)
@@ -1252,11 +1246,11 @@ public class LobbyControllerTest {
 
         // then
         mockMvc.perform(deleteRequest)
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
     }
 
-    @Test
-    void deleteLobbyPlayer_lobbyPlayerNotInLobby_Forbidden() throws Exception {
+     @Test
+     void deleteLobbyPlayer_lobbyPlayerNotInLobby_Forbidden() throws Exception {
         // given
         String token = "token";
         UUID lobbyId = UUID.randomUUID();
@@ -1266,8 +1260,8 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
+        when(lobbyService.findLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
+        when(lobbyService.findLobbyByLobbyId(lobbyId)).thenReturn(lobby);
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "LobbyPlayer not in lobby"))
                 .when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
 
@@ -1292,8 +1286,8 @@ public class LobbyControllerTest {
 
         // when
         when(authService.authenticateToken(token)).thenReturn(user);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
-        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
+        when(lobbyService.findLobbyPlayerByUser(user)).thenReturn(lobbyPlayer);
+        when(lobbyService.findLobbyByLobbyId(lobbyId)).thenReturn(lobby);
         doNothing().when(lobbyService).validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         doThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Host cannot leave with this endpoint"))
                 .when(lobbyService).validateLobbyPlayerIsNotHost(lobbyPlayer);

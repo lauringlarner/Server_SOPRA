@@ -151,9 +151,12 @@ public class GameOrchestrationService {
         // validate player is in game or FORBIDDEN
         lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
 
-        // update all Users stats 
-        TeamType winningTeam = gameService.getWinningTeam(game);
-        updateAllPlayersUserStats(lobby, winningTeam);
+        // update all Users stats if multiplayer
+        if ((!game.getIsSinglePlayer()) && (!game.isStatsFinalized())) {
+            game.setStatsFinalized(true);
+            TeamType winningTeam = gameService.getWinningTeam(game);
+            updateAllPlayersUserStats(lobby, winningTeam);
+        }
 
         // reset all players readyStatus to false and sets Lobbys gameId to null
         lobbyService.resetLobbyAfterGame(game.getLobbyId());

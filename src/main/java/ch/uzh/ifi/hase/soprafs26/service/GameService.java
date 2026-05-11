@@ -354,6 +354,8 @@ public class GameService {
 		scoreService.claimTile(game, indexOfWord, team);
 		leaderboardService.updateLeaderboard(game);
 
+		checkBoardFullyClaimed(game);
+
 		gameRepository.flush();
 		pushGameUpdate(game);
 	}
@@ -445,5 +447,24 @@ public class GameService {
 			game.setTileGrid(tileGrid);
 		}
 	}
+
+	private void checkBoardFullyClaimed(Game game) {
+		Tile[][] grid = game.getTileGrid();
+
+		for (Tile[] row : grid) {
+			for (Tile tile : row) {
+				if (tile.getStatus() == TileStatus.UNCLAIMED ||
+					tile.getStatus() == TileStatus.PROCESSING_TEAM1 ||
+					tile.getStatus() == TileStatus.PROCESSING_TEAM2) {
+					return; // board not finished yet
+				}
+			}
+		}
+
+		// full board
+		game.setStatus(GameStatus.ENDED);
+		gameRepository.flush();
+		pushGameUpdate(game);
+}
 
 }

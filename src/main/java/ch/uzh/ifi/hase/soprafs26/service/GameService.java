@@ -25,7 +25,6 @@ import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
-import ch.uzh.ifi.hase.soprafs26.repository.GameTimerRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 /**
@@ -38,8 +37,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 @Service
 @Transactional
 public class GameService {
-
-    private final GameTimerRepository gameTimerRepository;
 
     private final PusherService pusherService;
 
@@ -55,19 +52,17 @@ public class GameService {
 					   	ScoreService scoreService,
 					   	LeaderboardService leaderboardService,
 						PusherService pusherService,
-						GameTimerRepository gameTimerRepository,
 						LobbyService lobbyService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
         this.pusherService = pusherService;
-        this.gameTimerRepository = gameTimerRepository;
 		this.lobbyService = lobbyService;
 	}
 
-	//////////////
-	// Creation //
-	//////////////
+	//=========
+	// Creation 
+	//=========
 
 	public Game createGame(Lobby lobby) {
 		return createGame(lobby, 0);
@@ -135,9 +130,9 @@ public class GameService {
 		return newGame;
 	}
 
-	///////////////
-	// Retrieval //	
-	///////////////
+	//==========
+	// Retrieval 
+	//==========
 
 	public List<Game> getGames() {
 		return this.gameRepository.findAll();
@@ -152,19 +147,19 @@ public class GameService {
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
-	/////////////
-	// Updates //
-	/////////////
+	//========
+	// Updates 
+	//========
 	
 
-	/////////////
-	// Actions //
-	/////////////
+	//========
+	// Actions 
+	//========
 
 
-	//////////////
-    // Deletion //
-    //////////////
+	//=========
+    // Deletion 
+    //=========
 
 	public void deleteGame(UUID gameId) {
 		Game game = gameRepository.findById(gameId).orElse(null);
@@ -222,13 +217,13 @@ public class GameService {
 		}
 	}
 	
-	////////////////
-	// Validation //
-	////////////////
+	//===========
+	// Validation 
+	//===========
 
-    ///////////////
-    // Utilities //    
-    ///////////////
+    //==========
+    // Utilities 
+    //==========
 	
 	public TeamType getWinningTeam(Game game) {
 		if (game.getScore_1() > game.getScore_2()) {
@@ -242,9 +237,9 @@ public class GameService {
 		}
 	}
 	
-    ////////////
-    // Pusher //
-    ////////////
+    //=======
+    // Pusher 
+    //=======
 
 	public void pushGameUpdate(Game game) {
 		GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);

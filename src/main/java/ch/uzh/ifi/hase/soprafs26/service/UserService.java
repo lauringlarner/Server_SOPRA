@@ -37,9 +37,9 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 
-	//////////////
-	// Creation //
-	//////////////
+	//=========
+	// Creation 
+	//=========
 
 	public User createUser(User newUser) {
 		// Validate username
@@ -74,9 +74,9 @@ public class UserService {
 		return newUser;
 	}
 
-	///////////////
-	// Retrieval //	
-	///////////////
+	//==========
+	// Retrieval
+	//==========
 	
 	public List<User> getUsers() {
 		return this.userRepository.findAll();
@@ -100,9 +100,9 @@ public class UserService {
 		return userRepository.findByUsername(username);
 	}
 
-	/////////////
-	// Updates //
-	/////////////
+	//========
+	// Updates 
+	//========
 
 	public User updateUser(UUID userId, User updatedUser) {
 		User user = getUserById(userId);
@@ -168,9 +168,9 @@ public class UserService {
 		log.debug("Stats updatedfor User: {}", user);
 	}
 
-	/////////////
-	// Actions //
-	/////////////
+	//========
+	// Actions 
+	//========
 	
 	public User loginUser(String username, String password) {
 		User user = getUserByUsername(username);
@@ -205,9 +205,9 @@ public class UserService {
 		return user;
 	}
 
-	////////////////
-	// Validation //
-	////////////////
+	//===========
+	// Validation 
+	//===========
 	
 	private void checkIfUserExists(User userToBeCreated) {
 		if (getUserByUsername(userToBeCreated.getUsername()) != null) {

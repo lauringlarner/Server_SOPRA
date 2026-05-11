@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,7 +28,6 @@ public class GameTimerController {
 
     @PostMapping("/games/{gameId}/timer/start")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public GameTimerDTO startTimer(
             @PathVariable UUID gameId,
             @RequestHeader(value = "Authorization", required = false) String token) {
@@ -48,7 +46,6 @@ public class GameTimerController {
 
     @GetMapping("/games/{gameId}/timer")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public GameTimerDTO getTimer(
             @PathVariable UUID gameId) {
         GameTimer timer = gameTimerService.getTimerByGameId(gameId);

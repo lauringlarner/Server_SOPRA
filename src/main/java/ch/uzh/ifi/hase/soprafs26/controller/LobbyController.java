@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,7 +53,6 @@ public class LobbyController {
 
     @PostMapping("/lobbies")
     @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
     public LobbyAccessInfoDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
@@ -69,7 +67,6 @@ public class LobbyController {
 
     @GetMapping("/lobbies/{lobbyId}")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public LobbyDTO getLobbyById(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
@@ -88,7 +85,6 @@ public class LobbyController {
 
     @PostMapping("/lobbies/join")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public LobbyAccessInfoDTO postJoinLobby(@RequestBody LobbyJoinCodeDTO lobbyJoinCodeDTO, 
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
@@ -110,7 +106,6 @@ public class LobbyController {
 
     @PutMapping("/lobbies/{lobbyId}/players/{playerId}/team")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void  updateTeamSelection(@PathVariable UUID lobbyId,
         @PathVariable UUID playerId, @RequestBody TeamTypeDTO teamTypeDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -134,7 +129,6 @@ public class LobbyController {
 
     @PutMapping("/lobbies/{lobbyId}/players/{playerId}/ready")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void  updateReadyStatus(@PathVariable UUID lobbyId,
         @PathVariable UUID playerId, @RequestBody ReadyStatusDTO readyStatusDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -159,7 +153,6 @@ public class LobbyController {
 
     @PutMapping("/lobbies/{lobbyId}/settings")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void  updateGameSettings(@PathVariable UUID lobbyId,
         @RequestBody GameSettingsDTO gameSettingsDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -183,7 +176,6 @@ public class LobbyController {
 
     @PostMapping("/lobbies/{lobbyId}/start")
     @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
     public void createGame(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token,
         @RequestBody StartGameDTO startGameDTO)
@@ -198,7 +190,6 @@ public class LobbyController {
 
     @DeleteMapping("/lobbies/{lobbyId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void deleteLobby(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
@@ -225,7 +216,6 @@ public class LobbyController {
 
     @DeleteMapping("/lobbies/{lobbyId}/players/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void deleteLobbyPlayer(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED

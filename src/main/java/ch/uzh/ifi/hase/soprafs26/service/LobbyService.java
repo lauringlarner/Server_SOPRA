@@ -46,9 +46,9 @@ public class LobbyService {
         this.pusherService = pusherService;
 	}
 
-    //////////////
-    // Creation //
-    //////////////
+    //=========
+    // Creation
+    //=========
 
     public LobbyPlayer createLobbyPlayer(User user, Boolean isHost) {
         
@@ -109,9 +109,9 @@ public class LobbyService {
 		return newLobby;
     }
 
-    ///////////////
-    // Retrieval //
-    ///////////////
+    //==========
+    // Retrieval 
+    //==========
     
     public Lobby getLobbyByJoinCode(String joinCode) {
         validateJoinCode(joinCode); // BAD_REQUEST on failure
@@ -158,9 +158,9 @@ public class LobbyService {
         return lobbyRepository.findById(lobbyId).orElse(null);
     }
     
-    /////////////
-    // Actions //
-    /////////////
+    //========
+    // Actions 
+    //========
     
     public Lobby joinLobby(LobbyPlayer lobbyPlayer, Lobby lobbyToJoin) {
 
@@ -200,9 +200,9 @@ public class LobbyService {
         pushLobbyUpdate(lobby);
     }
 
-    /////////////
-    // Updates //
-    /////////////
+    //========
+    // Updates 
+    //========
     
     public void updateTeamType(LobbyPlayer lobbyPlayer, TeamType teamType) {
         validateTeamType(teamType); // BAD_REQUEST on failure
@@ -255,9 +255,9 @@ public class LobbyService {
         log.debug("Lobby {} is now running the game {}", lobby, gameId);
     }
        
-    //////////////
-    // Deletion //
-    //////////////
+    //=========
+    // Deletion 
+    //=========
     
     public void deleteLobby(LobbyPlayer lobbyPlayer, Lobby lobby) {
         // remove host and send SSE to all remaining players before deletion
@@ -281,9 +281,9 @@ public class LobbyService {
         log.debug("Player successfully deleted");
     }
 
-    ////////////////
-    // Validation //
-    ////////////////
+    //===========
+    // Validation 
+    //===========
     
     public void validateLobbyPlayerInLobby(LobbyPlayer lobbyPlayer, Lobby lobby) {
         if (!lobbyPlayer.getLobby().equals(lobby)) {
@@ -419,9 +419,9 @@ public class LobbyService {
         }
     }
     
-    ///////////////
-    // Utilities //    
-    ///////////////
+    //==========
+    // Utilities    
+    //==========
     
     public boolean isPlayerHost(LobbyPlayer lobbyPlayer) {
         return lobbyPlayer.getIsHost();
@@ -452,9 +452,9 @@ public class LobbyService {
         return code.toString();
     }
                   
-    ////////////
-    // Pusher //
-    ////////////
+    //=======
+    // Pusher 
+    //=======
 
     public void pushLobbyUpdate(Lobby lobby) {
         LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);

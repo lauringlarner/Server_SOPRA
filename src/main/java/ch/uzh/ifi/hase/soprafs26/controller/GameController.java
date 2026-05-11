@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +48,6 @@ public class GameController {
     
     @GetMapping("/games/{gameId}")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public GameDTO getGameByIdEmitter(@PathVariable UUID gameId,
         @RequestHeader(value = "Authorization", required = false) String token) {
         User user = authService.authenticateToken(token);
@@ -59,7 +57,6 @@ public class GameController {
 
     @DeleteMapping("/games/{gameId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void deleteGame(@PathVariable UUID gameId,
         @RequestHeader(value = "Authorization", required = false) String token) {
         User user = authService.authenticateToken(token);
@@ -80,7 +77,6 @@ public class GameController {
     // Mapping change from /lobbies/{lobbyId}/games/{gameId}/leaderboard to /games/{gameId}/leaderboard
     @PostMapping("/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
     public LeaderboardGetDTO postLeaderboard(
                                              @PathVariable UUID gameId,
                                              @RequestBody LeaderboardPostDTO leaderboardPostDTO,
@@ -100,7 +96,6 @@ public class GameController {
     // Mapping change from /lobbies/{lobbyId}/games/{gameId}/leaderboard to /games/{gameId}/leaderboard
     @GetMapping("/games/{gameId}/leaderboard")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public LeaderboardGetDTO getLeaderboard(@PathVariable UUID gameId,
                                             @RequestHeader(value = "Authorization", required = false) String token) {
         User user = authService.authenticateToken(token);

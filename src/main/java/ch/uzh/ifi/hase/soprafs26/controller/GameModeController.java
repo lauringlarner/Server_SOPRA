@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +26,6 @@ public class GameModeController {
 
     @GetMapping("gameModes")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public List<GameModeDTO> getAllGameModes(@RequestHeader(value = "Authorization", required = false) String token) {
         // Check if user is authenticated
 		authService.authenticateToken(token);
@@ -38,7 +36,6 @@ public class GameModeController {
 
     @GetMapping("gameModes/{id}")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public GameModeDTO getGameMode(@RequestHeader(value = "Authorization", required = false) String token, @PathVariable String id) {
         // Check if user is authenticated
 		authService.authenticateToken(token);

@@ -21,17 +21,6 @@ public class GameModeService {
                 "Once submitted, our AI will validate the image to ensure it matches the item on the tile.",
                 "Earn points for every captured tile, plus bonus points for completing rows, columns, or diagonals."
             )
-        ),
-
-        new GameModeDTO(
-            "Lockout_no_bonus_points",
-            "Lockout Bingo without bonus points",
-            List.of(
-                "Locate an item listed on the bingo board in the real world.",
-                "Tap the tile to open the camera and snap a photo of that item.",
-                "Once submitted, our AI will validate the image to ensure it matches the item on the tile.",
-                "Earn points for every captured tile."
-            )
         )
     );
 

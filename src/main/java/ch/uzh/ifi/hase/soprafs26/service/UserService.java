@@ -54,8 +54,8 @@ public class UserService {
 		if (newUser.getPassword() == null || newUser.getPassword().isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty!");
 		}
-		if (newUser.getPassword().length() < 12) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 12 characters long!");
+		if (newUser.getPassword().length() < 8) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long!");
 		}
 		if (!newUser.getPassword().chars().anyMatch(Character::isDigit)) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
@@ -132,8 +132,8 @@ public class UserService {
 		if (newPassword == null || newPassword.isEmpty()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be empty!");
 		}
-		if (newPassword.length() < 12) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 12 characters long!");
+		if (newPassword.length() < 8) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters long!");
 		}
 		if (!newPassword.chars().anyMatch(Character::isDigit)) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");

@@ -9,6 +9,7 @@ public class LeaderboardGetDTO {
     private final UUID gameId;
     private int team1Score;
     private int team2Score;
+    private Boolean isSinglePlayer;
     private Tile[][] tileGrid;
 
     public LeaderboardGetDTO(UUID gameId) {
@@ -33,6 +34,14 @@ public class LeaderboardGetDTO {
 
     public void setTeam2Score(int team2Score) {
         this.team2Score = team2Score;
+    }
+
+    public Boolean getIsSinglePlayer() {
+        return isSinglePlayer;
+    }
+
+    public void setIsSinglePlayer(Boolean isSinglePlayer) {
+        this.isSinglePlayer = isSinglePlayer;
     }
 
     public Tile[][] getTileGrid() {

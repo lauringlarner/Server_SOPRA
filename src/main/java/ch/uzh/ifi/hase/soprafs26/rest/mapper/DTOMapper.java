@@ -77,6 +77,7 @@ public interface DTOMapper {
 	@Mapping(source = "wordListScore", target = "wordListScore")
 	@Mapping(source = "score_1", target = "score_1")
 	@Mapping(source = "score_2", target = "score_2")
+	@Mapping(source = "isSinglePlayer", target = "isSinglePlayer")
 	@Mapping(source = "gameDuration", target = "gameDuration")
 	@Mapping(source = "startedAt", target = "startedAt")
 	@Mapping(source = "lobbyId", target = "lobbyId")
@@ -101,6 +102,7 @@ public interface DTOMapper {
 	@Mapping(source = "gameDuration", target = "gameDuration")
 	@Mapping(source = "gameId", target = "gameId")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
+	@Mapping(source = "listType", target = "listType")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
 
 	// chat mapper

@@ -41,6 +41,9 @@ public class Lobby {
     @Column(nullable = false)
 	private Integer gameDuration;
 
+    @Column(nullable = false)
+    private String listType;
+
   
     public static long getSerialversionuid() {
         return serialVersionUID;
@@ -65,6 +68,7 @@ public class Lobby {
     public String getJoinCode() {
         return joinCode;
     }
+
 
     public void setJoinCode(String joinCode) {
         this.joinCode = joinCode;
@@ -100,6 +104,14 @@ public class Lobby {
 
     public void setGameId(UUID gameId) {
         this.gameId = gameId;
+    }
+
+     public String getListType(){
+        return listType;
+    }
+
+    public void setListType(String listType) {
+        this.listType = listType;
     }
 
 }

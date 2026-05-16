@@ -1,5 +1,32 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -9,35 +36,11 @@ import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Leaderboard;
 import ch.uzh.ifi.hase.soprafs26.entity.Tile;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LeaderboardPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
 import ch.uzh.ifi.hase.soprafs26.service.GameOrchestrationService;
 import ch.uzh.ifi.hase.soprafs26.service.LeaderboardService;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.web.server.ResponseStatusException;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.GameDTO;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * GameControllerTest
@@ -137,6 +140,16 @@ public class GameControllerTest {
 
         mockMvc.perform(get("/games/" + gameId))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getGame_unauthorized_403() throws Exception {
+        given(authService.authenticateToken(any()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+        mockMvc.perform(get("/games/" + gameId)
+                        .header("Authorization", "Bearer bad-token"))
+                .andExpect(status().isForbidden());
     }
 
     // ─────────────────────────────────────────────
@@ -244,10 +257,122 @@ public class GameControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    public void submitImage_missingFile_400() throws Exception {
+        mockMvc.perform(multipart("/games/" + gameId + "/submission")
+                        .param("object", "word0")
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void submitImage_missingObject_400() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "image", "test.jpg", "image/jpeg", "fake-bytes".getBytes());
+
+        mockMvc.perform(multipart("/games/" + gameId + "/submission")
+                        .file(file)
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isBadRequest());
+    }
+
     // ─────────────────────────────────────────────
     // POST /games/{gameId}/leaderboard
     // ─────────────────────────────────────────────
 
+    @Test
+    public void postLeaderboard_validRequest_201() throws Exception {
+        Leaderboard leaderboard = new Leaderboard();
+        leaderboard.setGameId(gameId);
+        leaderboard.setTeam1Score(5);
+        leaderboard.setTeam2Score(3);
+        leaderboard.setIsSinglePlayer(false);
+        leaderboard.setTileGrid(testGame.getTileGrid());
+
+        given(gameOrchestrationService.getGameById(gameId)).willReturn(testGame);
+        given(leaderboardService.initOrUpdate(testGame)).willReturn(leaderboard);
+
+        LeaderboardPostDTO postDTO = new LeaderboardPostDTO();
+
+        mockMvc.perform(post("/games/" + gameId + "/leaderboard")
+                        .contentType("application/json")
+                        .content(asJsonString(postDTO))
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isCreated());
+    }
+
+     @Test
+     public void postLeaderboard_gameNotFound_404() throws Exception {
+        given(gameOrchestrationService.getGameById(gameId))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        mockMvc.perform(post("/games/" + gameId + "/leaderboard")
+                        .contentType("application/json")
+                        .content(asJsonString(new LeaderboardPostDTO()))
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void postLeaderboard_unauthorized_403() throws Exception {
+        given(authService.authenticateToken(any()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+        mockMvc.perform(post("/games/" + gameId + "/leaderboard")
+                        .contentType("application/json")
+                        .content(asJsonString(new LeaderboardPostDTO()))
+                        .header("Authorization", "Bearer bad-token"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void postLeaderboard_missingBody_400() throws Exception {
+        mockMvc.perform(post("/games/" + gameId + "/leaderboard")
+                        .contentType("application/json")
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // ─────────────────────────────────────────────
+    // GET /games/{gameId}/leaderboard
+    // ─────────────────────────────────────────────
+
+    @Test
+    public void getLeaderboard_validRequest_200() throws Exception {
+        Leaderboard leaderboard = new Leaderboard();
+        leaderboard.setGameId(gameId);
+        leaderboard.setTeam1Score(10);
+        leaderboard.setTeam2Score(8);
+        leaderboard.setIsSinglePlayer(false);
+        leaderboard.setTileGrid(testGame.getTileGrid());
+
+        given(gameOrchestrationService.getLeaderboard(testUser, gameId))
+                .willReturn(leaderboard);
+
+        mockMvc.perform(get("/games/" + gameId + "/leaderboard")
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getLeaderboard_notFound_404() throws Exception {
+        given(gameOrchestrationService.getLeaderboard(testUser, gameId))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        mockMvc.perform(get("/games/" + gameId + "/leaderboard")
+                        .header("Authorization", "Bearer token123"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void getLeaderboard_unauthorized_403() throws Exception {
+        given(authService.authenticateToken(any()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+        mockMvc.perform(get("/games/" + gameId + "/leaderboard")
+                        .header("Authorization", "Bearer bad-token"))
+                .andExpect(status().isForbidden());
+    }
 
     // ─────────────────────────────────────────────
     // Helpers

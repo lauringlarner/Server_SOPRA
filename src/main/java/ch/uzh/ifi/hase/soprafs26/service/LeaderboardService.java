@@ -39,6 +39,7 @@ public class LeaderboardService {
             leaderboard.setTeam2Score(game.getScore_2());
         }
 
+        leaderboard.setIsSinglePlayer(game.getIsSinglePlayer());
         leaderboard.setTileGrid(game.getTileGrid());
         return leaderboardRepository.save(leaderboard);
     }
@@ -55,6 +56,7 @@ public class LeaderboardService {
 
         leaderboard.setTeam1Score(game.getScore_1());
         leaderboard.setTeam2Score(game.getScore_2());
+        leaderboard.setIsSinglePlayer(game.getIsSinglePlayer());
         leaderboard.setTileGrid(game.getTileGrid());
 
         return leaderboardRepository.save(leaderboard);

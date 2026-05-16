@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
@@ -38,9 +37,9 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 
-	//////////////
-	// Creation //
-	//////////////
+	//=========
+	// Creation 
+	//=========
 
 	public User createUser(User newUser) {
 		// Validate username
@@ -60,9 +59,6 @@ public class UserService {
 		if (!newUser.getPassword().chars().anyMatch(Character::isDigit)) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
 		}
-		if (!newUser.getPassword().chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
-		}
 
 		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 		newUser.setToken(UUID.randomUUID().toString());
@@ -78,9 +74,9 @@ public class UserService {
 		return newUser;
 	}
 
-	///////////////
-	// Retrieval //	
-	///////////////
+	//==========
+	// Retrieval
+	//==========
 	
 	public List<User> getUsers() {
 		return this.userRepository.findAll();
@@ -104,9 +100,9 @@ public class UserService {
 		return userRepository.findByUsername(username);
 	}
 
-	/////////////
-	// Updates //
-	/////////////
+	//========
+	// Updates 
+	//========
 
 	public User updateUser(UUID userId, User updatedUser) {
 		User user = getUserById(userId);
@@ -138,9 +134,6 @@ public class UserService {
 		if (!newPassword.chars().anyMatch(Character::isDigit)) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one digit!");
 		}
-		if (!newPassword.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least one punctuation!");
-		}
 
 		User user = getUserById(userId);
 
@@ -163,9 +156,21 @@ public class UserService {
 		return user;
 	}
 
-	/////////////
-	// Actions //
-	/////////////
+	public void updateUserStats(User user, boolean gameWon) {
+		user.setGamesPlayed(user.getGamesPlayed()+1);
+		if (gameWon) {
+			user.setGamesWon(user.getGamesWon()+1);
+		}
+
+		user = userRepository.save(user);
+		userRepository.flush();
+
+		log.debug("Stats updatedfor User: {}", user);
+	}
+
+	//========
+	// Actions 
+	//========
 	
 	public User loginUser(String username, String password) {
 		User user = getUserByUsername(username);
@@ -200,9 +205,9 @@ public class UserService {
 		return user;
 	}
 
-	////////////////
-	// Validation //
-	////////////////
+	//===========
+	// Validation 
+	//===========
 	
 	private void checkIfUserExists(User userToBeCreated) {
 		if (getUserByUsername(userToBeCreated.getUsername()) != null) {

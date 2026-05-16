@@ -14,6 +14,7 @@ public class GameDTO {
 	private List<String> wordListScore;
 	private int score_1;
 	private int score_2;
+	private Boolean isSinglePlayer;
 	private Integer gameDuration;
 	private String startedAt;
 	private UUID lobbyId;
@@ -92,6 +93,14 @@ public class GameDTO {
 		this.score_2 = score_2;
 	}
 
+	public Boolean getIsSinglePlayer() {
+		return isSinglePlayer;
+	}
+
+	public void setIsSinglePlayer(Boolean isSinglePlayer) {
+		this.isSinglePlayer = isSinglePlayer;
+	}
+
 	public Tile[][] getTileGrid() {
 		return tileGrid;
 	}
@@ -100,4 +109,3 @@ public class GameDTO {
 		this.tileGrid = tileGrid;
 	}
 }
-

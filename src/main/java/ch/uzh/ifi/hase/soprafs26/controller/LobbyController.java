@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +23,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyAccessInfoDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyJoinCodeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ReadyStatusDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.StartGameDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TeamTypeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.AuthService;
@@ -53,7 +53,6 @@ public class LobbyController {
 
     @PostMapping("/lobbies")
     @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
     public LobbyAccessInfoDTO createLobby(@RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
@@ -68,7 +67,6 @@ public class LobbyController {
 
     @GetMapping("/lobbies/{lobbyId}")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public LobbyDTO getLobbyById(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
@@ -83,11 +81,23 @@ public class LobbyController {
 
         return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
     }
+
+    @GetMapping("/lobbies/current")
+    @ResponseStatus(HttpStatus.OK)
+    public LobbyDTO getCurrentLobby(
+        @RequestHeader(value = "Authorization", required = false) String token) {
+		// authenticate and return user or UNAUTHORIZED
+        User user = authService.authenticateToken(token);
+
+        // fetch current lobby from authenticated user or NOT_FOUND
+        Lobby lobby = lobbyService.getCurrentLobbyByUser(user);
+
+        return DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);
+    }
     
 
     @PostMapping("/lobbies/join")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public LobbyAccessInfoDTO postJoinLobby(@RequestBody LobbyJoinCodeDTO lobbyJoinCodeDTO, 
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
@@ -109,7 +119,6 @@ public class LobbyController {
 
     @PutMapping("/lobbies/{lobbyId}/players/{playerId}/team")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void  updateTeamSelection(@PathVariable UUID lobbyId,
         @PathVariable UUID playerId, @RequestBody TeamTypeDTO teamTypeDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -133,7 +142,6 @@ public class LobbyController {
 
     @PutMapping("/lobbies/{lobbyId}/players/{playerId}/ready")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void  updateReadyStatus(@PathVariable UUID lobbyId,
         @PathVariable UUID playerId, @RequestBody ReadyStatusDTO readyStatusDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -158,7 +166,6 @@ public class LobbyController {
 
     @PutMapping("/lobbies/{lobbyId}/settings")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void  updateGameSettings(@PathVariable UUID lobbyId,
         @RequestBody GameSettingsDTO gameSettingsDTO,
         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -173,36 +180,43 @@ public class LobbyController {
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
         
-        // get gameDuration and update lobbys gameDuration or BAD_REQUEST
+        // get gameDuration and listType and update lobby settings or BAD_REQUEST
         Integer gameDuration = gameSettingsDTO.getGameDuration();
-        lobbyService.updateLobbySettings(lobby, gameDuration);
+        String listType = gameSettingsDTO.getListType();
+        lobbyService.updateLobbySettings(lobby, gameDuration, listType);
     }
 
 
     @PostMapping("/lobbies/{lobbyId}/start")
     @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
     public void createGame(@PathVariable UUID lobbyId,
-        @RequestHeader(value = "Authorization", required = false) String token) {
+        @RequestHeader(value = "Authorization", required = false) String token,
+        @RequestBody StartGameDTO startGameDTO)
+        {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
-        
+
         // starts game
-        gameOrchestrationService.startGame(user, lobbyId);
+        gameOrchestrationService.startGame(user, lobbyId, Boolean.TRUE.equals(startGameDTO.getIsSinglePlayer()) ? 1 : 0);
     }
     
 
     @DeleteMapping("/lobbies/{lobbyId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void deleteLobby(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
 
-        // fetch lobbyPlayer and lobby or NOT_FOUND
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);   
+        // fetch lobbyPlayer and lobby or returns NO_CONTENT (idempotent)
+        LobbyPlayer lobbyPlayer = lobbyService.findLobbyPlayerByUser(user);
+        if (lobbyPlayer == null) {
+            return;
+        }
+        Lobby lobby = lobbyService.findLobbyByLobbyId(lobbyId);    
+         if (lobby == null) {
+            return;
+        } 
 
         // validate lobbyPlayer is in lobby and is a host or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
@@ -215,15 +229,20 @@ public class LobbyController {
 
     @DeleteMapping("/lobbies/{lobbyId}/players/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ResponseBody
     public void deleteLobbyPlayer(@PathVariable UUID lobbyId,
         @RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or UNAUTHORIZED
         User user = authService.authenticateToken(token);
 
-        // fetch lobbyPlayer and lobby or NOT_FOUND
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-        Lobby lobby = lobbyService.getLobbyByLobbyId(lobbyId);    
+        // fetch lobbyPlayer and lobby or returns NO_CONTENT (idempotent)
+        LobbyPlayer lobbyPlayer = lobbyService.findLobbyPlayerByUser(user);
+        if (lobbyPlayer == null) {
+            return;
+        }
+        Lobby lobby = lobbyService.findLobbyByLobbyId(lobbyId);    
+         if (lobby == null) {
+            return;
+        }
 
         // validate lobbyPlayer is in lobby or FORBIDDEN
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);

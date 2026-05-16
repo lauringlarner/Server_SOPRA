@@ -15,6 +15,10 @@ import jakarta.persistence.Table;
 @Table(name = "chat_messages")
 public class ChatMessage {
 
+    // ChatMessage.gameID is not a foreign key currently
+    // It is taken as a @Column for easier querying
+    // It'll create extra problems
+    // Even if the game is deleted messages are kept in the database
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

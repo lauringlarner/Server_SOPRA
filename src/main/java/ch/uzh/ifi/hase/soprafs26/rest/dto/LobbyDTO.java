@@ -16,7 +16,17 @@ public class LobbyDTO {
     private String createdAt; // needs to be String for pusher
 
     private List<LobbyPlayerDTO> lobbyPlayers;
-    
+
+    private String listType;
+
+    public String getListType() {
+        return listType;
+    }
+
+    public void setListType(String listType) {
+        this.listType = listType;
+    }
+
     public String getCreatedAt() {
         return createdAt;
     }

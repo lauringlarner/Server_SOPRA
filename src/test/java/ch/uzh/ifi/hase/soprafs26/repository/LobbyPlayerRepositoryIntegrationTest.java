@@ -147,6 +147,7 @@ public class LobbyPlayerRepositoryIntegrationTest {
         lobby.setGameId(null);
         lobby.setCreatedAt(LocalDateTime.now());
         lobby.setGameDuration(10);
+        lobby.setListType("all");
         return lobby;
     }
 

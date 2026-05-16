@@ -99,17 +99,17 @@ public class UserServiceIntegrationTest {
 		User testUser = new User();
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
-		testUser.setPassword("Passwd1!");
+		testUser.setPassword("Pass1");
 
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}
 
 	@Test
-	public void createUser_noMark_throwsException() {
+	public void createUser_noDigit_throwsException() {
 		User testUser = new User();
 		testUser.setUsername("testUsername");
 		testUser.setEmail("test@example.com");
-		testUser.setPassword("Password123");
+		testUser.setPassword("PasswordABC");
 
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
 	}

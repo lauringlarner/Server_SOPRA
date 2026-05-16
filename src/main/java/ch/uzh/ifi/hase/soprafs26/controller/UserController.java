@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,7 +44,6 @@ public class UserController {
 
 	@GetMapping("/users")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public List<UserGetDTO> getAllUsers(@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
 		authService.authenticateToken(token);
@@ -63,7 +61,6 @@ public class UserController {
 
 	@GetMapping("/users/{userId}")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public UserGetDTO getUserProfile(@PathVariable UUID userId,
 		@RequestHeader(value = "Authorization", required = false) String token) {
 		// Check if user is authenticated
@@ -78,7 +75,6 @@ public class UserController {
 
 	@PostMapping("/users")
 	@ResponseStatus(HttpStatus.CREATED)
-	@ResponseBody
 	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
 		if (userPostDTO.getUsername() == null || userPostDTO.getUsername().isBlank()) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username cannot be empty!");
@@ -98,7 +94,6 @@ public class UserController {
 
 	@PostMapping("/users/login")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public UserLoginResponseDTO login(@RequestBody UserPostDTO userPostDTO) {
 		// Find user by username and password
 		User user = userService.loginUser(userPostDTO.getUsername(), userPostDTO.getPassword());
@@ -109,7 +104,6 @@ public class UserController {
 
 	@PostMapping("/users/logout")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@ResponseBody
 	public void logout(@RequestHeader(value = "Authorization", required = false) String token) {
 		// authenticate and return user or throw Unauthorized
 		User user = authService.authenticateToken(token);
@@ -120,7 +114,6 @@ public class UserController {
 
 	@PutMapping("/users/{userId}/password")
 	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
 	public UserGetDTO changePassword(@PathVariable UUID userId,
 		@RequestBody PasswordChangeDTO passwordChangeDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {
@@ -141,7 +134,6 @@ public class UserController {
 
 	@PutMapping("/users/{userId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@ResponseBody
 	public void updateUserProfile(@PathVariable UUID userId,
 		@RequestBody UserPostDTO userPostDTO,
 		@RequestHeader(value = "Authorization", required = false) String token) {

@@ -1,13 +1,13 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import jakarta.persistence.Column;
@@ -53,6 +53,9 @@ public class Game implements Serializable {
 	private int score_2;
 
 	@Column(nullable = false)
+	private Boolean isSinglePlayer = false;
+
+	@Column(nullable = false)
 	private Integer gameDuration;
 
 	@Column(nullable = false)
@@ -66,6 +69,21 @@ public class Game implements Serializable {
 
 	@Column(columnDefinition = "TEXT")
 	private String tileGridJson;
+
+	@Column(nullable=false)
+	private boolean isStatsFinalized = false;
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public boolean isStatsFinalized() {
+		return isStatsFinalized;
+	}
+
+	public void setStatsFinalized(boolean isStatsFinalized) {
+		this.isStatsFinalized = isStatsFinalized;
+	}
 
 	public void setLobbyId(UUID lobbyId) {
 		this.lobbyId = lobbyId;
@@ -137,6 +155,14 @@ public class Game implements Serializable {
 
 	public void setScore_2(int score_2) {
 		this.score_2 = score_2;
+	}
+
+	public Boolean getIsSinglePlayer() {
+		return isSinglePlayer;
+	}
+
+	public void setIsSinglePlayer(Boolean isSinglePlayer) {
+		this.isSinglePlayer = Boolean.TRUE.equals(isSinglePlayer);
 	}
 
 	public int getBoardSize() {

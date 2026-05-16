@@ -46,9 +46,9 @@ public class LobbyService {
         this.pusherService = pusherService;
 	}
 
-    //////////////
-    // Creation //
-    //////////////
+    //=========
+    // Creation
+    //=========
 
     public LobbyPlayer createLobbyPlayer(User user, Boolean isHost) {
         
@@ -88,6 +88,7 @@ public class LobbyService {
         newLobby.setCreatedAt(LocalDateTime.now());
         newLobby.setJoinCode(generateJoinCode());
         newLobby.addPlayer(lobbyPlayer);
+        newLobby.setListType("all");
 
         // Default Game Settings
         newLobby.setGameDuration(10);
@@ -108,9 +109,9 @@ public class LobbyService {
 		return newLobby;
     }
 
-    ///////////////
-    // Retrieval //
-    ///////////////
+    //==========
+    // Retrieval 
+    //==========
     
     public Lobby getLobbyByJoinCode(String joinCode) {
         validateJoinCode(joinCode); // BAD_REQUEST on failure
@@ -127,6 +128,17 @@ public class LobbyService {
     public Lobby getLobbyByLobbyId(UUID lobbyId) {
         return lobbyRepository.findById(lobbyId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found"));
+    }
+
+    public Lobby getCurrentLobbyByUser(User user) {
+        LobbyPlayer lobbyPlayer = getLobbyPlayerByUser(user);
+        Lobby lobby = lobbyPlayer.getLobby();
+
+        if (lobby == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby not found");
+        }
+
+        return lobby;
     }
     
     
@@ -146,10 +158,20 @@ public class LobbyService {
                 return new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found!");
         });
     }
+
+    @Transactional(readOnly = true)
+    public LobbyPlayer findLobbyPlayerByUser(User user) {
+        return lobbyPlayerRepository.findByUser(user); 
+    }
+
+    @Transactional(readOnly = true)
+    public Lobby findLobbyByLobbyId(UUID lobbyId) {
+        return lobbyRepository.findById(lobbyId).orElse(null);
+    }
     
-    /////////////
-    // Actions //
-    /////////////
+    //========
+    // Actions 
+    //========
     
     public Lobby joinLobby(LobbyPlayer lobbyPlayer, Lobby lobbyToJoin) {
 
@@ -189,9 +211,9 @@ public class LobbyService {
         pushLobbyUpdate(lobby);
     }
 
-    /////////////
-    // Updates //
-    /////////////
+    //========
+    // Updates 
+    //========
     
     public void updateTeamType(LobbyPlayer lobbyPlayer, TeamType teamType) {
         validateTeamType(teamType); // BAD_REQUEST on failure
@@ -223,13 +245,15 @@ public class LobbyService {
     }
     
     
-    public void updateLobbySettings(Lobby lobby, Integer gameDuration) {
+    public void updateLobbySettings(Lobby lobby, Integer gameDuration, String listType) {
         validateGameDuration(gameDuration); // BAD_REQUEST on failure
+        validateListType(listType); // BAD_REQUEST on failure
         lobby.setGameDuration(gameDuration);
+        lobby.setListType(listType);
         lobbyRepository.flush();
         // pusher update
         pushLobbyUpdate(lobby);
-        
+
         log.debug("Lobby {} successfully changed their settings",lobby);
     }
    
@@ -242,9 +266,9 @@ public class LobbyService {
         log.debug("Lobby {} is now running the game {}", lobby, gameId);
     }
        
-    //////////////
-    // Deletion //
-    //////////////
+    //=========
+    // Deletion 
+    //=========
     
     public void deleteLobby(LobbyPlayer lobbyPlayer, Lobby lobby) {
         // remove host and send SSE to all remaining players before deletion
@@ -268,9 +292,9 @@ public class LobbyService {
         log.debug("Player successfully deleted");
     }
 
-    ////////////////
-    // Validation //
-    ////////////////
+    //===========
+    // Validation 
+    //===========
     
     public void validateLobbyPlayerInLobby(LobbyPlayer lobbyPlayer, Lobby lobby) {
         if (!lobbyPlayer.getLobby().equals(lobby)) {
@@ -360,9 +384,15 @@ public class LobbyService {
     }
 
     
+    private void validateListType(String listType) {
+        if (listType == null || (!listType.equals("inside") && !listType.equals("outside") && !listType.equals("all") && !listType.equals("demo"))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid list type! Must be 'inside', 'outside', or 'all'");
+        }
+    }
+
     private void validateGameDuration(Integer gameDuration) {
         Integer minDuration = 5;
-        Integer maxDuration = 20;
+        Integer maxDuration = 120;
         
         if (gameDuration < minDuration || gameDuration > maxDuration) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -400,9 +430,9 @@ public class LobbyService {
         }
     }
     
-    ///////////////
-    // Utilities //    
-    ///////////////
+    //==========
+    // Utilities    
+    //==========
     
     public boolean isPlayerHost(LobbyPlayer lobbyPlayer) {
         return lobbyPlayer.getIsHost();
@@ -433,9 +463,9 @@ public class LobbyService {
         return code.toString();
     }
                   
-    ////////////
-    // Pusher //
-    ////////////
+    //=======
+    // Pusher 
+    //=======
 
     public void pushLobbyUpdate(Lobby lobby) {
         LobbyDTO lobbyDTO = DTOMapper.INSTANCE.convertEntityToLobbyDTO(lobby);

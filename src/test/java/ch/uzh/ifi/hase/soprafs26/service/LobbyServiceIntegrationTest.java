@@ -127,7 +127,7 @@ public class LobbyServiceIntegrationTest {
         LobbyPlayer lp = lobbyService.createLobbyPlayer(user, true);
         Lobby lobby = lobbyService.createLobby(lp);
 
-        lobbyService.updateLobbySettings(lobby, 15);
+        lobbyService.updateLobbySettings(lobby, 15, "all");
 
         Lobby reloaded = lobbyRepository.findById(lobby.getId()).orElse(null);
 

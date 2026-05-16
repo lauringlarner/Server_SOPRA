@@ -1,8 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
-import java.util.ArrayList;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.VisionQuickstartObjectLocalization;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.constant.TileStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
@@ -37,7 +38,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 @Transactional
 public class GameService {
 
-	private final PusherService pusherService;
+    private final PusherService pusherService;
 
     private final Logger log = LoggerFactory.getLogger(GameService.class);
 
@@ -49,21 +50,25 @@ public class GameService {
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
 					   	ScoreService scoreService,
-					   	LeaderboardService leaderboardService, 
+					   	LeaderboardService leaderboardService,
 						PusherService pusherService,
 						LobbyService lobbyService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
         this.pusherService = pusherService;
-        this.lobbyService = lobbyService;
+		this.lobbyService = lobbyService;
 	}
 
-	//////////////
-	// Creation //
-	//////////////
+	//=========
+	// Creation 
+	//=========
 
 	public Game createGame(Lobby lobby) {
+		return createGame(lobby, 0);
+	}
+
+	public Game createGame(Lobby lobby, int isSingleplayer) {
 		Game newGame = new Game();
 		int boardSize = 4;
 		List<String> wordList = new ArrayList<>();
@@ -71,24 +76,34 @@ public class GameService {
 
 		newGame.setStatus(GameStatus.IN_PROGRESS);
 		newGame.setLobbyId(lobby.getId());
+		newGame.setIsSinglePlayer(isSingleplayer == 1);
+
+		String listType=lobby.getListType();
 
 		// Build one canonical 4x4 board and derive the flat word list from it.
-		for (int row = 0; row < boardSize; row++) {
-			for (int col = 0; col < boardSize; col++) {
-				String word;
+		if (listType.equals("demo")) {
+			String[] demoWords = Words.WordList("urban_objects_demo.csv");
+			for (int row = 0; row < boardSize; row++) {
+				for (int col = 0; col < boardSize; col++) {
+					String word = demoWords[row * boardSize + col];
+					wordList.add(word);
+					tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+				}
+			}
+		} else {
+			for (int row = 0; row < boardSize; row++) {
+				for (int col = 0; col < boardSize; col++) {
+					String word;
+					do {
+						word = Words.Word(listType);
+					} while (wordList.contains(word));
 
-				do {
-            		word = Words.Word();
-					if (word == null || word.isBlank()) {
-						throw new IllegalStateException("Generated blank board word");
-					}
-        		} while (wordList.contains(word));
-
-				wordList.add(word);
-				tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+					wordList.add(word);
+					tileGrid[row][col] = new Tile(word, 1, TileStatus.UNCLAIMED);
+				}
 			}
 		}
-
+		/* */
 		newGame.setWordList(wordList);
 		//set WordListScore
 		List<String> wordListScore = new ArrayList<>();
@@ -115,9 +130,9 @@ public class GameService {
 		return newGame;
 	}
 
-	///////////////
-	// Retrieval //	
-	///////////////
+	//==========
+	// Retrieval 
+	//==========
 
 	public List<Game> getGames() {
 		return this.gameRepository.findAll();
@@ -132,24 +147,44 @@ public class GameService {
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
-	/////////////
-	// Updates //
-	/////////////
+	//========
+	// Updates 
+	//========
 	
 
-	/////////////
-	// Actions //
-	/////////////
+	//========
+	// Actions 
+	//========
 
 
-	//////////////
-    // Deletion //
-    //////////////
+	//=========
+    // Deletion 
+    //=========
 
-	public void deleteGame(Game game) {
+	public void deleteGame(UUID gameId) {
+		Game game = gameRepository.findById(gameId).orElse(null);
+
+		if (game == null) {
+        	return;
+    	}
+
 		gameRepository.delete(game);
-
         log.debug("Game successfully deleted");
+	}
+
+	@Async
+	public void deleteGameDelayed(UUID gameId) {
+		try {
+			Thread.sleep(30_000); // 30 second delay
+
+			if (!gameRepository.existsById(gameId)) {
+				return;
+			}
+
+			deleteGame(gameId);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	public synchronized boolean finishGameIfExpired(UUID gameId) {
@@ -182,18 +217,29 @@ public class GameService {
 		}
 	}
 	
-	////////////////
-	// Validation //
-	////////////////
+	//===========
+	// Validation 
+	//===========
 
-    ///////////////
-    // Utilities //    
-    ///////////////
+    //==========
+    // Utilities 
+    //==========
 	
+	public TeamType getWinningTeam(Game game) {
+		if (game.getScore_1() > game.getScore_2()) {
+			return TeamType.Team1;
+		}
+		else if (game.getScore_1() < game.getScore_2()) {
+			return TeamType.Team2;
+		}
+		else {
+			return null;
+		}
+	}
 	
-    ////////////
-    // Pusher //
-    ////////////
+    //=======
+    // Pusher 
+    //=======
 
 	public void pushGameUpdate(Game game) {
 		GameDTO gameDTO = DTOMapper.INSTANCE.convertEntityToGameDTO(game);
@@ -202,17 +248,17 @@ public class GameService {
 
 
 /* Not yet sorted, and in need of refactoring */
-
+	/* 
 	//returns a list of 16 randomly choosen words from the library
 	public static List<String> WordList() {
 		List<String> wordList = new ArrayList<>();
 
 		for (int i = 0; i < 16; i++) {
-			wordList.add(Words.Word());
+			wordList.add(Words.Word(lobby.getlistType()));
 		}
 
 		return wordList;
-	}
+	}*/
 
 	public int checkWordList(List<String> wordList, String object) {
 		for (int i = 0; i < wordList.size(); i++) {
@@ -302,6 +348,8 @@ public class GameService {
 
 		scoreService.claimTile(game, indexOfWord, team);
 		leaderboardService.updateLeaderboard(game);
+
+		checkBoardFullyClaimed(game);
 
 		gameRepository.flush();
 		pushGameUpdate(game);
@@ -394,5 +442,24 @@ public class GameService {
 			game.setTileGrid(tileGrid);
 		}
 	}
+
+	private void checkBoardFullyClaimed(Game game) {
+		Tile[][] grid = game.getTileGrid();
+
+		for (Tile[] row : grid) {
+			for (Tile tile : row) {
+				if (tile.getStatus() == TileStatus.UNCLAIMED ||
+					tile.getStatus() == TileStatus.PROCESSING_TEAM1 ||
+					tile.getStatus() == TileStatus.PROCESSING_TEAM2) {
+					return; // board not finished yet
+				}
+			}
+		}
+
+		// full board
+		game.setStatus(GameStatus.ENDED);
+		gameRepository.flush();
+		pushGameUpdate(game);
+}
 
 }

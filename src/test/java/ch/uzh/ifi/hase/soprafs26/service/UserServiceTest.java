@@ -13,6 +13,7 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -166,5 +167,85 @@ public class UserServiceTest {
 		User result = userService.updateUser(testUser.getId(), updatedUser);
 
 		assertEquals("newUsername", result.getUsername());
+	}
+
+	@Test
+	public void getUsers_returnsAllUsers() {
+		List<User> users = List.of(testUser);
+		Mockito.when(userRepository.findAll()).thenReturn(users);
+
+		List<User> result = userService.getUsers();
+
+		assertEquals(1, result.size());
+		Mockito.verify(userRepository, Mockito.times(1)).findAll();
+	}
+
+	@Test
+	public void getUserById_validId_returnsUser() {
+		Mockito.when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+
+		User result = userService.getUserById(testUser.getId());
+
+		assertEquals(testUser.getId(), result.getId());
+	}
+
+	@Test
+	public void getUserById_invalidId_throwsNotFound() {
+		UUID unknownId = UUID.randomUUID();
+		Mockito.when(userRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+		assertThrows(ResponseStatusException.class, () -> userService.getUserById(unknownId));
+	}
+
+	@Test
+	public void getUserByToken_validToken_returnsUser() {
+		testUser.setToken("valid-token");
+		Mockito.when(userRepository.findByToken("valid-token")).thenReturn(testUser);
+
+		User result = userService.getUserByToken("valid-token");
+
+		assertEquals(testUser, result);
+	}
+
+	@Test
+	public void getUserByToken_invalidToken_throwsUnauthorized() {
+		Mockito.when(userRepository.findByToken("invalid-token")).thenReturn(null);
+
+		assertThrows(ResponseStatusException.class, () -> userService.getUserByToken("invalid-token"));
+	}
+
+	@Test
+	public void updateUserStats_gameWon_incrementsGamesPlayedAndWon() {
+		testUser.setGamesPlayed(0);
+		testUser.setGamesWon(0);
+
+		userService.updateUserStats(testUser, true);
+
+		assertEquals(1, testUser.getGamesPlayed());
+		assertEquals(1, testUser.getGamesWon());
+	}
+
+	@Test
+	public void updateUserStats_gameLost_incrementsGamesPlayedOnly() {
+		testUser.setGamesPlayed(2);
+		testUser.setGamesWon(1);
+
+		userService.updateUserStats(testUser, false);
+
+		assertEquals(3, testUser.getGamesPlayed());
+		assertEquals(1, testUser.getGamesWon());
+	}
+
+	@Test
+	public void validateUserMatchesUserId_sameId_noException() {
+		assertDoesNotThrow(() -> userService.validateUserMatchesUserId(testUser.getId(), testUser));
+	}
+
+	@Test
+	public void validateUserMatchesUserId_differentId_throwsForbidden() {
+		UUID otherId = UUID.randomUUID();
+
+		assertThrows(ResponseStatusException.class,
+			() -> userService.validateUserMatchesUserId(otherId, testUser));
 	}
 }

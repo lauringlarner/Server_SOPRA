@@ -16,21 +16,24 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.ChatMessageRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyPlayerRepository;
-
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ChatMessageGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import jakarta.transaction.Transactional;
 
 @Service
 @Transactional
 public class ChatService {
 
+    private final PusherService pusherService;
     private final ChatMessageRepository chatMessageRepository;
     private final LobbyPlayerRepository lobbyPlayerRepository;
     private final GameRepository gameRepository;
 
-    public ChatService(ChatMessageRepository chatMessageRepository, LobbyPlayerRepository lobbyPlayerRepository, GameRepository gameRepository) {
+    public ChatService(ChatMessageRepository chatMessageRepository, LobbyPlayerRepository lobbyPlayerRepository, GameRepository gameRepository, PusherService pusherService) {
         this.chatMessageRepository = chatMessageRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
         this.gameRepository = gameRepository;
+        this.pusherService = pusherService;
     }
 
     public ChatMessage sendMessage(User user, UUID gameId, String message) {
@@ -56,7 +59,11 @@ public class ChatService {
         chatMessage.setMessage(message);
         chatMessage.setSentAt(Instant.now());
 
-        return chatMessageRepository.save(chatMessage);
+        ChatMessage chatMessageSaved = chatMessageRepository.save(chatMessage);
+
+        pushChatUpdate(chatMessageSaved);
+
+        return chatMessageSaved;
     }
 
     public List<ChatMessage> getMessages(UUID gameId) {
@@ -64,4 +71,9 @@ public class ChatService {
         int size = all.size();
         return size <= 7 ? all : all.subList(size - 7, size);
     }
+
+    public void pushChatUpdate(ChatMessage chatMessage) {
+        ChatMessageGetDTO chatMessageGetDTO = DTOMapper.INSTANCE.convertEntityToChatMessageGetDTO(chatMessage);
+		pusherService.trigger("game-" + chatMessage.getGameId(), "ChatUpdate", chatMessageGetDTO);
+	}
 }

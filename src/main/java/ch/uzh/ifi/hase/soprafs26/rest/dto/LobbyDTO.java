@@ -19,12 +19,22 @@ public class LobbyDTO {
 
     private String listType;
 
+    private Boolean isSinglePlayer;
+
     public String getListType() {
         return listType;
     }
 
     public void setListType(String listType) {
         this.listType = listType;
+    }
+
+    public Boolean getIsSinglePlayer() {
+        return isSinglePlayer;
+    }
+
+    public void setIsSinglePlayer(Boolean isSinglePlayer) {
+        this.isSinglePlayer = isSinglePlayer;
     }
 
     public String getCreatedAt() {

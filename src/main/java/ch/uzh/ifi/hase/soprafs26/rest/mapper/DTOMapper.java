@@ -103,6 +103,7 @@ public interface DTOMapper {
 	@Mapping(source = "gameId", target = "gameId")
 	@Mapping(source = "lobbyPlayers", target = "lobbyPlayers")
 	@Mapping(source = "listType", target = "listType")
+	@Mapping(source = "isSinglePlayer", target = "isSinglePlayer")
 	LobbyDTO convertEntityToLobbyDTO(Lobby lobby);
 
 	// chat mapper

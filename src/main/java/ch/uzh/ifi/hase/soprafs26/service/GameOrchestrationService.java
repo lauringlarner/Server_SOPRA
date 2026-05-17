@@ -66,14 +66,21 @@ public class GameOrchestrationService {
         lobbyService.validateLobbyPlayerInLobby(lobbyPlayer, lobby);
         lobbyService.validateLobbyPlayerIsHost(lobbyPlayer);
 
-        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN 
-        // and every team has at least 1 player each and every player is assigned to a valid team or CONFLICT
+        // validate all lobbyPlayers currently in the lobby are "ready" and the lobby is OPEN
         lobbyService.validateAllPlayersReady(lobby);
         lobbyService.validateLobbyIsOpen(lobby);
-        lobbyService.validateAllPlayersAreInValidTeams(lobby);
-        if (isSingleplayer == 0){
-        lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
+
+        if (isSingleplayer == 1) {
+            // auto-assign all players to Team1 so team validation and image submission work correctly
+            for (LobbyPlayer lp : lobby.getLobbyPlayers()) {
+                lobbyService.updateTeamType(lp, TeamType.Team1);
+            }
+            lobby.setIsSinglePlayer(true);
+        } else {
+            lobbyService.validateAllPlayersAreInValidTeams(lobby);
+            lobbyService.validateLobbyHasPlayersInBothTeams(lobby);
         }
+
         // create game
         Game game = gameService.createGame(lobby, isSingleplayer);
         leaderboardService.initOrUpdate(game);

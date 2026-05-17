@@ -44,6 +44,9 @@ public class Lobby {
     @Column(nullable = false)
     private String listType;
 
+    @Column(nullable = false)
+    private Boolean isSinglePlayer = false;
+
   
     public static long getSerialversionuid() {
         return serialVersionUID;
@@ -112,6 +115,14 @@ public class Lobby {
 
     public void setListType(String listType) {
         this.listType = listType;
+    }
+
+    public Boolean getIsSinglePlayer() {
+        return isSinglePlayer;
+    }
+
+    public void setIsSinglePlayer(Boolean isSinglePlayer) {
+        this.isSinglePlayer = Boolean.TRUE.equals(isSinglePlayer);
     }
 
 }

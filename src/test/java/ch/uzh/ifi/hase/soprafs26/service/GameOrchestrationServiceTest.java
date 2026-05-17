@@ -3,6 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,51 @@ class GameOrchestrationServiceTest {
     }
 
     // ---------------- START GAME ----------------
+
+    @Test
+    void startGame_singleplayer_assignsPlayersToTeam1AndSkipsTeamValidation() {
+        User user = new User();
+        UUID lobbyId = UUID.randomUUID();
+
+        Lobby lobby = new Lobby();
+        LobbyPlayer player = new LobbyPlayer();
+        player.setTeamType(TeamType.Team1);
+
+        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
+        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(player);
+
+        Game game = new Game();
+        game.setId(UUID.randomUUID());
+        when(gameService.createGame(lobby, 1)).thenReturn(game);
+
+        service.startGame(user, lobbyId, 1);
+
+        verify(lobbyService, never()).validateAllPlayersAreInValidTeams(any());
+        verify(lobbyService, never()).validateLobbyHasPlayersInBothTeams(any());
+    }
+
+    @Test
+    void startGame_singleplayer_undecidedPlayer_doesNotThrow() {
+        User user = new User();
+        UUID lobbyId = UUID.randomUUID();
+
+        Lobby lobby = new Lobby();
+        LobbyPlayer player = new LobbyPlayer();
+        player.setTeamType(TeamType.Undecided);
+
+        lobby.setLobbyPlayers(List.of(player));
+
+        when(lobbyService.getLobbyByLobbyId(lobbyId)).thenReturn(lobby);
+        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(player);
+
+        Game game = new Game();
+        game.setId(UUID.randomUUID());
+        when(gameService.createGame(lobby, 1)).thenReturn(game);
+
+        assertDoesNotThrow(() -> service.startGame(user, lobbyId, 1));
+
+        verify(lobbyService).updateTeamType(player, TeamType.Team1);
+    }
 
     @Test
     void startGame_singleplayer_success() {

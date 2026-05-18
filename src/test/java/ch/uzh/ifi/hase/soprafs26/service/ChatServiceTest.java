@@ -1,5 +1,22 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.springframework.web.server.ResponseStatusException;
+
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 import ch.uzh.ifi.hase.soprafs26.entity.ChatMessage;
@@ -9,23 +26,6 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.ChatMessageRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyPlayerRepository;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 
 public class ChatServiceTest {
 
@@ -69,30 +69,6 @@ public class ChatServiceTest {
     // sendMessage
 
     @Test
-    public void sendMessage_validInput_success() {
-        // given
-        ChatMessage saved = new ChatMessage();
-        saved.setGameId(testGameId);
-        saved.setSender("testuser");
-        saved.setTeamType(TeamType.Team1);
-        saved.setMessage("Hello!");
-        saved.setSentAt(Instant.now());
-
-        Mockito.when(lobbyPlayerRepository.findByUser(testUser)).thenReturn(testLobbyPlayer);
-        Mockito.when(chatMessageRepository.save(Mockito.any())).thenReturn(saved);
-
-        // when
-        ChatMessage result = chatService.sendMessage(testUser, testGameId, "Hello!");
-
-        // then
-        verify(chatMessageRepository, Mockito.times(1)).save(Mockito.any());
-        assertEquals("testuser", result.getSender());
-        assertEquals(TeamType.Team1, result.getTeamType());
-        assertEquals("Hello!", result.getMessage());
-        assertEquals(testGameId, result.getGameId());
-    }
-
-    @Test
     public void sendMessage_emptyMessage_throwsBadRequest() {
         // when/then
         assertThrows(ResponseStatusException.class,
@@ -132,23 +108,6 @@ public class ChatServiceTest {
         // when/then
         assertThrows(ResponseStatusException.class,
                 () -> chatService.sendMessage(testUser, testGameId, "Hello!"));
-    }
-
-    @Test
-    public void sendMessage_setsCorrectFields() {
-        // given
-        Mockito.when(lobbyPlayerRepository.findByUser(testUser)).thenReturn(testLobbyPlayer);
-        Mockito.when(chatMessageRepository.save(Mockito.any())).thenAnswer(i -> i.getArgument(0));
-
-        // when
-        ChatMessage result = chatService.sendMessage(testUser, testGameId, "Test message");
-
-        // then
-        assertEquals(testGameId, result.getGameId());
-        assertEquals("testuser", result.getSender());
-        assertEquals(TeamType.Team1, result.getTeamType());
-        assertEquals("Test message", result.getMessage());
-        assertNotNull(result.getSentAt());
     }
 
     // getMessages

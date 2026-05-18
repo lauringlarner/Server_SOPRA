@@ -1,7 +1,5 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
-import java.time.Instant;
-
 import ch.uzh.ifi.hase.soprafs26.constant.TeamType;
 
 public class ChatMessageGetDTO {
@@ -9,7 +7,7 @@ public class ChatMessageGetDTO {
     private String sender;
     private TeamType teamType;
     private String message;
-    private Instant sentAt;
+    private String sentAt;
 
     public String getSender() { return sender; }
     public void setSender(String sender) { this.sender = sender; }
@@ -20,6 +18,6 @@ public class ChatMessageGetDTO {
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
 
-    public Instant getSentAt() { return sentAt; }
-    public void setSentAt(Instant sentAt) { this.sentAt = sentAt; }
+    public String getSentAt() { return sentAt; }
+    public void setSentAt(String sentAt) { this.sentAt = sentAt; }
 }

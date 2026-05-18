@@ -1,12 +1,17 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.pusher.rest.Pusher;
 
 @Service
 public class PusherService {
+
+    private final Logger log = LoggerFactory.getLogger(PusherService.class);
 
     private final Pusher pusher;
 
@@ -22,7 +27,12 @@ public class PusherService {
         this.pusher.setEncrypted(true);
     }
 
+    @Async
     public void trigger(String channel, String event, Object payload) {
-        pusher.trigger(channel, event, payload);
+        try {
+            pusher.trigger(channel, event, payload);
+        } catch (RuntimeException exception) {
+            log.warn("Pusher trigger failed for channel {} and event {}", channel, event, exception);
+        }
     }
 }

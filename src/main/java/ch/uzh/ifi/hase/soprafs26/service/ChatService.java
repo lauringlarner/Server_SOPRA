@@ -24,12 +24,15 @@ import jakarta.transaction.Transactional;
 @Transactional
 public class ChatService {
 
-    private final PusherService pusherService;
     private final ChatMessageRepository chatMessageRepository;
     private final LobbyPlayerRepository lobbyPlayerRepository;
     private final GameRepository gameRepository;
+    private final PusherService pusherService;
 
-    public ChatService(ChatMessageRepository chatMessageRepository, LobbyPlayerRepository lobbyPlayerRepository, GameRepository gameRepository, PusherService pusherService) {
+    public ChatService(ChatMessageRepository chatMessageRepository,
+            LobbyPlayerRepository lobbyPlayerRepository,
+            GameRepository gameRepository,
+            PusherService pusherService) {
         this.chatMessageRepository = chatMessageRepository;
         this.lobbyPlayerRepository = lobbyPlayerRepository;
         this.gameRepository = gameRepository;
@@ -41,16 +44,12 @@ public class ChatService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot be empty");
         }
 
-        Game game = gameRepository.findById(gameId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
+        Game game = getGame(gameId);
         if (game.getStatus() != GameStatus.IN_PROGRESS) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Game is not in progress");
         }
 
-        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
-        if (lobbyPlayer == null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not in an active game");
-        }
+        LobbyPlayer lobbyPlayer = getLobbyPlayerInGameLobby(user, game);
 
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setGameId(gameId);
@@ -59,21 +58,36 @@ public class ChatService {
         chatMessage.setMessage(message);
         chatMessage.setSentAt(Instant.now());
 
-        ChatMessage chatMessageSaved = chatMessageRepository.save(chatMessage);
-
-        pushChatUpdate(chatMessageSaved);
-
-        return chatMessageSaved;
+        ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
+        pushChatMessage(savedMessage);
+        return savedMessage;
     }
 
-    public List<ChatMessage> getMessages(UUID gameId) {
+    public List<ChatMessage> getMessages(User user, UUID gameId) {
+        Game game = getGame(gameId);
+        getLobbyPlayerInGameLobby(user, game);
+
         List<ChatMessage> all = chatMessageRepository.findByGameIdOrderBySentAtAsc(gameId);
         int size = all.size();
         return size <= 7 ? all : all.subList(size - 7, size);
     }
 
-    public void pushChatUpdate(ChatMessage chatMessage) {
-        ChatMessageGetDTO chatMessageGetDTO = DTOMapper.INSTANCE.convertEntityToChatMessageGetDTO(chatMessage);
-		pusherService.trigger("game-" + chatMessage.getGameId(), "ChatUpdate", chatMessageGetDTO);
-	}
+    public void pushChatMessage(ChatMessage chatMessage) {
+        ChatMessageGetDTO chatMessageDTO = DTOMapper.INSTANCE.convertEntityToChatMessageGetDTO(chatMessage);
+        pusherService.trigger("game-" + chatMessage.getGameId(), "ChatMessage", chatMessageDTO);
+    }
+
+    private Game getGame(UUID gameId) {
+        return gameRepository.findById(gameId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
+    }
+
+    private LobbyPlayer getLobbyPlayerInGameLobby(User user, Game game) {
+        LobbyPlayer lobbyPlayer = lobbyPlayerRepository.findByUser(user);
+        if (lobbyPlayer == null || lobbyPlayer.getLobby() == null
+                || !game.getLobbyId().equals(lobbyPlayer.getLobby().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not in this game's lobby");
+        }
+        return lobbyPlayer;
+    }
 }

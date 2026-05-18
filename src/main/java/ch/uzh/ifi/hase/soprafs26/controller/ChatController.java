@@ -46,8 +46,8 @@ public class ChatController {
     @ResponseStatus(HttpStatus.OK)
     public List<ChatMessageGetDTO> getMessages(@PathVariable UUID gameId,
             @RequestHeader(value = "Authorization", required = false) String token) {
-        authService.authenticateToken(token);
-        List<ChatMessage> messages = chatService.getMessages(gameId);
+        User user = authService.authenticateToken(token);
+        List<ChatMessage> messages = chatService.getMessages(user, gameId);
         return messages.stream()
                 .map(DTOMapper.INSTANCE::convertEntityToChatMessageGetDTO)
                 .collect(Collectors.toList());

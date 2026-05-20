@@ -108,6 +108,7 @@ public interface DTOMapper {
 
 	// chat mapper
 	@Mapping(source = "sender", target = "sender")
+	@Mapping(source = "id", target = "id")
 	@Mapping(source = "teamType", target = "teamType")
 	@Mapping(source = "message", target = "message")
 	@Mapping(source = "sentAt", target = "sentAt")

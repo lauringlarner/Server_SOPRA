@@ -174,7 +174,7 @@ public class ChatControllerTest {
         msg2.setSentAt(Instant.parse("2026-01-01T10:00:01Z"));
 
         given(authService.authenticateToken("Bearer token123")).willReturn(user);
-        given(chatService.getMessages(gameId)).willReturn(List.of(msg1, msg2));
+        given(chatService.getMessages(user, gameId)).willReturn(List.of(msg1, msg2));
 
         // when/then
         MockHttpServletRequestBuilder getRequest = get("/games/" + gameId + "/chat")
@@ -196,7 +196,7 @@ public class ChatControllerTest {
         user.setToken("token123");
 
         given(authService.authenticateToken("Bearer token123")).willReturn(user);
-        given(chatService.getMessages(gameId)).willReturn(List.of());
+        given(chatService.getMessages(user, gameId)).willReturn(List.of());
 
         // when/then
         MockHttpServletRequestBuilder getRequest = get("/games/" + gameId + "/chat")

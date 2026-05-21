@@ -55,8 +55,14 @@ MapStruct-generated [`DTOMapper`](src/main/java/ch/uzh/ifi/hase/soprafs26/rest/m
 ### Prerequisites
 
 - **Java 17** – set `JAVA_HOME` to JDK 17 on Windows
-- **Google Cloud Vision credentials** – place your service account JSON at the path expected by `VisionQuickstartObjectLocalization` and set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable
-- **Pusher account** – set the following environment variables:
+
+- **Google Cloud Vision** – the app uses the [Cloud Vision API](https://cloud.google.com/vision) for real-time image analysis. To set it up:
+  1. Create a [Google Cloud](https://cloud.google.com/) account and project
+  2. Enable the **Cloud Vision API** in the GCP console
+  3. Create a service account and download the JSON credentials file
+  4. Set the environment variable: `GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json`
+
+- **Pusher** – the app uses [Pusher](https://pusher.com/) as a real-time pub/sub messaging service to synchronise game state across all connected clients. Create a free account at [pusher.com](https://pusher.com/) and set the following environment variables:
   ```
   PUSHER_APP_ID
   PUSHER_KEY
@@ -114,6 +120,9 @@ Set up Docker Hub secrets in your GitHub repository settings:
 
 Use [Postman](https://www.getpostman.com) to test the REST endpoints. The server exposes JSON over HTTP on port `8080`.
 
+##Illustrations
+
+
 ## Roadmap
 
 The following features would be valuable additions for contributors:
@@ -130,9 +139,9 @@ The following features would be valuable additions for contributors:
 |---|---|
 | Arda Aydın | [@ardaaydin](https://github.com/ardaaydin) |
 | Laurin Glarner | [@laurinlarner](https://github.com/lauringlarner) |
-| Naren Wallimann | — |[@Wallimann20-914-099](https://github.com/Wallimann20-914-099) |
-| Melchior Kneubuehler | — |[@mel-kne](https://github.com/mel-kne)|
-| Alessio Martinoli | - |[@AleMarti0](https://github.com/AleMarti0)|
+| Naren Wallimann | [@Wallimann20-914-099](https://github.com/Wallimann20-914-099) |
+| Melchior Kneubuehler | [@mel-kne](https://github.com/mel-kne)|
+| Alessio Martinoli | [@AleMarti0](https://github.com/AleMarti0)|
 
 This project was developed as part of the **Software Engineering Lab (SoPra FS26)** at the University of Zurich, Department of Informatics (IFI).
 

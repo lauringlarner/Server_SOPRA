@@ -60,7 +60,7 @@ MapStruct-generated [`DTOMapper`](src/main/java/ch/uzh/ifi/hase/soprafs26/rest/m
   1. Create a [Google Cloud](https://cloud.google.com/) account and project
   2. Enable the **Cloud Vision API** in the GCP console
   3. Create a service account and download the JSON credentials file
-  4. Set the environment variable: `GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json`
+  4. Place the credentials file in the project and set the environment variable: `GOOGLE_APPLICATION_CREDENTIALS=<path-to-credentials.json>`
 
 - **Pusher** – the app uses [Pusher](https://pusher.com/) as a real-time pub/sub messaging service to synchronise game state across all connected clients. Create a free account at [pusher.com](https://pusher.com/) and set the following environment variables:
   ```

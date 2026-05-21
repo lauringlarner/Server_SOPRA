@@ -130,9 +130,9 @@ The following features would be valuable additions for contributors:
 |---|---|
 | Arda Aydın | [@ardaaydin](https://github.com/ardaaydin) |
 | Laurin Glarner | [@laurinlarner](https://github.com/lauringlarner) |
-| Naren Wallimann | — |[@Wallimann20-914-099](https://github.com/Wallimann20-914-099) |
-| Melchior Kneubuehler | — |[@mel-kne](https://github.com/mel-kne)|
-| Alessio Martinoli | - |[@AleMarti0](https://github.com/AleMarti0)|
+| Naren Wallimann | [@Wallimann20-914-099](https://github.com/Wallimann20-914-099) |
+| Melchior Kneubuehler | [@mel-kne](https://github.com/mel-kne)|
+| Alessio Martinoli | [@AleMarti0](https://github.com/AleMarti0)|
 
 This project was developed as part of the **Software Engineering Lab (SoPra FS26)** at the University of Zurich, Department of Informatics (IFI).
 

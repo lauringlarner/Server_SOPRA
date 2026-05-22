@@ -167,29 +167,13 @@ public class GameService {
     //=========
 
 	public void deleteGame(UUID gameId) {
-		Game game = gameRepository.findById(gameId).orElse(null);
-
+		Game game = findGameById(gameId);
 		if (game == null) {
         	return;
     	}
 
 		gameRepository.delete(game);
         log.debug("Game successfully deleted");
-	}
-
-	@Async
-	public void deleteGameDelayed(UUID gameId) {
-		try {
-			Thread.sleep(30_000); // 30 second delay
-
-			if (!gameRepository.existsById(gameId)) {
-				return;
-			}
-
-			deleteGame(gameId);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
 	}
 
 	public synchronized boolean finishGameIfExpired(UUID gameId) {

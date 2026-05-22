@@ -162,6 +162,6 @@ public class GameOrchestrationService {
         lobbyService.resetLobbyAfterGame(game.getLobbyId());
 
         // delete game
-        gameService.deleteGameDelayed(game.getId());
+        gameService.deleteGame(game.getId());
     }
 }

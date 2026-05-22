@@ -194,7 +194,7 @@ class GameOrchestrationServiceTest {
 
         verify(userService, never()).updateUserStats(any(), anyBoolean());
         verify(lobbyService).resetLobbyAfterGame(game.getLobbyId());
-        verify(gameService).deleteGameDelayed(gameId); 
+        verify(gameService).deleteGame(gameId); 
     }
 
     @Test
@@ -233,7 +233,7 @@ class GameOrchestrationServiceTest {
         verify(userService).updateUserStats(player2.getUser(), false);
 
         verify(lobbyService).resetLobbyAfterGame(game.getLobbyId());
-        verify(gameService).deleteGameDelayed(game.getId());
+        verify(gameService).deleteGame(game.getId());
 
     }
 
@@ -248,6 +248,6 @@ class GameOrchestrationServiceTest {
 
         verifyNoInteractions(lobbyService);
         verify(userService, never()).updateUserStats(any(), anyBoolean());
-        verify(gameService, never()).deleteGameDelayed(any());
+        verify(gameService, never()).deleteGame(any());
     }
 }

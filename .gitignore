@@ -57,3 +57,6 @@ src/main/java/ch/uzh/ifi/hase/soprafs26/VisionQuickstart.java
 *.jpeg
 *.png
 !vision_test/**
+
+
+sopra-fs26-group-18-server-254a2c84c9e1.json

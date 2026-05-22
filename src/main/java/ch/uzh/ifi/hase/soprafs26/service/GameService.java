@@ -143,8 +143,17 @@ public class GameService {
 	}
 
 	public Game getGameById(UUID gameId) {
-		return gameRepository.findById(gameId)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
+		Game game = gameRepository.findById(gameId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (game.getStatus() == GameStatus.IN_PROGRESS &&
+			isExpired(game, Instant.now())) {
+
+			finishGameIfExpired(gameId);
+			return getGameById(gameId); 
+		}
+
+		return game;
 	}
 
 	@Transactional(readOnly = true)
@@ -188,6 +197,7 @@ public class GameService {
 		clearProcessingTiles(game);
 		game.setStatus(GameStatus.ENDED);
 		leaderboardService.initOrUpdate(game);
+		gameRepository.save(game);
 		gameRepository.flush();
 		pushGameUpdate(game);
 		lobbyService.resetLobbyAfterGame(game.getLobbyId());

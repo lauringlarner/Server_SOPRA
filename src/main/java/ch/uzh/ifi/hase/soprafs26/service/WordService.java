@@ -10,16 +10,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Words {
+public class WordService {
 
-    private static final Logger log = LoggerFactory.getLogger(Words.class);
+    private static final Logger log = LoggerFactory.getLogger(WordService.class);
 
     private static final SecureRandom secureRandom = new SecureRandom();
 
     public static String[] WordList(String nameOfWordList) {
         List<String> words = new ArrayList<>();
 
-        try (InputStream is = Words.class.getClassLoader().getResourceAsStream(nameOfWordList);
+        try (InputStream is = WordService.class.getClassLoader().getResourceAsStream(nameOfWordList);
              BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String line;
             while ((line = br.readLine()) != null) {

@@ -98,8 +98,8 @@ public class GameController {
     @ResponseStatus(HttpStatus.OK)
     public LeaderboardGetDTO getLeaderboard(@PathVariable UUID gameId,
                                             @RequestHeader(value = "Authorization", required = false) String token) {
-        User user = authService.authenticateToken(token);
-        Leaderboard leaderboard = gameOrchestrationService.getLeaderboard(user, gameId);
+        authService.authenticateToken(token);
+        Leaderboard leaderboard = gameOrchestrationService.getLeaderboard(gameId);
 
         LeaderboardGetDTO dto = new LeaderboardGetDTO(leaderboard.getGameId());
         dto.setTeam1Score(leaderboard.getTeam1Score());

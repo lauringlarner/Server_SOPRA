@@ -84,11 +84,7 @@ public class GameOrchestrationService {
         return game;
     }
 
-    public Leaderboard getLeaderboard(User user, UUID gameId) {
-        Game game = gameService.getGameById(gameId);
-        LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
-
-        lobbyService.validateLobbyPlayerIsInGame(lobbyPlayer, game);
+    public Leaderboard getLeaderboard(UUID gameId) {
         return leaderboardService.getLeaderboard(gameId);
     }
 
@@ -143,8 +139,12 @@ public class GameOrchestrationService {
 
 
     public void deleteGame(User user, UUID gameId) {
-        // fetch Game from gameId, lobby from lobbyId and player from user or Not Found
-        Game game = gameService.getGameById(gameId);
+        // fetch Game from gameId or return (idempotent) NO_CONTENT
+        Game game = gameService.findGameById(gameId);
+        if (game == null) {
+            return;
+        }
+        // fetch lobby from lobbyId and player from user or Not Found
         Lobby lobby = lobbyService.getLobbyByLobbyId(game.getLobbyId());
         LobbyPlayer lobbyPlayer = lobbyService.getLobbyPlayerByUser(user);
         
@@ -162,6 +162,6 @@ public class GameOrchestrationService {
         lobbyService.resetLobbyAfterGame(game.getLobbyId());
 
         // delete game
-        gameService.deleteGameDelayed(game.getId());
+        gameService.deleteGame(game.getId());
     }
 }

@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +52,9 @@ public class GameServiceTest {
 
     @Mock
     private PusherService pusherService;
+
+    @Mock
+    private LobbyService lobbyService;
 
     @InjectMocks
     private GameService gameService;
@@ -296,6 +301,24 @@ public class GameServiceTest {
         assertDoesNotThrow(() -> gameService.deleteGame(testGame.getId()));
 
         verify(gameRepository, times(1)).delete(testGame);
+    }
+
+    @Test
+    public void finishGameIfExpired_expiredGame_endsGameAndClearsProcessingTiles() {
+        testGame.setGameDuration(1);
+        testGame.setStartedAt(Instant.now().minus(2, ChronoUnit.MINUTES));
+        testGame.getTileGrid()[0][0].setStatus(TileStatus.PROCESSING_TEAM1);
+        given(gameRepository.findById(gameId)).willReturn(Optional.of(testGame));
+
+        boolean finished = gameService.finishGameIfExpired(gameId);
+
+        assertTrue(finished);
+        assertEquals(GameStatus.ENDED, testGame.getStatus());
+        assertEquals(TileStatus.UNCLAIMED, testGame.getTileGrid()[0][0].getStatus());
+        verify(leaderboardService, times(1)).initOrUpdate(testGame);
+        verify(gameRepository, times(1)).flush();
+        verify(pusherService, times(1)).trigger(eq("game-" + gameId), eq("GameUpdate"), any(GameDTO.class));
+        verify(lobbyService, times(1)).resetLobbyAfterGame(testLobby.getId());
     }
 
     // ─────────────────────────────────────────────

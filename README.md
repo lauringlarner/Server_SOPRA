@@ -10,7 +10,7 @@ This is the RESTful backend for a multiplayer, vision-based tile game built as p
 |---|---|
 | Language | Java 17 |
 | Framework | Spring Boot 4.0.0 |
-| Persistence | Spring Data JPA · H2 (in-memory) |
+| Persistence | Spring Data JPA · PostgreSQL (Cloud SQL) · H2 (local) |
 | Image Analysis | Google Cloud Vision API 3.40.0 |
 | Real-time Messaging | Pusher HTTP Java 1.0.0 |
 | Object Mapping | MapStruct 1.5.5 |
@@ -69,6 +69,17 @@ MapStruct-generated [`DTOMapper`](src/main/java/ch/uzh/ifi/hase/soprafs26/rest/m
   PUSHER_SECRET
   PUSHER_CLUSTER
   ```
+
+- **Cloud SQL (PostgreSQL)** – the app uses [Cloud SQL](https://cloud.google.com/sql) (PostgreSQL) for persistent storage in production. Locally, H2 in-memory is used automatically — no database setup needed. For App Engine deployment:
+  1. Create a [Cloud SQL instance](https://console.cloud.google.com/sql) (PostgreSQL) in the **same GCP project** as your App Engine application
+  2. Create a database and a database user with a password inside the instance
+  3. Add the following secrets to your GitHub repository (they are injected into `app.yaml` at deploy time):
+  ```
+  DATABASE_URL   (jdbc:postgresql:///DATABASE?cloudSqlInstance=PROJECT:REGION:INSTANCE&socketFactory=com.google.cloud.sql.postgres.SocketFactory)
+  DB_USERNAME
+  DB_PASSWORD
+  ```
+  The [Cloud SQL Socket Factory](https://github.com/GoogleCloudPlatform/cloud-sql-jdbc-socket-factory) is used for the connection — no IP allowlisting required.
 
 ### Run locally
 

@@ -43,7 +43,7 @@ jobs:
 
       - name: Inject DB credentials into app.yaml
         env:
-          DATABASE_URL: ${{ secrets.DB_URL }}
+          DB_URL: ${{ secrets.DATABASE_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |

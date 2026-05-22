@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test;
 
 public class WordServiceTest {
 
+    private final WordService wordService = new WordService();
+
     @Test
     public void wordList_returnsNonEmpty() {
-        String[] words = WordService.WordList("urban_objects.csv");
+        String[] words = wordService.WordList("urban_objects.csv");
 
         assertNotNull(words);
         assertTrue(words.length > 0);
@@ -19,16 +21,15 @@ public class WordServiceTest {
 
     @Test
     public void wordList_containsNoBlankEntries() {
-        String[] words = WordService.WordList("urban_objects.csv");
+        String[] words = wordService.WordList("urban_objects.csv");
 
         assertTrue(Arrays.stream(words).noneMatch(word -> word == null || word.isBlank()));
     }
 
-    // random word → not null and exists in the list
     @Test
     public void word_returnsValidWord() {
-        String word = WordService.Word("all");
-        String[] wordList = WordService.WordList("urban_objects.csv");
+        String word = wordService.Word("default");
+        String[] wordList = wordService.WordList("urban_objects.csv");
 
         assertNotNull(word);
         assertFalse(word.isBlank());
@@ -37,21 +38,21 @@ public class WordServiceTest {
 
     @Test
     public void word_insideBranch_returnsValidWord() {
-        String word = WordService.Word("inside");
+        String word = wordService.Word("inside");
         assertNotNull(word);
         assertFalse(word.isBlank());
     }
 
     @Test
     public void word_outsideBranch_returnsValidWord() {
-        String word = WordService.Word("outside");
+        String word = wordService.Word("outside");
         assertNotNull(word);
         assertFalse(word.isBlank());
     }
 
     @Test
     public void word_demoBranch_returnsFixedIndex() {
-        String word = WordService.Word("demo");
+        String word = wordService.Word("demo");
         assertNotNull(word);
         assertFalse(word.isBlank());
     }

@@ -46,18 +46,21 @@ public class GameService {
 	private final ScoreService scoreService;
 	private final LeaderboardService leaderboardService;
 	private final LobbyService lobbyService;
+	private final WordService wordService;
 
 
 	public GameService(@Qualifier("gameRepository") GameRepository gameRepository,
 					   	ScoreService scoreService,
 					   	LeaderboardService leaderboardService,
 						PusherService pusherService,
-						LobbyService lobbyService) {
+						LobbyService lobbyService,
+						WordService wordService) {
 		this.gameRepository = gameRepository;
 		this.scoreService = scoreService;
 		this.leaderboardService = leaderboardService;
         this.pusherService = pusherService;
 		this.lobbyService = lobbyService;
+		this.wordService = wordService;
 	}
 
 	//=========
@@ -82,7 +85,7 @@ public class GameService {
 
 		// Build one canonical 4x4 board and derive the flat word list from it.
 		if (listType.equals("demo")) {
-			String[] demoWords = WordService.WordList("urban_objects_demo.csv");
+			String[] demoWords = wordService.WordList("urban_objects_demo.csv");
 			for (int row = 0; row < boardSize; row++) {
 				for (int col = 0; col < boardSize; col++) {
 					String word = demoWords[row * boardSize + col];
@@ -95,7 +98,7 @@ public class GameService {
 				for (int col = 0; col < boardSize; col++) {
 					String word;
 					do {
-						word = WordService.Word(listType);
+						word = wordService.Word(listType);
 					} while (wordList.contains(word));
 
 					wordList.add(word);

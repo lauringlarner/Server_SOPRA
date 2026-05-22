@@ -9,14 +9,16 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
+@Service
 public class WordService {
 
-    private static final Logger log = LoggerFactory.getLogger(WordService.class);
+    private final Logger log = LoggerFactory.getLogger(WordService.class);
 
-    private static final SecureRandom secureRandom = new SecureRandom();
+    private final SecureRandom secureRandom = new SecureRandom();
 
-    public static String[] WordList(String nameOfWordList) {
+    public String[] WordList(String nameOfWordList) {
         List<String> words = new ArrayList<>();
 
         try (InputStream is = WordService.class.getClassLoader().getResourceAsStream(nameOfWordList);
@@ -34,33 +36,33 @@ public class WordService {
 
     return words.toArray(String[]::new);
 }
-    public static String Word(String typeOfWordList) {
+    public String Word(String typeOfWordList) {
         switch (typeOfWordList) {
             case "inside" -> {
                 String[] wordsList = WordList("urban_objects_inside.csv");
                 int randomNum = secureRandom.nextInt(wordsList.length);
                 String word = wordsList[randomNum];
-                System.out.println(word);
+                log.debug("Generated word: {}", word);
                 return word;
             }
             case "outside" -> {
                 String[] wordsList = WordList("urban_objects_outside.csv");
                 int randomNum = secureRandom.nextInt(wordsList.length);
                 String word = wordsList[randomNum];
-                System.out.println(word);
+                log.debug("Generated word: {}", word);
                 return word;
             }
             case "demo" -> {
                 String[] wordsList = WordList("urban_objects_demo.csv");
                 String word =wordsList[15];
-                System.out.println(word);
+                log.debug("Generated word: {}", word);
                 return word;
             }
             default -> {
                 String[] wordsList = WordList("urban_objects.csv");
                 int randomNum = secureRandom.nextInt(wordsList.length);
                 String word = wordsList[randomNum];
-                System.out.println(word);
+                log.debug("Generated word: {}", word);
                 return word;
             }
         }

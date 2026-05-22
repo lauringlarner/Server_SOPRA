@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
@@ -18,30 +19,10 @@ import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
 import com.google.cloud.vision.v1.WebDetection;
 import com.google.protobuf.ByteString;
 
-
-
 public class VisionQuickstartObjectLocalization {
 
     private static final float THRESHOLD = 0.5f;
     private static ImageAnnotatorClient vision;
-
-    static {
-        try {
-            InputStream stream = VisionQuickstartObjectLocalization.class
-                    .getClassLoader()
-                    .getResourceAsStream("sopra-fs26-group-18-server-254a2c84c9e1.json");
-            GoogleCredentials credentials = (stream != null
-                    ? GoogleCredentials.fromStream(stream)
-                    : GoogleCredentials.getApplicationDefault())
-                    .createScoped("https://www.googleapis.com/auth/cloud-platform");
-            ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
-                    .setCredentialsProvider(() -> credentials)
-                    .build();
-            vision = ImageAnnotatorClient.create(settings);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize Vision client", e);
-        }
-    }
 
     public static int analyzeimage(byte[] imageBytes, String object) throws Exception {
 
@@ -55,65 +36,100 @@ public class VisionQuickstartObjectLocalization {
                 .setImage(img)
                 .build();
 
-        BatchAnnotateImagesResponse response = vision.batchAnnotateImages(List.of(request));
+        BatchAnnotateImagesResponse response = getVisionClient().batchAnnotateImages(List.of(request));
 
         for (AnnotateImageResponse res : response.getResponsesList()) {
-            if (res.hasError()) return 0;
-
-            List<String> allWords = new ArrayList<>();
-
-            // LABEL_DETECTION
-            for (EntityAnnotation label : res.getLabelAnnotationsList()) {
-                System.out.println("Label: " + label.getDescription() + " score=" + label.getScore());
-                if (label.getScore() >= THRESHOLD) {
-                    Arrays.stream(label.getDescription().toLowerCase().split("\\s+"))
-                            .filter(w -> w.length() > 2)
-                            .forEach(allWords::add);
-                }
-            }
-            // web detection
-            WebDetection web = res.getWebDetection();
-                for (WebDetection.WebEntity entity : web.getWebEntitiesList()) {
-                    if (entity.getScore() >= THRESHOLD && !entity.getDescription().isEmpty()) {
-                        Arrays.stream(entity.getDescription().toLowerCase().split("\\s+"))
-                            .filter(w -> w.length() > 2)
-                            .forEach(allWords::add);
-    }
-}
-
-            // OBJECT_LOCALIZATION
-            for (LocalizedObjectAnnotation loc : res.getLocalizedObjectAnnotationsList()) {
-                System.out.println("Object: " + loc.getName() + " score=" + loc.getScore());
-                if (loc.getScore() >= THRESHOLD) {
-                    Arrays.stream(loc.getName().toLowerCase().split("\\s+"))
-                            .filter(w -> w.length() > 2)
-                            .forEach(allWords::add);
-                }
-            }
-
-            System.out.println("Word list: " + allWords);
-
-             List<String> acceptedTerms = SynonymMap.getAcceptedTerms(object);
-            System.out.println("Accepted terms for '" + object + "': " + acceptedTerms);
-
-            for (String term : acceptedTerms) {
-                String[] termWords = term.replaceAll("[^a-z ]", "").split("\\s+");
-                boolean allMatch = true;
-                for (String word : termWords) {
-                    if (word.length() <= 2) continue;
-                    boolean found = allWords.stream().anyMatch(w -> w.contains(word));
-                    if (!found) {
-                        allMatch = false;
-                        break;
-                    }
-                }
-                if (allMatch) {
-                    System.out.println("Matched via term: " + term);
-                    return 1;
-                }
+            if (responseMatchesObject(res, object)) {
+                return 1;
             }
         }
 
         return 0;
+    }
+
+    static boolean responseMatchesObject(AnnotateImageResponse res, String object) {
+        if (res.hasError()) {
+            return false;
+        }
+
+        List<String> allWords = extractDetectedWords(res);
+        return detectedWordsMatchObject(allWords, object);
+    }
+
+    static List<String> extractDetectedWords(AnnotateImageResponse res) {
+        List<String> allWords = new ArrayList<>();
+
+        for (EntityAnnotation label : res.getLabelAnnotationsList()) {
+            if (label.getScore() >= THRESHOLD) {
+                addSignificantWords(allWords, label.getDescription());
+            }
+        }
+
+        WebDetection web = res.getWebDetection();
+        for (WebDetection.WebEntity entity : web.getWebEntitiesList()) {
+            if (entity.getScore() >= THRESHOLD && !entity.getDescription().isEmpty()) {
+                addSignificantWords(allWords, entity.getDescription());
+            }
+        }
+
+        for (LocalizedObjectAnnotation loc : res.getLocalizedObjectAnnotationsList()) {
+            if (loc.getScore() >= THRESHOLD) {
+                addSignificantWords(allWords, loc.getName());
+            }
+        }
+
+        return allWords;
+    }
+
+    static boolean detectedWordsMatchObject(List<String> allWords, String object) {
+        List<String> acceptedTerms = SynonymMap.getAcceptedTerms(object);
+
+        for (String term : acceptedTerms) {
+            String[] termWords = term.replaceAll("[^a-z ]", "").split("\\s+");
+            boolean allMatch = true;
+            for (String word : termWords) {
+                if (word.length() <= 2) {
+                    continue;
+                }
+                boolean found = allWords.stream().anyMatch(w -> w.contains(word));
+                if (!found) {
+                    allMatch = false;
+                    break;
+                }
+            }
+            if (allMatch) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void addSignificantWords(List<String> allWords, String text) {
+        Arrays.stream(text.toLowerCase(Locale.ROOT).split("\\s+"))
+                .filter(w -> w.length() > 2)
+                .forEach(allWords::add);
+    }
+
+    private static synchronized ImageAnnotatorClient getVisionClient() {
+        if (vision == null) {
+            try {
+                InputStream stream = VisionQuickstartObjectLocalization.class
+                        .getClassLoader()
+                        .getResourceAsStream("sopra-fs26-group-18-server-254a2c84c9e1.json");
+                GoogleCredentials credentials = (stream != null
+                        ? GoogleCredentials.fromStream(stream)
+                        : GoogleCredentials.getApplicationDefault())
+                        .createScoped("https://www.googleapis.com/auth/cloud-platform");
+                ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
+                        .setCredentialsProvider(() -> credentials)
+                        .build();
+                vision = ImageAnnotatorClient.create(settings);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize Vision client", e);
+            }
+        }
+
+        return vision;
     }
 }

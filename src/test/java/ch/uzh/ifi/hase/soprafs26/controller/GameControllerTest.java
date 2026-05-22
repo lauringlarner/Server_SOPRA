@@ -346,7 +346,7 @@ public class GameControllerTest {
         leaderboard.setIsSinglePlayer(false);
         leaderboard.setTileGrid(testGame.getTileGrid());
 
-        given(gameOrchestrationService.getLeaderboard(testUser, gameId))
+        given(gameOrchestrationService.getLeaderboard(gameId))
                 .willReturn(leaderboard);
 
         mockMvc.perform(get("/games/" + gameId + "/leaderboard")
@@ -356,7 +356,7 @@ public class GameControllerTest {
 
     @Test
     public void getLeaderboard_notFound_404() throws Exception {
-        given(gameOrchestrationService.getLeaderboard(testUser, gameId))
+        given(gameOrchestrationService.getLeaderboard(gameId))
                 .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         mockMvc.perform(get("/games/" + gameId + "/leaderboard")

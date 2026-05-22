@@ -147,6 +147,11 @@ public class GameService {
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 	}
 
+	@Transactional(readOnly = true)
+    public Game findGameById(UUID gameId) {
+        return gameRepository.findById(gameId).orElse(null);
+    }
+
 	//========
 	// Updates 
 	//========

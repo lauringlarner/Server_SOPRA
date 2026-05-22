@@ -17,6 +17,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
@@ -115,21 +116,15 @@ class GameOrchestrationServiceTest {
 
     @Test
     void getLeaderboard_success() {
-        User user = new User();
         UUID gameId = UUID.randomUUID();
 
-        Game game = new Game();
-        LobbyPlayer player = new LobbyPlayer();
         Leaderboard leaderboard = new Leaderboard();
 
-        when(gameService.getGameById(gameId)).thenReturn(game);
-        when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(player);
         when(leaderboardService.getLeaderboard(gameId)).thenReturn(leaderboard);
 
-        Leaderboard result = service.getLeaderboard(user, gameId);
+        Leaderboard result = service.getLeaderboard(gameId);
 
         assertNotNull(result);
-        verify(lobbyService).validateLobbyPlayerIsInGame(player, game);
     }
 
     // ---------------- IMAGE SUBMISSION ----------------
@@ -191,7 +186,7 @@ class GameOrchestrationServiceTest {
         Lobby lobby = new Lobby();
         LobbyPlayer player = new LobbyPlayer();
 
-        when(gameService.getGameById(gameId)).thenReturn(game);
+        when(gameService.findGameById(gameId)).thenReturn(game);
         when(lobbyService.getLobbyByLobbyId(game.getLobbyId())).thenReturn(lobby);
         when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(player);
 
@@ -224,7 +219,7 @@ class GameOrchestrationServiceTest {
 
         lobby.setLobbyPlayers(List.of(player1, player2));
 
-        when(gameService.getGameById(gameId)).thenReturn(game);
+        when(gameService.findGameById(gameId)).thenReturn(game);
         when(lobbyService.getLobbyByLobbyId(game.getLobbyId())).thenReturn(lobby);
         when(lobbyService.getLobbyPlayerByUser(user)).thenReturn(player1);
 
@@ -232,7 +227,27 @@ class GameOrchestrationServiceTest {
 
         service.deleteGame(user, gameId);
 
+        verify(lobbyService).validateLobbyPlayerIsInGame(player1, game);
+
         verify(userService).updateUserStats(player1.getUser(), true);
         verify(userService).updateUserStats(player2.getUser(), false);
+
+        verify(lobbyService).resetLobbyAfterGame(game.getLobbyId());
+        verify(gameService).deleteGameDelayed(game.getId());
+
+    }
+
+    @Test
+    void deleteGame_gameNotFound_returnsWithoutDoingAnything() {
+        UUID gameId = UUID.randomUUID();
+        User user = new User();
+
+        when(gameService.findGameById(gameId)).thenReturn(null);
+
+        service.deleteGame(user, gameId);
+
+        verifyNoInteractions(lobbyService);
+        verify(userService, never()).updateUserStats(any(), anyBoolean());
+        verify(gameService, never()).deleteGameDelayed(any());
     }
 }

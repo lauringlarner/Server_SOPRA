@@ -188,6 +188,7 @@ public class GameService {
 		clearProcessingTiles(game);
 		game.setStatus(GameStatus.ENDED);
 		leaderboardService.initOrUpdate(game);
+		gameRepository.save(game);
 		gameRepository.flush();
 		pushGameUpdate(game);
 		lobbyService.resetLobbyAfterGame(game.getLobbyId());
@@ -295,6 +296,7 @@ public class GameService {
 		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), indexOfWord);
 		tile.setStatus(getProcessingStatus(team));
 		game.setTileGrid(tileGrid);
+		gameRepository.save(game);
 		gameRepository.flush();
 		pushGameUpdate(game);
 	}
@@ -340,6 +342,7 @@ public class GameService {
 
 		checkBoardFullyClaimed(game);
 
+		gameRepository.save(game);
 		gameRepository.flush();
 		pushGameUpdate(game);
 	}
@@ -389,6 +392,7 @@ public class GameService {
 		Tile tile = getTileAtIndex(tileGrid, game.getBoardSize(), tileIndex);
 		tile.setStatus(TileStatus.UNCLAIMED);
 		game.setTileGrid(tileGrid);
+		gameRepository.save(game);
 		gameRepository.flush();
 		pushGameUpdate(game);
 	}
@@ -447,6 +451,7 @@ public class GameService {
 
 		// full board
 		game.setStatus(GameStatus.ENDED);
+		gameRepository.save(game);
 		gameRepository.flush();
 		pushGameUpdate(game);
 }

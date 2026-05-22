@@ -41,6 +41,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Inject DB credentials into app.yaml
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          python3 << 'EOF'
+          import os, yaml
+          with open('app.yaml', 'r') as f:
+              data = yaml.safe_load(f)
+          data.setdefault('env_variables', {}).update({
+              'DB_URL': os.environ['DB_URL'],
+              'DB_USERNAME': os.environ['DB_USERNAME'],
+              'DB_PASSWORD': os.environ['DB_PASSWORD'],
+          })
+          with open('app.yaml', 'w') as f:
+              yaml.dump(data, f, default_flow_style=False)
+          EOF
+
       - name: Deploy to App Engine
         id: deploy
         uses: google-github-actions/deploy-appengine@v0.2.0

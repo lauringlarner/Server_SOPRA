@@ -144,7 +144,7 @@ public class GameService {
 
 	public Game getGameById(UUID gameId) {
 		Game game = gameRepository.findById(gameId)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
 
 		if (game.getStatus() == GameStatus.IN_PROGRESS &&
 			isExpired(game, Instant.now())) {
